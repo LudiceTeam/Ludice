@@ -48,6 +48,11 @@ class Register(BaseModel):
 @app.post("/register")
 async def register(request:Register):
     if redis.exists(f"user:{request.username}"):
-        raise HTTPException(status_code=400,detail="User not found")
+        raise HTTPException(status_code=400,detail="User already exists")
     else:
         redis.set(f"user:{request.username}",request.passw)
+@app.post("/login")
+async def login(request:Register):
+    if redis.exists(f"user:{request.username}"):
+        password = redis.get(f"user:{request.username}")
+        return password == request.password
