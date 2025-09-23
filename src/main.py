@@ -9,10 +9,45 @@ import random
 from pydantic.types import StrictStr
 from pydantic_core.core_schema import str_schema
 import uuid
+import redis
+import secrets
+import hashlib
+
+
+
+
+#Connecting REDIS
+class RedisAuth:
+    def __init__(self, host='localhost', port=6379, db=0):
+        self.redis = redis.Redis(host=host, port=port, db=db, decode_responses=True)
+    
+    def _hash_password(self, password):
+        """Хеширование пароля"""
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    def _generate_token(self):
+        """Генерация токена"""
+        return secrets.token_hex(32)
+
+
+redis = redis.Redis('localhost',6379,0,decode_responses=True)
 
 
 app = FastAPI()
-
 @app.get("/")
+
+
 async def main():
     return "Ludice API"
+
+
+class Register(BaseModel):
+    username:str
+    passw:str
+
+@app.post("/register")
+async def register(request:Register):
+    if redis.exists(f"user:{request.username}"):
+        raise HTTPException(status_code=400,detail="User not found")
+    else:
+        redis.set(f"user:{request.username}",request.passw)
