@@ -83,6 +83,7 @@ async def login(request:Register):
 
 class CreateLobby(BaseModel):
     username:str
+    title:str
     id:str = Field(default_factory=lambda: str(uuid.uuid4()))
 
 @app.post("/create/lobby")
@@ -93,9 +94,10 @@ async def create_lobby(request:CreateLobby):
         if user["username"] == request.username:
             user["lobbys"].append({
                 "host":request.username,
+                "title":request.title,
                 "id":request.id,
                 "players":[request.username],
-                "bets":{}
+                "bets":[]
             })
             with open("lobby.json","w") as file:
                 json.dump(data,file)
@@ -107,7 +109,7 @@ class DeleteGame:
     id:str
 
 @app.delete("/delete/game")
-async def delete_game(request:CreateLobby):
+async def delete_game(request:DeleteGame):
     try:
         with open("lobby.json","r") as file:
             data = json.load(file)
@@ -122,5 +124,34 @@ async def delete_game(request:CreateLobby):
                             return
         raise HTTPException(status_code=400,detail="Bad Request")          
     except Exception as e:
-        raise HTTPException(status_code=403,detail=f"Exception : {e}")          
+        raise HTTPException(status_code=403,detail=f"Exception : {e}")         
+
+class Bet(BaseModel):
+    username:str
+    author:str
+    id:str
+    bet:int   
+
+@app.post("/bet")
+async def bet(request:Bet):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+
+    try:
+        for user in data:
+            if user["username"] == request.author:
+                for lob in user["lobbys"]:
+                    if lob["id"] == request.id:
+                        lob["bets"].append({
+                            "username":request.id,
+                            "bet":request.bet
+                        })
+                        with open("lobby.json","w") as file:
+                            json.dump(data,file)
+                        return    
+        raise HTTPException(status_code=400,detail="Lobby not found")            
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error while betting : {e}")
+                    
+
 
