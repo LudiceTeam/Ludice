@@ -61,7 +61,19 @@ async def register(request:Register):
         else:
             data[request.username] = request.id
             with open("data/users.json","w") as file:
-                json.dump(data,file)        
+                json.dump(data,file)  
+            # DEFAULT LOBBY DATA
+            with open("lobby.json","r") as file:
+                lobs = json.load(file)
+            lobs.append({
+                "username":request.username,
+                "lobbys":[]
+            })
+            with open("lobby.json","w") as file:
+                json.dump(lobs,file)
+
+
+                  
 @app.post("/login")
 async def login(request:Register):
     if redis.exists(f"user:{request.username}"):
