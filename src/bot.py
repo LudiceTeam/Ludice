@@ -1,8 +1,6 @@
 from pathlib import   Path
 from dotenv import  load_dotenv
 import os
-import asyncio
-import logging
 import sys
 from os import getenv
 from aiogram import Bot, Dispatcher, executor, types
