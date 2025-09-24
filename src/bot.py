@@ -25,6 +25,7 @@ from os import getenv
 from aiogram import Bot, Dispatcher, executor, types
 import asyncio
 import logging
+import requests
 
 from handlers import start, help 
 
