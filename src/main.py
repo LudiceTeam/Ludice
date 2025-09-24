@@ -85,7 +85,7 @@ class CreateLobby(BaseModel):
     username:str
     id:str = Field(default_factory=lambda: str(uuid.uuid4()))
 
-@app.get("/create/lobby")
+@app.post("/create/lobby")
 async def create_lobby(request:CreateLobby):
     with open("lobby.json","r") as file:
         data = json.load(file)   
@@ -101,4 +101,26 @@ async def create_lobby(request:CreateLobby):
                 json.dump(data,file)
             return
     raise HTTPException(status_code=400,detail="User not found")          
+
+class DeleteGame:
+    username:str
+    id:str
+
+@app.delete("/delete/game")
+async def delete_game(request:CreateLobby):
+    try:
+        with open("lobby.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == request.username:
+                for lob in user["lobbys"]:
+                    if lob["id"] == request.id:
+                        ind = user["lobbys"].index(lob)
+                        user["lobbys"].pop(ind)
+                        with open("lobby.json","w") as file:
+                            json.dump(data,file)
+                            return
+        raise HTTPException(status_code=400,detail="Bad Request")          
+    except Exception as e:
+        raise HTTPException(status_code=403,detail=f"Exception : {e}")          
 
