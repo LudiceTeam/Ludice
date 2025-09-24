@@ -67,3 +67,4 @@ async def login(request:Register):
     if redis.exists(f"user:{request.username}"):
         password = redis.get(f"user:{request.username}")
         return password == request.password
+
