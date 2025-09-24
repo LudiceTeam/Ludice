@@ -20,8 +20,6 @@ import logging
 import sys
 from os import getenv
 
-
-
 from aiogram import Bot, Dispatcher, executor, types
 import asyncio
 import logging
@@ -49,6 +47,31 @@ async def start(message: types.Message):
     else:
         await message.reply("Registration failed. Please try again later.")
 
+@dp.message_handler(commands=['lobby'])
+async def lobby(message: types.Message):
+    await message.reply("Welcome to the lobby! Here you can find other players to join your game. \nUse /join <game_id> to join a game. /create and than <game_name> to create a new game.")
+
+@dp.message_handler(commands=['create'])
+async def create_game(message: types.Message, state: FSMContext):
+    await message.answer("Name your game:")
+    await state.set_state(CreateGame.waiting_for_name)
+
+@dp.message_handler(state=CreateGame.waiting_for_name)
+async def process_game_name(message: types.Message, state: FSMContext):
+    game_name = message.text
+    await message.answer(f"Game '{game_name}' created successfully!")
+    await state.finish()
+
+@dp.message_handler(commands=['join'])
+async def join_game(message: types.Message):
+    await message.answer("Enter the game ID you want to join:")
+    await state.set_state(JoinGame.waiting_for_game_id) 
+
+@dp.message_handler(state=JoinGame.waiting_for_game_id)
+async def process_game_id(message: types.Message, state: FSMContext):
+    game_id = message.text
+    await message.answer(f"You have joined the game with ID: {game_id}")
+    await state.finish()
 
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
