@@ -51,6 +51,14 @@ async def register(request:Register):
         raise HTTPException(status_code=400,detail="User already exists")
     else:
         redis.set(f"user:{request.username}",request.passw)
+        with open("data/users.json","r") as file:
+            data = json.load(file)
+        if request.username in data:
+            raise HTTPException(status_code=400,detail="User alredy exists")
+        else:
+            data[request.username] = request.passw
+            with open("data/users.json","w") as file:
+                json.dump(data,file)        
 @app.post("/login")
 async def login(request:Register):
     if redis.exists(f"user:{request.username}"):
