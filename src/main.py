@@ -68,3 +68,25 @@ async def login(request:Register):
         password = redis.get(f"user:{request.username}")
         return password == request.password
 
+
+class CreateLobby(BaseModel):
+    username:str
+    id:str = Field(default_factory=lambda: str(uuid.uuid4()))
+
+@app.get("/create/lobby")
+async def create_lobby(request:CreateLobby):
+    with open("lobby.json","r") as file:
+        data = json.load(file)   
+    for user in data:  
+        if user["username"] == request.username:
+            user["lobbys"].append({
+                "host":request.username,
+                "id":request.id,
+                "players":[request.username],
+                "bets":{}
+            })
+            with open("lobby.json","w") as file:
+                json.dump(data,file)
+            return
+    raise HTTPException(status_code=400,detail="User not found")          
+
