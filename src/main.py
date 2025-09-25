@@ -213,7 +213,7 @@ async def leave_game(request:Leave):
                     lobby["players"].pop(ind)
                     with open("lobby.json","w") as file:
                         json.dump(data,file)
-                    return
+                    return True
     raise HTTPException(status_code=400,detail="Bad data")
 
 @app.post("/join/game")
@@ -249,4 +249,18 @@ async def join_random(username:str):
                         json.dump(data,file)
                     return {"Title":lob["title"],"Id":lob["id"],"Host":lob["host"]}
 
-              
+class GetPartyInfo(BaseModel):
+    author:str
+    id:str
+@app.post("/get/party/info")
+async def get_party_info(request:GetPartyInfo):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    for user in data:
+        if user["username"] == request.author:
+            for part in user["lobbys"]:
+                if part["id"] == request.id:
+                    return {"Host:":part["host"],"Title":part["title"],"Id":part["id"],"Players":part["players"],"Bets":part["bets"]}     
+    raise HTTPException(status_code=400,detail="User not found")
+
+               
