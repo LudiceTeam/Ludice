@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from app.states import CreateGame
+from app.states import CreatePaerty
 from app.keyboards import game_type_kb
 
 router = Router()
