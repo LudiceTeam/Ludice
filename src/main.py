@@ -129,8 +129,10 @@ async def delete_game(request:DeleteGame):
 class Bet(BaseModel):
     username:str
     author:str
-    id:str
-    bet:int   
+    id_game:str
+    bet:int
+    bet_id:str = Field(default_factory=lambda: str(uuid.uuid4()))  
+     
 
 @app.post("/bet")
 async def bet(request:Bet):
@@ -141,10 +143,11 @@ async def bet(request:Bet):
         for user in data:
             if user["username"] == request.author:
                 for lob in user["lobbys"]:
-                    if lob["id"] == request.id:
+                    if lob["id"] == request.id_game:
                         lob["bets"].append({
-                            "username":request.id,
-                            "bet":request.bet
+                            "username":request.username,
+                            "bet":request.bet,
+                            "bet_id":request.bet_id
                         })
                         with open("lobby.json","w") as file:
                             json.dump(data,file)
@@ -154,4 +157,25 @@ async def bet(request:Bet):
         raise HTTPException(status_code=400,detail=f"Error while betting : {e}")
                     
 
+class Cancel_Bet(BaseModel):
+    author:str
+    id_game:str
+    id_bet:str
+    author:str
 
+@app.delete("/delete/bet")
+async def delete_bet(request:Cancel_Bet):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    for user in data:
+        if user["username"] == request.author:
+            for lob in user["lobbys"]:
+                if lob["id"] == request.id_game:
+                    for bet in lob["bets"] :
+                        if bet["bet_id"] == request.id_bet:
+                            ind = lob["bets"].index(bet)
+                            lob["bets"].pop(ind)
+                            with open("lobby.json","w") as file:
+                                json.dumo(data,file)
+                            return
+    raise HTTPException(status_code=400,detail="Game not found or bet not found")                            
