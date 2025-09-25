@@ -192,4 +192,61 @@ async def isbetted(request:IsBetted):
             for lobby in user["lobbys"]:
                 if lobby["id"] == request.lobby_id:
                     return len(lobby["bets"]) == len("players")
-    raise HTTPException(status_code=400,detail="Wrong data")                
+    raise HTTPException(status_code=400,detail="Wrong data")
+
+
+
+class Leave(BaseModel):
+    id_game:str
+    username:str 
+    author:str
+
+app.post("/leave/game")
+async def leave_game(request:Leave):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    for user in data:
+        if user["username"] == request.author:
+            for lobby in user["lobbys"]:
+                if lobby["id"] == request.id_game:
+                    ind = lobby["players"].index(request.username)
+                    lobby["players"].pop(ind)
+                    with open("lobby.json","w") as file:
+                        json.dump(data,file)
+                    return
+    raise HTTPException(status_code=400,detail="Bad data")
+
+@app.post("/join/game")
+async def join_game(request:Leave):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    for user in data:
+        if user["username"] == request.author:
+            for lobby in user["lobbys"]:
+                if lobby["id"] == request.id_game:
+                    lobby["players"].append(request.username)
+                    with open("lobby.json","w") as file:
+                        json.dump(data,file)
+                    return
+    raise HTTPException(status_code=400,detail="Bad data")
+
+@app.get("/join/random/game/{username}")
+async def join_random(username:str):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    user = random.choice(data)
+    while len(user["lobbys"]) == 0:
+        user = random.choice(data)
+    random_username = user["username"]
+    random_game = random.choice(user["lobbys"])
+    rand_id= random_game["id"]
+    for user in data:
+        if user["username"] == random_username:
+            for lob in user["lobbys"]:
+                if lob["id"] == rand_id:
+                    lob["players"].append(username)
+                    with open("lobby.json","w") as file:
+                        json.dump(data,file)
+                    return {"Title":lob["title"],"Id":lob["id"],"Host":lob["host"]}
+
+              
