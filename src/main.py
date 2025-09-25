@@ -263,4 +263,23 @@ async def get_party_info(request:GetPartyInfo):
                     return {"Host:":part["host"],"Title":part["title"],"Id":part["id"],"Players":part["players"],"Bets":part["bets"]}     
     raise HTTPException(status_code=400,detail="User not found")
 
+class StartNewGame(BaseModel):
+    host:str
+    id_game:str
+@app.post("/start/new_game")
+async def start_new_game(request:StartNewGame):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    for user in data:
+        if user["username"] == request.host:
+            for lob in user["lobbys"]:
+                if lob["id"] == request.id_game:
+                    lob["players"] = request.username
+                    lob["bets"] = []
+                    with open("lobby.json","w") as file:
+                        json.dump(data,file)
+                    return True
+    raise HTTPException(status_code=400,detail="Error while updating,try again") 
+               
+
                
