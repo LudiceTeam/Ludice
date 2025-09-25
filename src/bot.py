@@ -1,7 +1,14 @@
 from pathlib import   Path
 from dotenv import  load_dotenv
 import os
-
+import sys
+from os import getenv
+from aiogram import Bot, Dispatcher, executor, types
+import asyncio
+import logging
+import requests
+from handlers import start, help
+ 
 ROOT = Path(__file__).resolve().parents[1]
 ENV_PATH = ROOT / ".env"
 load_dotenv(dotenv_path=ENV_PATH)
@@ -14,18 +21,6 @@ if not TOKEN:
     print("Missing token")
 else:
     print("Token found")
-
-import asyncio
-import logging
-import sys
-from os import getenv
-
-from aiogram import Bot, Dispatcher, executor, types
-import asyncio
-import logging
-import requests
-
-from handlers import start, help 
 
 API_TOKEN = "YOUR_TOKEN_HERE"
 
