@@ -178,4 +178,18 @@ async def delete_bet(request:Cancel_Bet):
                             with open("lobby.json","w") as file:
                                 json.dumo(data,file)
                             return
-    raise HTTPException(status_code=400,detail="Game not found or bet not found")                            
+    raise HTTPException(status_code=400,detail="Game not found or bet not found")            
+#FIXME code an endpoint for  bool is everyone betted
+class IsBetted(BaseModel):
+    author:str
+    lobby_id:str
+@app.post("/isbetted")
+async def isbetted(request:IsBetted):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    for user in data:
+        if user["username"] == request.author:
+            for lobby in user["lobbys"]:
+                if lobby["id"] == request.lobby_id:
+                    return len(lobby["bets"]) == len("players")
+    raise HTTPException(status_code=400,detail="Wrong data")                
