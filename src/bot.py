@@ -1,13 +1,12 @@
-from pathlib import   Path
-from dotenv import  load_dotenv
-import os
-import sys
-from os import getenv
-from aiogram import Bot, Dispatcher, executor, types
 import asyncio
 import logging
-import requests
-from handlers import start, help
+
+from aiogram import Bot, Dispatcher, Router, F
+from aiogram.filters import Command
+from aiogram.types import Message, CallbackQuery
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.utils.keyboard import InlineKeyboardBuilder
  
 ROOT = Path(__file__).resolve().parents[1]
 ENV_PATH = ROOT / ".env"
@@ -32,6 +31,16 @@ def send_user_to_api(username, user_id):
     }
     resp = requests.post(url, json=data)
     return resp.status_code == 200
+
+
+# Logs
+logging.basicConfig(level=logging.INFO)
+
+
+
+class CreateGame(StatesGroup):
+    waiting_for_name = State()
+    waiting_for_players = State()
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
@@ -68,7 +77,21 @@ async def process_game_id(message: types.Message, state: FSMContext):
     await message.answer(f"You have joined the game with ID: {game_id}")
     await state.finish()
 
+@dp.message_handler(commands=['random_party'])
+async def random_party(message: types.Message):
+    await message.answer("Joining a random party...")
+
+@dp.message_handler(commands=['leave_party'])
+async def leave_party(message: types.Message):
+    await message.answer("Leaving the party...")
+
+@dp.message_handler(commands=['party_info'])
+async def party_info(message: types.Message):
+    await message.answer("Here is the party info...")
+
+
+
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    asyncio.run(main())
 
 
