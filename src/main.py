@@ -15,6 +15,7 @@ import hashlib
 from jose import JWTError
 import jwt
 from passlib.context import CryptContext
+from filelock import FileLock
 
 
 
@@ -147,7 +148,9 @@ async def bet(request:Bet):
                         lob["bets"].append({
                             "username":request.username,
                             "bet":request.bet,
-                            "bet_id":request.bet_id
+                            "bet_id":request.bet_id,
+                            "winners":[],
+                            "losers":[]
                         })
                         with open("lobby.json","w") as file:
                             json.dump(data,file)
@@ -247,7 +250,7 @@ async def join_random(username:str):
                     lob["players"].append(username)
                     with open("lobby.json","w") as file:
                         json.dump(data,file)
-                    return {"Title":lob["title"],"Id":lob["id"],"Host":lob["host"]}
+                    return {"Title":lob["title"],"Id":lob["id"],"Host":lob["host"],"Winners":lob["winners"],"Losers":lob["losers"]}
 
 class GetPartyInfo(BaseModel):
     author:str
@@ -282,4 +285,22 @@ async def start_new_game(request:StartNewGame):
     raise HTTPException(status_code=400,detail="Error while updating,try again") 
                
 
-               
+class Win(BaseModel):
+    username:str
+    author:str
+    lobby_id:str
+@app.post("/win")
+async def win(request:Win):
+    lock = FileLock("lobby.json.lock")
+    with lock:
+        with open("lobby.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == request.author:
+                for lob in user["lobbys"]:
+                    if lob["id"] == request.lobby_id:
+                        lob["winners"].append(request.username)       
+                        with open("lobby.json","w") as file:
+                            json.dump(data,file)
+                        return True
+        raise HTTPException(status_code=400,detail="Error while waiting for the  win")                 
