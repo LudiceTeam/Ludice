@@ -1,6 +1,7 @@
 import asyncio
-import logging
+# import logging --- IGNORE --- comment: not used yet 
 
+from app.routers import rgame
 from app.routers import create_party
 
 async def main():
