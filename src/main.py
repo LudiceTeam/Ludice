@@ -304,3 +304,18 @@ async def win(request:Win):
                             json.dump(data,file)
                         return True
         raise HTTPException(status_code=400,detail="Error while waiting for the  win")                 
+async def lose(request:Win):
+    lock = FileLock("lobby.josn.lock")
+    with lock:
+        with open("lobyy.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == request.author:
+                for lob in user["lobbys"]:
+                    if lob["id"] == request.lobby_id:
+                        lob["losers"].append(request.username)       
+                        with open("lobby.json","w") as file:
+                            json.dump(data,file)
+                        return True
+        raise HTTPException(status_code=400,detail="Error while waiting for the  win")                     
+        
