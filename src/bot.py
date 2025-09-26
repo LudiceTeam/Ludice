@@ -1,25 +1,16 @@
 import asyncio
-import logging
+# import logging --- IGNORE --- comment: not used yet 
 
-def send_user_to_api(username, user_id):
-    url = "http://0.0.0.0:8000/register"
-    data = {
-        "username": username,
-        "id": user_id
-    }
-    resp = requests.post(url, json=data)
-    return resp.status_code == 200
-
-logging.basicConfig(level=logging.INFO)
-
+from app.routers import rgame
+from app.routers import create_party
 
 async def main():
     TOKEN = "TOKEN_HERE"
     bot = Bot(token=TOKEN)
     dp = Dispatcher()
 
-    # Include routers
-    dp.include_router(create_game_router)
+    # Routers
+    dp.include_router(create_party)
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
