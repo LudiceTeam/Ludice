@@ -13,13 +13,15 @@ router = Router()
 
 logging.basicConfig(level=logging.INFO)
 
-def send_user_to_api(username, id, title, is_open=True):
+def send_user_to_api(username, author, id_game, bet_id, ):
     url = "http://0.0.0.0:8000/register"
     data = {
         "username": username,
-        "id": id,
+        "id_game": id_game,
         "title": title,
-        "is_open": is_open
+        "is_open": is_open,
+        "bet": bet
+
     }
     resp = requests.post(url, json=data)
     return resp.status_code == 200
