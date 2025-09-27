@@ -18,10 +18,10 @@ def send_user_to_api(username, author, id_game, bet_id, ):
     data = {
         "username": username,
         "id_game": id_game,
+        "author": author,
         "title": title,
         "is_open": is_open,
         "bet": bet
-
     }
     resp = requests.post(url, json=data)
     return resp.status_code == 200
