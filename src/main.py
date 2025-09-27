@@ -447,6 +447,11 @@ async def kick(request:Kick):
                             lob["players"].pop(ind)
                             with open("lobby.json","w") as file:
                                 json.dump(data,file)
+                            delete_all_user_data_from_game(
+                                author=request.username,
+                                lobby_id=lob["id"],
+                                username=request.username
+                            )    
                         else:
                             raise HTTPException(status_code=404,detail="Error user is not in the game")
                     else:
