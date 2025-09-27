@@ -398,4 +398,29 @@ async def get_me(username:str):
     except Exception as e:
         raise HTTPException(status_code=400,detail = f"Error while get_me : {e}")                
                 
+class Kick(BaseModel):
+    username:str
+    author:str
+    lobby_id:str
 
+
+
+
+
+@app.post("/kick")
+async def kick(request:Kick):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    for user in data:
+        if user["username"] == request.author:
+            for lob in user["lobbys"]:
+                if lob["id"] == request.lobby_id:
+                    if request.username in lob["players"]:
+                        ind = lob["players"].index(request.username)
+                        lob["players"].pop(ind)
+                        with open("lobby.json","w") as file:
+                            json.dump(data,file)
+                    else:
+                        raise HTTPException(status_code=404,detail="Error user is not in the game")
+                    
+                                    
