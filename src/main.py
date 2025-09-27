@@ -358,4 +358,24 @@ async def lose(request:Win):
         raise HTTPException(status_code=400,detail="Error while waiting for the  win")                     
         
 
+@app.get("get/me/{username}")
+async def get_me(username:str):
+    try:
+        with open("lobby.json","r") as file:
+            data = json.load(file)
+        result = []
+        part = []
+        for user in data:
+            if user["username"] == username:
+                result.append(user["lobbys"])
+                break
+        for user in data:
+            if user["username"] != username:
+                for lob in user["lobbys"]:
+                    if username in user["lobbys"]:
+                        part.append(lob)
+        return {"Your lobbies":result,"Lobbies you are in":part}            
+    except Exception as e:
+        raise HTTPException(status_code=400,detail = f"Error while get_me : {e}")                
+                
 
