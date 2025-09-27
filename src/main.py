@@ -1,4 +1,4 @@
-from fastapi import FastAPI,HTTPException
+from fastapi import FastAPI,HTTPException,Header
 from pydantic import BaseModel
 from pydantic import BaseModel,Field
 import json
@@ -16,6 +16,8 @@ from jose import JWTError
 import jwt
 from passlib.context import CryptContext
 from filelock import FileLock
+import hmac
+import secrets
 
 
 
@@ -319,3 +321,13 @@ async def lose(request:Win):
                         return True
         raise HTTPException(status_code=400,detail="Error while waiting for the  win")                     
         
+
+SYSTEM_SECRET = "your-super-secret-system-key-12345" 
+def genereate_system_password(data:str,secret:str) -> str:
+    return hmac.new(
+        secret.encode(), 
+        data.encode(), 
+        hashlib.sha256
+    ).hexdigest()
+
+
