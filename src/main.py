@@ -405,7 +405,33 @@ class Kick(BaseModel):
 
 
 
+def delete_all_user_data_from_game(author:str,lobby_id:str,username:str) -> bool:
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    found = False   
+    for user in data:
+        if user["username"] == author:
+            for lob in user["lobbys"]:
+                if lob["id"] == lobby_id:
+                    found = True
+                    for bet in lob["bets"]:
+                        if bet["username"] == username:
+                            ind = lob["bets"].index(bet)
+                            lob["bets"].pop(ind)
+                    if username in lob["winners"]:
+                        inde = lob["winners"].index(username)
+                        lob["winners"].pop(inde)
+                    elif username in lob["losers"]:
+                        inde = lob["winners"].index(username)
+                        lob["losers"].pop(inde)
+    if found:
+        with open("lobby.json","w") as file:
+            json.dump(data,file)
+        return True     
+    return False                             
 
+
+                                    
 
 @app.post("/kick")
 async def kick(request:Kick):
