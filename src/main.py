@@ -4,7 +4,7 @@ from pydantic import BaseModel,Field
 import json
 import threading
 import socket
-from typing import Union,Literal,List,Optional
+from typing import Union,Literal,List,Optional,Any
 import random
 from pydantic.types import StrictStr
 from pydantic_core.core_schema import str_schema
@@ -185,6 +185,22 @@ async def delete_bet(request:Cancel_Bet):
                             return
     raise HTTPException(status_code=400,detail="Game not found or bet not found")            
 #FIXME code an endpoint for  bool is everyone betted
+
+SYSTEM_SECRET = "your-super-secret-system-key-12345" 
+def create_signature(data:str,secret:str) -> str:
+    return hmac.new(
+        secret.encode(), 
+        data.encode(), 
+        hashlib.sha256
+    ).hexdigest()
+
+def verify_token(request:Any,role:str,token:str = Header(...)) -> bool:
+    data_str = json.dumps(request.dict(), sort_keys=True)
+    expected_signature = create_signature(data_str, SYSTEM_SECRET)
+    return hmac.compare_digest(token, expected_signature)
+
+
+
 class IsBetted(BaseModel):
     author:str
     lobby_id:str
@@ -341,13 +357,5 @@ async def lose(request:Win):
                         return True
         raise HTTPException(status_code=400,detail="Error while waiting for the  win")                     
         
-
-SYSTEM_SECRET = "your-super-secret-system-key-12345" 
-def genereate_system_password(data:str,secret:str) -> str:
-    return hmac.new(
-        secret.encode(), 
-        data.encode(), 
-        hashlib.sha256
-    ).hexdigest()
 
 
