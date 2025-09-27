@@ -293,19 +293,39 @@ class Win(BaseModel):
     lobby_id:str
 @app.post("/win")
 async def win(request:Win):
-    lock = FileLock("lobby.json.lock")
-    with lock:
-        with open("lobby.json","r") as file:
+
+    def is_user(username:str,id_party:str,author:str) -> bool:
+        with open("users.json","r") as file:
             data = json.load(file)
-        for user in data:
-            if user["username"] == request.author:
-                for lob in user["lobbys"]:
-                    if lob["id"] == request.lobby_id:
-                        lob["winners"].append(request.username)       
-                        with open("lobby.json","w") as file:
-                            json.dump(data,file)
-                        return True
-        raise HTTPException(status_code=400,detail="Error while waiting for the  win")                 
+        if username in data:
+            with open("lobby.json","r") as file:
+                lobby = json.load(file)
+            for user in lobby:
+                if user["username"] == author:
+                    for lob in user["lobbys"]:
+                        if lob["id"] == id_party:
+                            return username in lob["players"]
+        return False
+
+
+    if is_user(request.username):               
+                        
+
+        lock = FileLock("lobby.json.lock")
+        with lock:
+            with open("lobby.json","r") as file:
+                data = json.load(file)
+            for user in data:
+                if user["username"] == request.author:
+                    for lob in user["lobbys"]:
+                        if lob["id"] == request.lobby_id:
+                            lob["winners"].append(request.username)       
+                            with open("lobby.json","w") as file:
+                                json.dump(data,file)
+                            return True
+            raise HTTPException(status_code=400,detail="Error while waiting for the  win")    
+    else:
+        raise HTTPException(status_code=400,detail="User is not in the system or this user is not in the game")                 
 async def lose(request:Win):
     lock = FileLock("lobby.josn.lock")
     with lock:
