@@ -88,6 +88,7 @@ class CreateLobby(BaseModel):
     username:str
     title:str
     id:str = Field(default_factory=lambda: str(uuid.uuid4()))
+    is_open:bool
 
 @app.post("/create/lobby")
 async def create_lobby(request:CreateLobby):
@@ -100,7 +101,10 @@ async def create_lobby(request:CreateLobby):
                 "title":request.title,
                 "id":request.id,
                 "players":[request.username],
-                "bets":[]
+                "bets":[],
+                "open":request.is_open,
+                "winners":[],
+                "losers":[]
             })
             with open("lobby.json","w") as file:
                 json.dump(data,file)
@@ -150,9 +154,7 @@ async def bet(request:Bet):
                         lob["bets"].append({
                             "username":request.username,
                             "bet":request.bet,
-                            "bet_id":request.bet_id,
-                            "winners":[],
-                            "losers":[]
+                            "bet_id":request.bet_id
                         })
                         with open("lobby.json","w") as file:
                             json.dump(data,file)
@@ -251,15 +253,33 @@ async def join_game(request:Leave):
                     return
     raise HTTPException(status_code=400,detail="Bad data")
 
+
+
+def is_lobby_open(author:str,lobby_id:str) -> bool:
+    try:
+        with open("lobby.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == author:
+                for lob in user["lobbys"]:
+                    if lob["id"] == lobby_id:
+                        return lob["open"] 
+    except Exception as e:
+        print(f"Exception as {e}")   
+                    
+
+
 @app.get("/join/random/game/{username}")
 async def join_random(username:str):
     with open("lobby.json","r") as file:
         data = json.load(file)
     user = random.choice(data)
-    while len(user["lobbys"]) == 0:
+    open_user_lob = [lob for lob in user["lobbys"] if is_lobby_open(lob)]
+    while len(open_user_lob) == 0:
         user = random.choice(data)
+        open_user_lob = [lob for lob in user["lobbys"] if is_lobby_open(lob)]
     random_username = user["username"]
-    random_game = random.choice(user["lobbys"])
+    random_game = random.choice(open_user_lob)
     rand_id= random_game["id"]
     for user in data:
         if user["username"] == random_username:
@@ -343,7 +363,7 @@ async def win(request:Win):
     else:
         raise HTTPException(status_code=400,detail="User is not in the system or this user is not in the game")                 
 async def lose(request:Win):
-    lock = FileLock("lobby.josn.lock")
+    lock = FileLock("lobby.json.lock")
     with lock:
         with open("lobyy.json","r") as file:
             data = json.load(file)
