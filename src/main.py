@@ -398,10 +398,7 @@ async def get_me(username:str):
     except Exception as e:
         raise HTTPException(status_code=400,detail = f"Error while get_me : {e}")                
                 
-class Kick(BaseModel):
-    username:str
-    author:str
-    lobby_id:str
+
 
 
 
@@ -431,7 +428,10 @@ def delete_all_user_data_from_game(author:str,lobby_id:str,username:str) -> bool
     return False                             
 
 
-                                    
+class Kick(BaseModel):
+    username:str
+    author:str
+    lobby_id:str                                    
 
 @app.post("/kick")
 async def kick(request:Kick):
@@ -441,12 +441,14 @@ async def kick(request:Kick):
         if user["username"] == request.author:
             for lob in user["lobbys"]:
                 if lob["id"] == request.lobby_id:
-                    if request.username in lob["players"]:
-                        ind = lob["players"].index(request.username)
-                        lob["players"].pop(ind)
-                        with open("lobby.json","w") as file:
-                            json.dump(data,file)
+                    if lob["host"] == request.author:
+                        if request.username in lob["players"]:
+                            ind = lob["players"].index(request.username)
+                            lob["players"].pop(ind)
+                            with open("lobby.json","w") as file:
+                                json.dump(data,file)
+                        else:
+                            raise HTTPException(status_code=404,detail="Error user is not in the game")
                     else:
-                        raise HTTPException(status_code=404,detail="Error user is not in the game")
-                    
-                                    
+                        raise HTTPException(status_code=403,detail="You are not the host of this game")    
+                                        
