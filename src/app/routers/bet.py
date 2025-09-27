@@ -1,11 +1,11 @@
-# /join game (command handler)
+# /create_party (command handler)
 import logging
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
-
 import requests
+
 from app.states import CreatePaerty
 from app.keyboards import game_type_kb
 
@@ -13,13 +13,15 @@ router = Router()
 
 logging.basicConfig(level=logging.INFO)
 
-def join_party(user_id, party_id, username=None):
-    url = "http://0.0.0.0:8000/join"
+def send_user_to_api(username, author, id_game, bet_id, ):
+    url = "http://0.0.0.0:8000/register"
     data = {
-        "user_id": user_id,
-        "party_id": party_id
+        "username": username,
+        "id_game": id_game,
+        "title": title,
+        "is_open": is_open,
+        "bet": bet
+
     }
-    if username:
-        data["username"] = username
     resp = requests.post(url, json=data)
     return resp.status_code == 200
