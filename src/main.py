@@ -457,3 +457,7 @@ async def kick(request:Kick):
                     else:
                         raise HTTPException(status_code=403,detail="You are not the host of this game")    
                                         
+def count_procent(payment:int,commision:int) -> Any:
+    Ludice_gets = payment / commision
+    user_gets = payment - Ludice_gets
+    return {"User gets":user_gets,"Ludice gets":user_gets}
