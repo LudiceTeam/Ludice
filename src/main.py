@@ -456,8 +456,13 @@ async def kick(request:Kick):
                             raise HTTPException(status_code=404,detail="Error user is not in the game")
                     else:
                         raise HTTPException(status_code=403,detail="You are not the host of this game")    
-                                        
-def count_procent(payment:int,commision:int) -> Any:
-    Ludice_gets = payment / commision
-    user_gets = payment - Ludice_gets
+
+class Commis(BaseModel):
+    payment:int # покупка юзера
+    commis:int # процент коммиссии
+
+@app.post("/com")
+def count_procent(request:Commis) -> Any:
+    Ludice_gets = request.payment / request.commis
+    user_gets = request.payment - Ludice_gets
     return {"User gets":user_gets,"Ludice gets":user_gets}
