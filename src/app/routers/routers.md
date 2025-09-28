@@ -27,3 +27,23 @@ def send_user_to_api(username, id, title, is_open=True):
     }
 ```
 
+### delete_party.py
+``` python
+def send_user_to_api(username, id, title, is_open=True):
+    url = "http://0.0.0.0:8000/register"
+    data = {
+        "username": username,
+        "id": id,
+    }
+```
+
+### joun_game.py
+```python
+def join_party(id_game, username, author):
+    url = "http://0.0.0.0:8000/join"
+    data = {
+        "id_game": id_game,
+        "username": username,
+        "author": author
+    }
+```
