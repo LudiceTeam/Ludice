@@ -13,13 +13,13 @@ router = Router()
 
 logging.basicConfig(level=logging.INFO)
 
-def join_party(user_id, party_id, username=None):
+def join_party(id_game, username, author):
     url = "http://0.0.0.0:8000/join"
     data = {
-        "user_id": user_id,
-        "party_id": party_id
+        "id_game": id_game,
+        "username": username,
+        "author": author
     }
-    if username:
-        data["username"] = username
+    # Done request to API
     resp = requests.post(url, json=data)
     return resp.status_code == 200

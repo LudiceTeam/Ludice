@@ -19,5 +19,6 @@ def send_user_to_api(username, id, title, is_open=True):
         "username": username,
         "id": id,
     }
+    # Done send request to API
     resp = requests.post(url, json=data)
     return resp.status_code == 200
