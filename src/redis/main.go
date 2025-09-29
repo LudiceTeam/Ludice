@@ -75,3 +75,23 @@ func inc_user_balance(username string, bal int) bool {
 		return false
 	}
 }
+
+func minus(username string, min int) bool {
+	var ind = check_exists(username)
+	if ind != 0 {
+		b, err := rdb.Get(ctx, username).Result()
+		if err != nil {
+			panic(err)
+		}
+		bal, err := strconv.Atoi(b)
+		if bal-min > 0 {
+			rdb.Set(ctx, username, bal-min, 0)
+			return true
+		} else {
+			fmt.Println("You dont have enough money")
+			return false
+		}
+	} else {
+		return false
+	}
+}
