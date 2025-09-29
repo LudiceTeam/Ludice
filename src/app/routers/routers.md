@@ -47,3 +47,29 @@ def join_party(id_game, username, author):
         "author": author
     }
 ```
+
+### leave_game
+``` Python
+logging.basicConfig(level=logging.INFO)
+def send_join_request(id_game, username, author):
+    url = "http://0.0.0.0:8000/join"
+    data = {
+        "id_game": id_game,
+        "username": username,
+        "author": author
+    }
+```
+
+### Party_info.py 
+``` Python
+router = Router()
+
+logging.basicConfig(level=logging.INFO)
+
+def send_request_to_api(author, id):
+    url = "http://0.0.0.0:8000/join"
+    data = {
+        "id": id,
+        "author": author
+    }
+```
