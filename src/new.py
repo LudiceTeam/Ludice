@@ -64,31 +64,64 @@ class StartGame(BaseModel):
     bet:int
     user_id:str
     id:str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_balance:str
 @app.post("/start/game")
 async def start_game(request:StartGame):
-    with open("best.json","r") as file:
+    with open("bets.json","r") as file:
         data = json.load(file)
     if request.user_id  in data:
         raise HTTPException(status_code=400,detail="You alredy betted")   
-    same_bets = {}  
-    for user, bet in data.items():
-        if bet == request.bet:
-            same_bets[user] = bet
-    if len(same_bets) != 0:        
-        rand_user = random.choice(same_bets.keys())
-        rand_bet = same_bets[rand_user]  
+    else:
+        data[request.user_id] = request.bet
+        with open("bets.json","w") as file:
+            json.dump(data,file)
 
 
-    with open("game.json","r") as file:
-        games = json.load(file)
+        with open("bets.json","r") as file:
+            data = json.load(file)    
 
-    games.append(
-        {
-            "id":str(uuid.uuid4()),
-            "players":[request.user_id,rand_user]
-        }
-    )    
-                 
+        opponet = ""
+        opponets_bet = 0
+        found = False
+        for user, bet in data.items():
+            if bet == request.bet and user != request.user_id:
+                opponet = user
+                opponets_bet = bet
+                found = True
+                break
+        if found:
+            del data[opponet]
+            del data[request.user_id] 
+            with open("bets.json","w") as file:
+                json.dump(data,file)
+
+
+            with open("game.json","r") as file:
+                games = json.load(file)
+
+            games.append(
+                {
+                    "id":str(uuid.uuid4()),
+                    "players":[request.user_id,opponet],
+                    request.user_id : request.bet,
+                    opponet:opponets_bet,
+                    f"res_{request.user_id}" : 0,
+                    f"res_{opponet}" : 0
+                }
+            )        
+            with open("games.json","w") as file:
+                json.dump(games,file)
+
+        else:
+            del data[request.user_id]
+            with open("bets.json","w") as file:
+                json.dump(data,file)
+            raise HTTPException(status_code=404,detail="Opponent wasnt found")    
+        
+
+
+        
+                    
 
 
 
