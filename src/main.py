@@ -246,8 +246,8 @@ async def leave_game(request:Leave):
         if user["username"] == request.author:
             for lobby in user["lobbys"]:
                 if lobby["id"] == request.id_game:
-                    ind = lobby["players"].index(request.username)
-                    lobby["players"].pop(ind)
+                    ind = user["lobbys"].index(lobby)
+                    user["lobbys"].pop(ind)
                     with open("lobby.json","w") as file:
                         json.dump(data,file)
                     return True
