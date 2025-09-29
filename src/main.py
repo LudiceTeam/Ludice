@@ -463,3 +463,36 @@ def count_procent(request:Commis) -> Any:
     Ludice_gets = request.payment / request.commis
     user_gets = request.payment - Ludice_gets
     return {"User gets":user_gets,"Ludice gets":user_gets}
+
+class GetUserWin(BaseModel):
+    username:str
+    author:str
+    id_lobby:str
+async def get_user_win(request:GetUserWin):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    total = 0   
+    found = False 
+    try:
+        for user in data:
+            if user["username"] == request.author:
+                for lob in user["lobbys"]:
+                    if lob["id"]  == request.id:
+                        for bet in lob["bets"].values():
+                            total += bet
+                        found = True
+                        break
+        if found:
+            return total  
+        raise HTTPException(status_code=400,detail="Something went wrong")          
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Excpeiotion as {e}")
+
+
+
+                    
+
+                               
+    
+
+
