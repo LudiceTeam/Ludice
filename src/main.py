@@ -103,8 +103,7 @@ async def create_lobby(request:CreateLobby):
                 "players":[request.username],
                 "bets":[],
                 "open":request.is_open,
-                "winners":[],
-                "losers":[]
+                "winner":""
             })
             with open("lobby.json","w") as file:
                 json.dump(data,file)
@@ -214,8 +213,23 @@ async def isbetted(request:IsBetted):
         if user["username"] == request.author:
             for lobby in user["lobbys"]:
                 if lobby["id"] == request.lobby_id:
-                    return len(lobby["bets"]) == len("players")
+                    return len(lobby["players"] == len(lobby["bets"].keys()))
     raise HTTPException(status_code=400,detail="Wrong data")
+
+
+class IsUserBetted(BaseModel):
+    author:str
+    lobby_id:str
+    username:str
+@app.post("/check/betted")
+async def is_user_betted(request:IsUserBetted):
+    with open("lobby.json","r") as file:
+        data = json.load(file)
+    for user in data:
+        if user["username"] == request.author:
+            for lob in user["lobbys"]:
+                if lob["id"] == request.lobby_id:
+                    return request.username in lob["bets"].keys()
 
 
 
@@ -317,6 +331,7 @@ async def start_new_game(request:StartNewGame):
                 if lob["id"] == request.id_game:
                     lob["players"] = request.username
                     lob["bets"] = []
+                    lob["winner"] = ""
                     with open("lobby.json","w") as file:
                         json.dump(data,file)
                     return True
@@ -355,7 +370,7 @@ async def win(request:Win):
                 if user["username"] == request.author:
                     for lob in user["lobbys"]:
                         if lob["id"] == request.lobby_id:
-                            lob["winners"].append(request.username)       
+                            lob["winner"] = request.username       
                             with open("lobby.json","w") as file:
                                 json.dump(data,file)
                             return True
@@ -415,12 +430,8 @@ def delete_all_user_data_from_game(author:str,lobby_id:str,username:str) -> bool
                         if bet["username"] == username:
                             ind = lob["bets"].index(bet)
                             lob["bets"].pop(ind)
-                    if username in lob["winners"]:
-                        inde = lob["winners"].index(username)
-                        lob["winners"].pop(inde)
-                    elif username in lob["losers"]:
-                        inde = lob["winners"].index(username)
-                        lob["losers"].pop(inde)
+                    if username  == lob["winner"]:
+                        lob["winner"] = ""
     if found:
         with open("lobby.json","w") as file:
             json.dump(data,file)
