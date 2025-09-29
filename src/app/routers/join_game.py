@@ -13,7 +13,7 @@ router = Router()
 
 logging.basicConfig(level=logging.INFO)
 
-def join_party(id_game, username, author):
+def send_join_request(id_game, username, author):
     url = "http://0.0.0.0:8000/join"
     data = {
         "id_game": id_game,
