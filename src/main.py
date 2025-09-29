@@ -222,7 +222,7 @@ class IsUserBetted(BaseModel):
     lobby_id:str
     username:str
 @app.post("/check/betted")
-async def is_user_betted(request:IsUserBetted):
+async def is_user_betted(request:IsUserBetted) -> bool:
     with open("lobby.json","r") as file:
         data = json.load(file)
     for user in data:
@@ -377,21 +377,7 @@ async def win(request:Win):
             raise HTTPException(status_code=400,detail="Error while waiting for the  win")    
     else:
         raise HTTPException(status_code=400,detail="User is not in the system or this user is not in the game")                 
-async def lose(request:Win):
-    lock = FileLock("lobby.json.lock")
-    with lock:
-        with open("lobyy.json","r") as file:
-            data = json.load(file)
-        for user in data:
-            if user["username"] == request.author:
-                for lob in user["lobbys"]:
-                    if lob["id"] == request.lobby_id:
-                        lob["losers"].append(request.username)       
-                        with open("lobby.json","w") as file:
-                            json.dump(data,file)
-                        return True
-        raise HTTPException(status_code=400,detail="Error while waiting for the  win")                     
-        
+
 
 @app.get("get/me/{username}")
 async def get_me(username:str):
