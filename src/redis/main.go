@@ -98,6 +98,17 @@ func minus(username string, min int) bool {
 		return false
 	}
 }
+func delete_user(username string) bool {
+	var ind int = check_exists(username)
+	if ind != 0 {
+		err := rdb.Del(ctx, username).Err()
+		if err != nil {
+			panic(err)
+		}
+		return true
+	}
+	return false
+}
 
 type INC struct {
 	username string `json:"username" binding:"required"`
