@@ -101,7 +101,7 @@ func minus(username string, min int) bool {
 
 type INC struct {
 	username string `json:"username" binding:"required"`
-	inc      int    `json:"inc_money" binding:"required"`
+	money    int    `json:"inc_money" binding:"required"`
 }
 
 func main() {
@@ -124,11 +124,11 @@ func main() {
 		var increse_class INC
 		if err := c.ShouldBindJSON(&increse_class); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Неверный формат данных",
+				"error": "Wrong data",
 			})
 			return
 		}
-		var incr bool = inc_user_balance(increse_class.username, increse_class.inc)
+		var incr bool = inc_user_balance(increse_class.username, increse_class.money)
 		if incr {
 			c.Status(200)
 			return
@@ -139,6 +139,24 @@ func main() {
 			return
 		}
 
+	})
+	r.POST("/minus", func(c *gin.Context) {
+		var minus_class INC
+		if err := c.ShouldBindJSON(&minus_class); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Wrong data",
+			})
+			return
+		}
+		var indic bool = minus(minus_class.username, minus_class.money)
+		if indic {
+			c.Status(200)
+		} else {
+			c.JSON(http.StatusBadGateway, gin.H{
+				"error": "You dont have enought money",
+			})
+			return
+		}
 	})
 
 	r.Run(":8000")
