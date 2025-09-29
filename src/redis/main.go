@@ -59,3 +59,19 @@ func get_user_balance(username string) int {
 		return 0
 	}
 }
+
+func inc_user_balance(username string, bal int) bool {
+	var ind = check_exists(username)
+	if ind != 0 {
+		b, err := rdb.Get(ctx, username).Result()
+		if err != nil {
+			panic(err)
+		}
+		balanceInt, err := strconv.Atoi(b)
+		balanceInt += bal
+		rdb.Set(ctx, username, balanceInt, 0)
+		return true
+	} else {
+		return false
+	}
+}
