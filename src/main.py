@@ -343,8 +343,16 @@ class Win(BaseModel):
     author:str
     lobby_id:str
 @app.post("/win")
-async def win(request:Win):
-
+async def win(request:Win,x_system_signature: str = Header(..., alias="X-System-Signature")):
+    data_str = json.dumps(request.dict(), sort_keys=True, separators=(',', ':'))
+    
+    expected_signature = create_signature(data_str, SYSTEM_SECRET)
+    
+    if not hmac.compare_digest(x_system_signature, expected_signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid system signature - access denied"
+        )
     def is_user(username:str,id_party:str,author:str) -> bool:
         with open("users.json","r") as file:
             data = json.load(file)
