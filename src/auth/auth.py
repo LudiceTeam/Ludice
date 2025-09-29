@@ -30,4 +30,8 @@ def check_is_user_system(token:str) -> bool:
         return payload.get("role") == "Ludice"
     except jwt.JWTERROR:
         return False
-    
+#redis = redis.Redis('localhost',6379,0,decode_responses=True)    
+#if redis.exists(f"user:{request.username}"):
+ #       raise HTTPException(status_code=400,detail="User already exists")
+  #  else:
+   #     redis.set(f"user:{request.username}",request.id)
