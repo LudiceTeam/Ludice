@@ -163,8 +163,20 @@ func main() {
 		if indic {
 			c.Status(200)
 		} else {
-			c.JSON(http.StatusBadGateway, gin.H{
+			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "You dont have enought money",
+			})
+			return
+		}
+	})
+	r.GET("/delete/:username", func(c *gin.Context) {
+		username := c.Param("username")
+		var main_indi = delete_user(username)
+		if main_indi {
+			c.Status(200)
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "This user doesnt exists",
 			})
 			return
 		}
