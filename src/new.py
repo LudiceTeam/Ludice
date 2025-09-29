@@ -73,7 +73,7 @@ def verify_signature(data: dict, received_signature: str) -> bool:
     if time.time() - data.get('timestamp', 0) > 300:
         return False
     
-    # 2. Проверяем подпись (включая timestamp)
+    
     data_to_verify = data.copy()
     data_to_verify.pop("signature", None)
     
