@@ -498,10 +498,23 @@ async def get_user_win(request:GetUserWin):
 
 
 redis_balance = redis.Redis('localhost',6378,0,decode_responses=True) 
-@app.get("/create/user/balance/{username}")
+@app.get("/create/{username}/balance")
 async def create_user_balance(username:str):
-    if redis_balance.exists(f"user:{username}"):
-        raise HTTPException(status_code=400,detail="User is alredy in database")
-    
-    else:
-        redis_balance.set(f"user:{username}",0)
+    try:
+        if redis_balance.exists(username):
+            raise HTTPException(status_code=400,detail="User is alredy in database")
+        
+        else:
+            redis_balance.set(username,0)
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error in redis base: {e}")        
+
+@app.get("/get/{username}/balance")
+async def get_user_balance(username:str):
+    try:
+        if not redis_balance.exists(f"user:{username}"):
+            raise HTTPException(status_code=400,detail="User not found")
+        else:
+            return int(redis_balance.get(username))       
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Exception in redis : {e}")    
