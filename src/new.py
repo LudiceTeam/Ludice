@@ -18,6 +18,7 @@ from passlib.context import CryptContext
 from filelock import FileLock
 import hmac
 import secrets
+import time
 
 
 
@@ -60,13 +61,42 @@ async def register(request:Register):
             with open("lobby.json","w") as file:
                 json.dump(lobs,file)
 
+def get_key() -> str:
+    with open("secrets.json","r") as file:
+        data = json.load(file)
+    return data["key"]    
+
+KEY = get_key()
+
+
+def verify_signature(data: dict, received_signature: str) -> bool:
+    if time.time() - data.get('timestamp', 0) > 300:
+        return False
+    
+    # 2. Проверяем подпись (включая timestamp)
+    data_to_verify = data.copy()
+    data_to_verify.pop("signature", None)
+    
+    data_str = json.dumps(data_to_verify, sort_keys=True, separators=(',', ':'))
+    expected_signature = hmac.new(KEY.encode(), data_str.encode(), hashlib.sha256).hexdigest()
+    
+    return hmac.compare_digest(received_signature, expected_signature)
+
 class StartGame(BaseModel):
     bet:int
     user_id:str
     id:str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_balance:str
+    timestamp: float = Field(default_factory=time.time)
+    signature:str
 @app.post("/start/game")
 async def start_game(request:StartGame):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
     with open("bets.json","r") as file:
         data = json.load(file)
     if request.user_id  in data:
@@ -109,7 +139,7 @@ async def start_game(request:StartGame):
                     f"res_{opponet}" : 0
                 }
             )        
-            with open("games.json","w") as file:
+            with open("game.json","w") as file:
                 json.dump(games,file)
 
         else:
