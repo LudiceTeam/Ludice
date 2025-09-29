@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -34,7 +35,7 @@ func check_exists(username string) int {
 
 func set_user_balance(username string) bool {
 	var indicator = check_exists(username)
-	if indicator != 0 {
+	if indicator == 0 {
 		err := rdb.Set(ctx, username, 0, 0).Err()
 		if err != nil {
 			panic(err)
@@ -42,5 +43,19 @@ func set_user_balance(username string) bool {
 		return true
 	} else {
 		return false
+	}
+}
+
+func get_user_balance(username string) int {
+	var indicator = check_exists(username)
+	if indicator != 0 {
+		balance, err := rdb.Get(ctx, username).Result()
+		if err != nil {
+			panic(err)
+		}
+		balanceInt, err := strconv.Atoi(balance)
+		return int(balanceInt)
+	} else {
+		return 0
 	}
 }
