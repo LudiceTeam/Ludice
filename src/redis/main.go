@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -94,4 +97,24 @@ func minus(username string, min int) bool {
 	} else {
 		return false
 	}
+}
+
+func main() {
+	r := gin.Default()
+	r.GET("/user/:username/create", func(c *gin.Context) {
+		username := c.Param("username")
+		set_user_balance(username)
+		c.JSON(http.StatusOK, gin.H{
+			"DONE": "OK",
+		})
+	})
+	r.GET("/get/:username/balance", func(c *gin.Context) {
+		username := c.Param("username")
+		var balance int = get_user_balance(username)
+		c.JSON(http.StatusOK, gin.H{
+			"Balance": balance,
+		})
+	})
+
+	r.Run(":8000")
 }
