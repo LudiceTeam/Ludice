@@ -82,11 +82,24 @@ def verify_signature(data: dict, received_signature: str) -> bool:
     
     return hmac.compare_digest(received_signature, expected_signature)
 
+
+def delete_the_same(bet:int,user_id1 : str,user_id2:str,id_that_we_need:str) -> bool:
+    with open("game.json","r") as file:
+        data = json.load(file)
+    for game in data:
+        if game["id"] != id_that_we_need and user_id1 in data["players"] and user_id2 in data["players"] and game["bet"] == bet:
+            ind = data.index(game)
+            data.pop(ind)
+            with open("game.json","w") as file:
+                json.dump(data,file)
+            return True
+    return False        
+
 class StartGame(BaseModel):
     bet:int
     user_id:str
     id:str = Field(default_factory=lambda: str(uuid.uuid4()))
-    user_balance:str
+   # user_balance:str
     timestamp: float = Field(default_factory=time.time)
     signature:str
 @app.post("/start/game")
