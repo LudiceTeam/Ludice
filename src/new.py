@@ -180,14 +180,16 @@ async def start_game(request:Start_Game):
     found = False
     with open("game.json","r") as file:
         data = json.load(file)
+    found_id = ""    
     for game in data:
         if len(game["players"]) == 1 and game["bet"] == request.bet and request.username not in game["players"]:
             game["players"].append(request.username)
             found = True
+            found_id = game["id"]
     if found:
         with open("game.json","w") as file:
             json.dump(data,file)
-        return True
+        return found_id
     else:
         for game in data:
             if len(game["players"]) == 0:
@@ -195,7 +197,7 @@ async def start_game(request:Start_Game):
                 game["players"].append(request.username)
                 with open("game.json","w") as file:
                     json.dump(data,file)
-                return game["id"] 
+                raise HTTPException(status_code=400,detail=game["id"])
 class Cancel_My_Find(BaseModel):
     username:str
     id:str
@@ -224,7 +226,12 @@ async def cancel_find(request:Cancel_My_Find):
 
 
 
-
+class Leave(BaseModel):
+    username:str
+    id:str
+    signature:str
+    timestamp: float = Field(default_factory=time.time)
+    
         
         
 
