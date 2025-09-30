@@ -146,6 +146,7 @@ async def start_game(request:StartGame):
                 {
                     "id":str(uuid.uuid4()),
                     "players":[request.user_id,opponet],
+                    "bet":request.bet,
                     request.user_id : request.bet,
                     opponet:opponets_bet,
                     f"res_{request.user_id}" : 0,
