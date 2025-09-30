@@ -102,7 +102,7 @@ class StartGame(BaseModel):
    # user_balance:str
     timestamp: float = Field(default_factory=time.time)
     signature:str
-@app.post("/start/game")
+@app.post("/start/test")
 async def start_game(request:StartGame):
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
@@ -163,13 +163,69 @@ async def start_game(request:StartGame):
             raise HTTPException(status_code=404,detail="Opponent wasnt found")    
         
 
+class Start_Game(BaseModel):
+    username:str
+    bet:int
+    timestamp: float = Field(default_factory=time.time)
+    signature:str
+
+@app.post("/start/game")
+async def start_game(request:Start_Game):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
+    found = False
+    with open("game.json","r") as file:
+        data = json.load(file)
+    for game in data:
+        if len(game["players"]) == 1 and game["bet"] == request.bet and request.username not in game["players"]:
+            game["players"].append(request.username)
+            found = True
+    if found:
+        with open("game.json","w") as file:
+            json.dump(data,file)
+        return True
+    else:
+        for game in data:
+            if len(game["players"]) == 0:
+                game["bet"] = request.bet  
+                game["players"].append(request.username)
+                with open("game.json","w") as file:
+                    json.dump(data,file)
+                return game["id"] 
+class Cancel_My_Find(BaseModel):
+    username:str
+    id:str
+    signature:str
+@app.post("/cancel/find")
+async def cancel_find(request:Cancel_My_Find):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
+    with open("game.json","r") as file:
+        data = json.load(file)               
+    try:
+        for game in data:
+            if game["id"] == request.id and len(game["players"]) == 1 and request.username in game["players"]:
+                ind = data.index(game)
+                data.pop(ind)
+                with open("game.json","w") as file:
+                    json.dump(data,file)
+                return True
+        return False             
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Exception as {e}")         
+
+
+
 
         
-                    
-
-
-
-
         
 
 
