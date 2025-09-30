@@ -1,8 +1,10 @@
-package data
+package main
 
 import (
 	"encoding/json"
 	"os"
+
+	"github.com/google/uuid"
 )
 
 type Game struct {
@@ -25,10 +27,10 @@ func new_data() {
 		panic(err)
 	}
 	newGame := Game{
-		ID:      "new_game",
-		Players: []string{"new_player"},
-		Bet1:    25,
-		Bet2:    30,
+		ID:      uuid.New().String(),
+		Players: []string{},
+		Bet1:    0,
+		Bet2:    0,
 		Res1:    0,
 		Res2:    0,
 	}
@@ -40,9 +42,13 @@ func new_data() {
 		panic(err)
 	}
 
-	err = os.WriteFile("data.json", jsonData, 0644)
+	err = os.WriteFile("game.json", jsonData, 0644)
 	if err != nil {
 		panic(err)
 	}
-
+}
+func main() {
+	for i := 0; i < 10; i++ {
+		new_data()
+	}
 }
