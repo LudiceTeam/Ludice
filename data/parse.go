@@ -10,8 +10,7 @@ import (
 type Game struct {
 	ID      string   `json:"id"`
 	Players []string `json:"players"`
-	Bet1    int      `json:"bet1"`
-	Bet2    int      `json:"bet2"`
+	Bet     int      `json:"bet"`
 	Res1    int      `json:"res1"`
 	Res2    int      `json:"res2"`
 }
@@ -29,8 +28,7 @@ func new_data() {
 	newGame := Game{
 		ID:      uuid.New().String(),
 		Players: []string{},
-		Bet1:    0,
-		Bet2:    0,
+		Bet:     0,
 		Res1:    0,
 		Res2:    0,
 	}
