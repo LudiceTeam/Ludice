@@ -95,73 +95,7 @@ def delete_the_same(bet:int,user_id1 : str,user_id2:str,id_that_we_need:str) -> 
             return True
     return False        
 
-class StartGame(BaseModel):
-    bet:int
-    user_id:str
-    id:str = Field(default_factory=lambda: str(uuid.uuid4()))
-   # user_balance:str
-    timestamp: float = Field(default_factory=time.time)
-    signature:str
-@app.post("/start/test")
-async def start_game(request:StartGame):
-    request_dict = request.dict()
-    if not verify_signature(request_dict, request.signature):
-        raise HTTPException(
-            status_code=403, 
-            detail="Invalid signature - data tampered"
-        )
-    with open("bets.json","r") as file:
-        data = json.load(file)
-    if request.user_id  in data:
-        raise HTTPException(status_code=400,detail="You alredy betted")   
-    else:
-        data[request.user_id] = request.bet
-        with open("bets.json","w") as file:
-            json.dump(data,file)
 
-
-        with open("bets.json","r") as file:
-            data = json.load(file)    
-
-        opponet = ""
-        opponets_bet = 0
-        found = False
-        for user, bet in data.items():
-            if bet == request.bet and user != request.user_id:
-                opponet = user
-                opponets_bet = bet
-                found = True
-                break
-        if found:
-            del data[opponet]
-            del data[request.user_id] 
-            with open("bets.json","w") as file:
-                json.dump(data,file)
-
-
-            with open("game.json","r") as file:
-                games = json.load(file)
-
-            games.append(
-                {
-                    "id":str(uuid.uuid4()),
-                    "players":[request.user_id,opponet],
-                    "bet":request.bet,
-                    request.user_id : request.bet,
-                    opponet:opponets_bet,
-                    f"res_{request.user_id}" : 0,
-                    f"res_{opponet}" : 0
-                }
-            )        
-            with open("game.json","w") as file:
-                json.dump(games,file)
-
-        else:
-            del data[request.user_id]
-            with open("bets.json","w") as file:
-                json.dump(data,file)
-            raise HTTPException(status_code=404,detail="Opponent wasnt found")    
-        
 
 class Start_Game(BaseModel):
     username:str
@@ -226,14 +160,28 @@ async def cancel_find(request:Cancel_My_Find):
 
 
 
-class Leave(BaseModel):
+class Win(BaseModel):
     username:str
     id:str
     signature:str
     timestamp: float = Field(default_factory=time.time)
-    
-        
-        
-
-
+@app.post("/write/winner")
+async def write_winner(request:Win):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
+    try:
+        with open("game.json","r") as file:
+            data = json.load(file)
+        for game in data:
+            if game["id"] == request.id and len(game["players"]) == 2 and request.username in game["players"]:
+                if game["winner"] == "":
+                    game["winner"] = request.username
+                    with open("game.json","w") as file:
+                        json.dump(data,file)
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error {e}")                
             
