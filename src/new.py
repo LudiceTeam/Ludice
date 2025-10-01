@@ -183,5 +183,33 @@ async def write_winner(request:Win):
                     with open("game.json","w") as file:
                         json.dump(data,file)
     except Exception as e:
-        raise HTTPException(status_code=400,detail=f"Error {e}")                
+        raise HTTPException(status_code=400,detail=f"Error {e}")   
+
+class Leave(BaseModel):
+    user_id:str
+    id:str
+    signature:str
+    timestamp: float = Field(default_factory=time.time)
+@app.post("/leave")
+async def leave(request:Leave):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
+    with open("game.json","r") as file:
+        data = json.load(file)
+    for game in data:
+        if game["id"] == request.id:
+            if len(game["players"]) == 2 and request.user_id in game["players"]:
+                game["players"] = []
+                game["bet"] = 0
+                game["winner"] = ""
+                with open("game.json","w") as file:
+                    json.dump(data,file)
+                return True
+    raise HTTPException(status_code=400,detail="Error lobby not found :(")            
+
+
             
