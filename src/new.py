@@ -33,6 +33,8 @@ async def main():
     return "Ludice API"
 
 
+
+
 class Register(BaseModel):
     username:str
     id:str
