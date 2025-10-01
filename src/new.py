@@ -22,19 +22,38 @@ import time
 
 
 
+
+def write_def_stats(user_id:str) -> bool:
+    try:
+        with open("stats.json","r") as file:
+            data = json.load(file)
+        data.append({
+            "user_id":user_id,
+            "wins":0,
+            "total_games":0
+        })    
+        with open("stats.json","r") as file:
+            json.dump(data,file)
+        return True    
+    except Exception as e:
+        return False
+
+
 redis = redis.Redis('localhost',6379,0,decode_responses=True)
 
-
 app = FastAPI()
+
+
+
 @app.get("/")
-
-
 async def main():
     return "Ludice API"
 
 
+
+
 class Register(BaseModel):
-    username:str
+    username:str# передавай id юзера
     id:str
 
 @app.post("/register")
@@ -60,6 +79,7 @@ async def register(request:Register):
             })
             with open("lobby.json","w") as file:
                 json.dump(lobs,file)
+            write_def_stats(request.username)    
 
 def get_key() -> str:
     with open("secrets.json","r") as file:
@@ -95,73 +115,7 @@ def delete_the_same(bet:int,user_id1 : str,user_id2:str,id_that_we_need:str) -> 
             return True
     return False        
 
-class StartGame(BaseModel):
-    bet:int
-    user_id:str
-    id:str = Field(default_factory=lambda: str(uuid.uuid4()))
-   # user_balance:str
-    timestamp: float = Field(default_factory=time.time)
-    signature:str
-@app.post("/start/test")
-async def start_game(request:StartGame):
-    request_dict = request.dict()
-    if not verify_signature(request_dict, request.signature):
-        raise HTTPException(
-            status_code=403, 
-            detail="Invalid signature - data tampered"
-        )
-    with open("bets.json","r") as file:
-        data = json.load(file)
-    if request.user_id  in data:
-        raise HTTPException(status_code=400,detail="You alredy betted")   
-    else:
-        data[request.user_id] = request.bet
-        with open("bets.json","w") as file:
-            json.dump(data,file)
 
-
-        with open("bets.json","r") as file:
-            data = json.load(file)    
-
-        opponet = ""
-        opponets_bet = 0
-        found = False
-        for user, bet in data.items():
-            if bet == request.bet and user != request.user_id:
-                opponet = user
-                opponets_bet = bet
-                found = True
-                break
-        if found:
-            del data[opponet]
-            del data[request.user_id] 
-            with open("bets.json","w") as file:
-                json.dump(data,file)
-
-
-            with open("game.json","r") as file:
-                games = json.load(file)
-
-            games.append(
-                {
-                    "id":str(uuid.uuid4()),
-                    "players":[request.user_id,opponet],
-                    "bet":request.bet,
-                    request.user_id : request.bet,
-                    opponet:opponets_bet,
-                    f"res_{request.user_id}" : 0,
-                    f"res_{opponet}" : 0
-                }
-            )        
-            with open("game.json","w") as file:
-                json.dump(games,file)
-
-        else:
-            del data[request.user_id]
-            with open("bets.json","w") as file:
-                json.dump(data,file)
-            raise HTTPException(status_code=404,detail="Opponent wasnt found")    
-        
 
 class Start_Game(BaseModel):
     username:str
@@ -180,14 +134,16 @@ async def start_game(request:Start_Game):
     found = False
     with open("game.json","r") as file:
         data = json.load(file)
+    found_id = ""    
     for game in data:
         if len(game["players"]) == 1 and game["bet"] == request.bet and request.username not in game["players"]:
             game["players"].append(request.username)
             found = True
+            found_id = game["id"]
     if found:
         with open("game.json","w") as file:
             json.dump(data,file)
-        return True
+        return found_id
     else:
         for game in data:
             if len(game["players"]) == 0:
@@ -195,7 +151,49 @@ async def start_game(request:Start_Game):
                 game["players"].append(request.username)
                 with open("game.json","w") as file:
                     json.dump(data,file)
-                return game["id"] 
+                raise HTTPException(status_code=400,detail=game["id"])
+def add_win(user_id:str) -> bool:
+    try:
+        with open("stats.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["user_id"] == user_id:
+                user["wins"] += 1
+                with open("stats.json","w") as file:
+                    json.dump(data,file)
+                return True         
+        return False
+    except Exception as e:
+        return False
+def add_game(user_id:str) -> bool:
+    try:
+        with open("stats.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["user_id"] == user_id:
+                user["total_games"] += 1
+                with open("stats.json","w") as file:
+                    json.dump(data,file)     
+                return True
+        return False     
+    except Exception as e:
+        return False  
+def count_procent_of_wins(user_id:str) -> float:
+    try:
+        found = False
+        with open("stats.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["user_id"] == user_id:
+                found = True
+                return float(user["total_games"] / user["wins"]) * 100
+        if found:
+            return True
+        return False                    
+                 
+    except Exception as e:
+        raise e        
+
 class Cancel_My_Find(BaseModel):
     username:str
     id:str
@@ -224,9 +222,97 @@ async def cancel_find(request:Cancel_My_Find):
 
 
 
+class Win(BaseModel):
+    username:str
+    id:str
+    signature:str
+    timestamp: float = Field(default_factory=time.time)
+@app.post("/write/winner")
+async def write_winner(request:Win):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
+    try:
+        with open("game.json","r") as file:
+            data = json.load(file)
+        for game in data:
+            if game["id"] == request.id and len(game["players"]) == 2 and request.username in game["players"]:
+                if game["winner"] == "":
+                    game["winner"] = request.username
+                    with open("game.json","w") as file:
+                        json.dump(data,file)
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error {e}")   
 
-        
-        
+class Leave(BaseModel):
+    user_id:str
+    id:str
+    signature:str
+    timestamp: float = Field(default_factory=time.time)
+@app.post("/leave")
+async def leave(request:Leave):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
+    try:
+        with open("game.json","r") as file:
+            data = json.load(file)
+        for game in data:
+            if game["id"] == request.id:
+                if len(game["players"]) == 2 and request.user_id in game["players"]:
+                    game["players"] = []
+                    game["bet"] = 0
+                    game["winner"] = ""
+                    with open("game.json","w") as file:
+                        json.dump(data,file)
+                    return True
+        raise HTTPException(status_code=400,detail="Error lobby not found :(")        
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error: {e}")    
 
-
-            
+class Procent_Of_Wins(BaseModel):
+    user_id:str
+    signature:str
+    timestamp: float = Field(default_factory=time.time)
+@app.post("/count/wins") 
+async def count_of_wins(request:Procent_Of_Wins):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
+    result = count_of_wins(request.user_id)
+    try:
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error: {e}")    
+@app.get("/get/leader/board/most_games")
+async def get_leader_board_games():
+    try:
+        with open("game.json","r") as file:
+            data = json.load(file)
+        result = {}
+        for user in data:
+            result[user["user_id"]] = user["total_games"]   
+        return result     
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error: {e}")
+@app.get("/get/procent/wins")
+async def get_leader_board():
+    try:
+        with open("data.json","r") as file:
+            data = json.load(file)
+        result = {}
+        for user in data:
+            pr = count_of_wins(user["user_id"])
+            result[user["user_id"]] = pr
+        return result        
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error:{e}")

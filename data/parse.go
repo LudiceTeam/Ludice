@@ -11,8 +11,7 @@ type Game struct {
 	ID      string   `json:"id"`
 	Players []string `json:"players"`
 	Bet     int      `json:"bet"`
-	Res1    int      `json:"res1"`
-	Res2    int      `json:"res2"`
+	Winner  string   `json:"winner"`
 }
 
 func new_data() {
@@ -29,8 +28,7 @@ func new_data() {
 		ID:      uuid.New().String(),
 		Players: []string{},
 		Bet:     0,
-		Res1:    0,
-		Res2:    0,
+		Winner:  "",
 	}
 
 	existingGames = append(existingGames, newGame)
