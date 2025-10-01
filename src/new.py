@@ -22,13 +22,30 @@ import time
 
 
 
+
+def write_def_stats(user_id:str) -> bool:
+    try:
+        with open("stats.json","r") as file:
+            data = json.load(file)
+        data.append({
+            "user_id":user_id,
+            "wins":0,
+            "total_games":0
+        })    
+        with open("stats.json","r") as file:
+            json.dump(data,file)
+        return True    
+    except Exception as e:
+        return False
+
+
 redis = redis.Redis('localhost',6379,0,decode_responses=True)
 
-
 app = FastAPI()
+
+
+
 @app.get("/")
-
-
 async def main():
     return "Ludice API"
 
@@ -36,7 +53,7 @@ async def main():
 
 
 class Register(BaseModel):
-    username:str
+    username:str# передавай id юзера
     id:str
 
 @app.post("/register")
@@ -62,6 +79,7 @@ async def register(request:Register):
             })
             with open("lobby.json","w") as file:
                 json.dump(lobs,file)
+            write_def_stats(request.username)    
 
 def get_key() -> str:
     with open("secrets.json","r") as file:
