@@ -152,6 +152,32 @@ async def start_game(request:Start_Game):
                 with open("game.json","w") as file:
                     json.dump(data,file)
                 raise HTTPException(status_code=400,detail=game["id"])
+def add_win(user_id:str) -> bool:
+    try:
+        with open("stats.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["user_id"] == user_id:
+                user["wins"] += 1
+                with open("stats.json","w") as file:
+                    json.dump(data,file)
+                return True         
+        return False
+    except Exception as e:
+        return False
+def add_game(user_id:str):
+    try:
+        with open("stats.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["user_id"] == user_id:
+                user["total_games"] += 1
+                with open("stats.json","w") as file:
+                    json.dump(data,file)     
+                return True
+        return False     
+    except Exception as e:
+        return False                  
 class Cancel_My_Find(BaseModel):
     username:str
     id:str
