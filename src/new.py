@@ -293,3 +293,26 @@ async def count_of_wins(request:Procent_Of_Wins):
         return result
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error: {e}")    
+@app.get("/get/leader/board/most_games")
+async def get_leader_board_games():
+    try:
+        with open("game.json","r") as file:
+            data = json.load(file)
+        result = {}
+        for user in data:
+            result[user["user_id"]] = user["total_games"]   
+        return result     
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error: {e}")
+@app.get("/get/procent/wins")
+async def get_leader_board():
+    try:
+        with open("data.json","r") as file:
+            data = json.load(file)
+        result = {}
+        for user in data:
+            pr = count_of_wins(user["user_id"])
+            result[user["user_id"]] = pr
+        return result        
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error:{e}")
