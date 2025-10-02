@@ -54,20 +54,20 @@ async def main():
 
 class Register(BaseModel):
     username:str# передавай id юзера
-    id:str
+    psw:str
 
 @app.post("/register")
 async def register(request:Register):
     if redis.exists(f"user:{request.username}"):
         raise HTTPException(status_code=400,detail="User already exists")
     else:
-        redis.set(f"user:{request.username}",request.id)
+        redis.set(f"user:{request.username}",request.psw)
         with open("data/users.json","r") as file:
             data = json.load(file)
         if request.username in data:
             raise HTTPException(status_code=400,detail="User alredy exists")
         else:
-            data[request.username] = request.id
+            data[request.username] = request.psw
             with open("data/users.json","w") as file:
                 json.dump(data,file)  
             # DEFAULT LOBBY DATA
