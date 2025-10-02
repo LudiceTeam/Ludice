@@ -334,6 +334,15 @@ async def get_me(user_id:str):
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")        
 
+
+def is_user_playing(user_id:str):
+    pass
+
+
+@app.get("/isuser/playing/{user_id}")
+async def is_playing(user_id:str) -> bool:
+    pass
+
 class WriteRes(BaseModel):
     user_id:str
     game_id:str
@@ -362,5 +371,31 @@ async def write_res(request:WriteRes):
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")        
         
-        
+
+
+
+@app.get("/join/link/{game_id}/{user_id}/{bet}")
+async def join_by_the_link(user_id:str,bet:int,game_id:str):
+    try:
+        with open("game.json","r") as file:
+            data = json.load(file)
+        done = False
+        for game in data:
+            if game["id"] == game_id:
+                try:
+                    if len(game["players"] == 1 and user_id not in game["players"]) and game["bet"] == bet:
+                        game["players"].append(user_id)
+                        done = True
+                        with open("game.json","w") as file:
+                            json.dump(data,file)
+                        return True
+                    else:
+                        raise HTTPException(status_code=400,detail="Lobby is full")
+                     
+                except Exception as e:
+                    raise HTTPException(status_code=400,detail=f"Error : {e}")        
+
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error while joining : {e}")
+
 
