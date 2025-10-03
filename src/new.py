@@ -436,3 +436,21 @@ class TelegrammPayment:
             return response.json()
         except Exception as e:
             return f"Exception {e}"
+Payment = TelegrammPayment("TOKEN")
+class Get_User_Balance(BaseModel):
+    user_id:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("get/user/balance")
+async def get_user_balance(request:Get_User_Balance):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )    
+    try:
+        return Payment.get_user_balance(user_id=request.user_id)
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Payment Error: {e}")
+    
