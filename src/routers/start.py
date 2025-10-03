@@ -1,8 +1,19 @@
-from aiogram import Router, types
-from aiogram.filters import CommandStart
+from aiogram import F,Router, types
+from aiogram.filters import CommandStart, or_f
+
+from keyboard import reply
 
 start_router = Router()
 
+
 @start_router.message(CommandStart())
 async def cmd_start(message: types.Message):
-    await message.answer("Hello! Welcome to the bot.")
+    await message.answer("Welcome to the ludicé bot. Choose an option:", reply_markup=reply.start_kb)
+
+@start_router.message(F.text == "About ℹ️")
+async def about_cmd(message: types.Message):
+    await message.answer(
+        "Open source project was created by enthusiasts.\n"
+        "<a href='https://github.com/DeepBlackHole'>GitHub Repository</a>",
+        parse_mode="HTML", reply_markup=reply.del_keyboard
+        )
