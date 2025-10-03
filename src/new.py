@@ -56,30 +56,35 @@ class Register(BaseModel):
     username:str# передавай id юзера
     psw:str
 
+def redis_register(username:str,pasw:str) -> bool:
+    if redis.exists(f"user:{username}"):
+        return False
+    else:
+        redis.set(f"user:{username}",pasw)
+        return True
+    
+
+
 @app.post("/register")
 async def register(request:Register):
-    if redis.exists(f"user:{request.username}"):
-        raise HTTPException(status_code=400,detail="User already exists")
+    with open("data/users.json","r") as file:
+        data = json.load(file)
+    if request.username in data:
+        raise HTTPException(status_code=400,detail="User alredy exists")
     else:
-        redis.set(f"user:{request.username}",request.psw)
-        with open("data/users.json","r") as file:
-            data = json.load(file)
-        if request.username in data:
-            raise HTTPException(status_code=400,detail="User alredy exists")
-        else:
-            data[request.username] = request.psw
-            with open("data/users.json","w") as file:
-                json.dump(data,file)  
-            # DEFAULT LOBBY DATA
-            with open("lobby.json","r") as file:
-                lobs = json.load(file)
-            lobs.append({
-                "username":request.username,
-                "lobbys":[]
-            })
-            with open("lobby.json","w") as file:
-                json.dump(lobs,file)
-            write_def_stats(request.username)    
+        data[request.username] = request.psw
+        with open("data/users.json","w") as file:
+            json.dump(data,file)  
+        # DEFAULT LOBBY DATA
+        with open("lobby.json","r") as file:
+            lobs = json.load(file)
+        lobs.append({
+            "username":request.username,
+            "lobbys":[]
+        })
+        with open("lobby.json","w") as file:
+            json.dump(lobs,file)
+        write_def_stats(request.username)    
 
 def get_key() -> str:
     with open("secrets.json","r") as file:
