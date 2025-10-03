@@ -412,4 +412,17 @@ async def join_by_the_link(user_id:str,bet:int,game_id:str):
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error while joining : {e}")
 
-
+class TelegrammPayment:
+    def __init__(self,bot_token):
+        self.token = bot_token
+        self.url = f"https://api.telegram.org/bot{bot_token}"    
+    def create_payment(self,chat_id:str,description:str,amount:int,title:str):
+        payload = {
+            "chat_id": chat_id,
+            "title": title,
+            "description": description,
+            "payload": "stars_payment",
+            "provider_token": "YOUR_PAYMENT_PROVIDER_TOKEN", 
+            "currency": "XTR",  
+            "prices": [{"label": "Stars", "amount": amount}] 
+        }
