@@ -412,7 +412,7 @@ async def join_by_the_link(user_id:str,bet:int,game_id:str):
 
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error while joining : {e}")
-
+# Интрефейс Платежки
 class PaymentInter:
     def __init__(self):
         pass
@@ -445,7 +445,7 @@ class TelegrammPayment(PaymentInter):
             return response.json()
         except Exception as e:
             return f"Exception {e}"
-Payment = TelegrammPayment("TOKEN")
+UserPayment = TelegrammPayment("TOKEN")
 class Get_User_Balance(BaseModel):
     user_id:str
     signature:str
@@ -459,7 +459,32 @@ async def get_user_balance(request:Get_User_Balance):
             detail="Invalid signature - data tampered"
         )    
     try:
-        return Payment.get_user_balance(user_id=request.user_id)
+        return UserPayment.get_user_balance(user_id=request.user_id)
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Payment Error: {e}")
-#FIXME Write the paymend endpoint    
+class Payment(BaseModel):
+    user_id:str
+    title:str
+    description:str
+    amount:int
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/user/pay")
+async def user_pay(request:Payment):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )   
+    try:
+        UserPayment.create_payment(
+            chat_id = request.user_id,
+            description = request.description,
+            amount = request.amount,
+            title = request.title,
+        )
+        return True
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")
+    
