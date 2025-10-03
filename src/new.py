@@ -335,13 +335,22 @@ async def get_me(user_id:str):
         raise HTTPException(status_code=400,detail=f"Error : {e}")        
 
 
-def is_user_playing(user_id:str):
-    pass
+def is_user_playing(user_id:str) -> bool:
+    with open("gane.json","r") as file:
+        data = json.load(file)
+    for game in data:
+        if user_id in game["players"]:
+            return True
+    return False
+        
 
 
 @app.get("/isuser/playing/{user_id}")
 async def is_playing(user_id:str) -> bool:
-    pass
+    try:
+       return is_user_playing(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error {e}")
 
 class WriteRes(BaseModel):
     user_id:str
