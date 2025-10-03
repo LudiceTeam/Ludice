@@ -19,6 +19,7 @@ from filelock import FileLock
 import hmac
 import secrets
 import time
+import requests
 
 
 
@@ -426,3 +427,12 @@ class TelegrammPayment:
             "currency": "XTR",  
             "prices": [{"label": "Stars", "amount": amount}] 
         }
+        response = requests.post(f"{self.url}/sendInvoice", json=payload)
+        return response.json()
+    def get_user_balance(self,user_id:str):
+        try:
+            payload = {"user_id": user_id}
+            response = requests.post(f"{self.base_url}/getUserStars", json=payload)
+            return response.json()
+        except Exception as e:
+            return f"Exception {e}"
