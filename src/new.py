@@ -19,6 +19,7 @@ from filelock import FileLock
 import hmac
 import secrets
 import time
+import requests
 
 
 
@@ -56,30 +57,35 @@ class Register(BaseModel):
     username:str# передавай id юзера
     psw:str
 
+def redis_register(username:str,pasw:str) -> bool:
+    if redis.exists(f"user:{username}"):
+        return False
+    else:
+        redis.set(f"user:{username}",pasw)
+        return True
+    
+
+
 @app.post("/register")
 async def register(request:Register):
-    if redis.exists(f"user:{request.username}"):
-        raise HTTPException(status_code=400,detail="User already exists")
+    with open("data/users.json","r") as file:
+        data = json.load(file)
+    if request.username in data:
+        raise HTTPException(status_code=400,detail="User alredy exists")
     else:
-        redis.set(f"user:{request.username}",request.psw)
-        with open("data/users.json","r") as file:
-            data = json.load(file)
-        if request.username in data:
-            raise HTTPException(status_code=400,detail="User alredy exists")
-        else:
-            data[request.username] = request.psw
-            with open("data/users.json","w") as file:
-                json.dump(data,file)  
-            # DEFAULT LOBBY DATA
-            with open("lobby.json","r") as file:
-                lobs = json.load(file)
-            lobs.append({
-                "username":request.username,
-                "lobbys":[]
-            })
-            with open("lobby.json","w") as file:
-                json.dump(lobs,file)
-            write_def_stats(request.username)    
+        data[request.username] = request.psw
+        with open("data/users.json","w") as file:
+            json.dump(data,file)  
+        # DEFAULT LOBBY DATA
+        with open("lobby.json","r") as file:
+            lobs = json.load(file)
+        lobs.append({
+            "username":request.username,
+            "lobbys":[]
+        })
+        with open("lobby.json","w") as file:
+            json.dump(lobs,file)
+        write_def_stats(request.username)    
 
 def get_key() -> str:
     with open("secrets.json","r") as file:
@@ -407,4 +413,44 @@ async def join_by_the_link(user_id:str,bet:int,game_id:str):
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error while joining : {e}")
 
-
+class TelegrammPayment:
+    def __init__(self,bot_token):
+        self.token = bot_token
+        self.url = f"https://api.telegram.org/bot{bot_token}"    
+    def create_payment(self,chat_id:str,description:str,amount:int,title:str):
+        payload = {
+            "chat_id": chat_id,
+            "title": title,
+            "description": description,
+            "payload": "stars_payment",
+            "provider_token": "YOUR_PAYMENT_PROVIDER_TOKEN", 
+            "currency": "XTR",  
+            "prices": [{"label": "Stars", "amount": amount}] 
+        }
+        response = requests.post(f"{self.url}/sendInvoice", json=payload)
+        return response.json()
+    def get_user_balance(self,user_id:str):
+        try:
+            payload = {"user_id": user_id}
+            response = requests.post(f"{self.base_url}/getUserStars", json=payload)
+            return response.json()
+        except Exception as e:
+            return f"Exception {e}"
+Payment = TelegrammPayment("TOKEN")
+class Get_User_Balance(BaseModel):
+    user_id:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("get/user/balance")
+async def get_user_balance(request:Get_User_Balance):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )    
+    try:
+        return Payment.get_user_balance(user_id=request.user_id)
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Payment Error: {e}")
+    
