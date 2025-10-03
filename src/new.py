@@ -413,7 +413,16 @@ async def join_by_the_link(user_id:str,bet:int,game_id:str):
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error while joining : {e}")
 
-class TelegrammPayment:
+class PaymentInter:
+    def __init__(self):
+        pass
+    def create_payment(self):
+        pass
+    def get_user_balance(self):
+        pass
+
+
+class TelegrammPayment(PaymentInter):
     def __init__(self,bot_token):
         self.token = bot_token
         self.url = f"https://api.telegram.org/bot{bot_token}"    
@@ -453,4 +462,4 @@ async def get_user_balance(request:Get_User_Balance):
         return Payment.get_user_balance(user_id=request.user_id)
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Payment Error: {e}")
-    
+#FIXME Write the paymend endpoint    
