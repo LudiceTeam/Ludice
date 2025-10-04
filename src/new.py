@@ -23,6 +23,20 @@ import requests
 
 
 
+def write_deafault_bank(username:str) -> bool:
+    try:
+        with open("bank.json","r") as file:
+            data = json.load(file)
+        if username in data:
+            return False
+        data[username] = 0
+        with open("bank.json","w") as file:
+            json.dump(data,file)    
+    except Exception as e:
+        return False        
+
+
+        
 
 def write_def_stats(user_id:str) -> bool:
     try:
@@ -73,6 +87,7 @@ async def register(request:Register):
     if request.username in data:
         raise HTTPException(status_code=400,detail="User alredy exists")
     else:
+        write_deafault_bank(request.username)
         data[request.username] = request.psw
         with open("data/users.json","w") as file:
             json.dump(data,file)  
@@ -445,6 +460,9 @@ class TelegrammPayment(PaymentInter):
             return response.json()
         except Exception as e:
             return f"Exception {e}"
+        
+
+
 UserPayment = TelegrammPayment("TOKEN")
 class Get_User_Balance(BaseModel):
     user_id:str
@@ -488,3 +506,7 @@ async def user_pay(request:Payment):
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")
     
+
+class SendStars_To_Winner:
+    def __init__(self,bot_token):
+        self.bot_token  = bot_token
