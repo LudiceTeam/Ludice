@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
 
 start_kb = ReplyKeyboardMarkup(
@@ -9,11 +9,19 @@ start_kb = ReplyKeyboardMarkup(
         ],
         {
             KeyboardButton(text="Profile 👤"),
-            KeyboardButton(text="About ℹ️"),
+            KeyboardButton(text="Statictic 📊"),
         }
     ],
     resize_keyboard=True,
    input_field_placeholder="Choose an option..."
+)
+
+statictic_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="Back ⬅️")
+        ]
+    ]
 )
 
 del_keyboard = ReplyKeyboardRemove()
