@@ -11,7 +11,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 # project imports
-from routers.start import start_router
+from routers.private_user import start_router
 from common.bot_cmds_list import private_bot_commands
 
 ALLOWED_UPDATES = ["message", "edited_message", "callback_query"]
