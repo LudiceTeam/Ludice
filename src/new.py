@@ -27,11 +27,12 @@ def write_deafault_bank(username:str) -> bool:
     try:
         with open("bank.json","r") as file:
             data = json.load(file)
-        if username in data:
-            return False
-        data[username] = 0
+        data.append({
+            "username":username,
+            "balance":0
+        }) 
         with open("bank.json","w") as file:
-            json.dump(data,file)    
+            json.dump(data,file)
     except Exception as e:
         return False        
 
@@ -47,7 +48,7 @@ def write_def_stats(user_id:str) -> bool:
             "wins":0,
             "total_games":0
         })    
-        with open("stats.json","r") as file:
+        with open("stats.json","w") as file:
             json.dump(data,file)
         return True    
     except Exception as e:
