@@ -195,7 +195,33 @@ async def increase_user_balance(request:IncreaseUserBalance):
 
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error something went wrong : {e}")
-        
+@app.post("/user/withdraw")
+async def withdraw(request:IncreaseUserBalance):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
+    try:
+        with open("bank.json","r") as file:
+            data = json.load(file)
+        done = False
+        for user in data:
+            if user["username"] == request.username:
+                try:
+                    if user["balance"] >= request.amount:
+                        return user["balance"] - request.amount
+                    raise HTTPException(status_code=400,detail=f"User balance doesnt have this much money :(")
+                except Exception as e:
+                    raise HTTPException(status_code=400,detail=f"Error while withdraw : {e}")    
+
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Something went wrong : {e}")
+
+
+
+
 
 class Start_Game(BaseModel):
     username:str
