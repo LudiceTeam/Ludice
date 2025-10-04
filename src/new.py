@@ -137,42 +137,6 @@ def delete_the_same(bet:int,user_id1 : str,user_id2:str,id_that_we_need:str) -> 
     return False        
 
 
-
-class Start_Game(BaseModel):
-    username:str
-    bet:int
-    timestamp: float = Field(default_factory=time.time)
-    signature:str
-
-@app.post("/start/game")
-async def start_game(request:Start_Game):
-    request_dict = request.dict()
-    if not verify_signature(request_dict, request.signature):
-        raise HTTPException(
-            status_code=403, 
-            detail="Invalid signature - data tampered"
-        )
-    found = False
-    with open("game.json","r") as file:
-        data = json.load(file)
-    found_id = ""    
-    for game in data:
-        if len(game["players"]) == 1 and game["bet"] == request.bet and request.username not in game["players"]:
-            game["players"].append(request.username)
-            found = True
-            found_id = game["id"]
-    if found:
-        with open("game.json","w") as file:
-            json.dump(data,file)
-        return found_id
-    else:
-        for game in data:
-            if len(game["players"]) == 0:
-                game["bet"] = request.bet  
-                game["players"].append(request.username)
-                with open("game.json","w") as file:
-                    json.dump(data,file)
-                raise HTTPException(status_code=400,detail=game["id"])
 def add_win(user_id:str) -> bool:
     try:
         with open("stats.json","r") as file:
@@ -199,6 +163,77 @@ def add_game(user_id:str) -> bool:
         return False     
     except Exception as e:
         return False  
+
+
+
+class IncreaseUserBalance(BaseModel):
+    username:str
+    amount:int
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/user/increase")
+async def increase_user_balance(request:IncreaseUserBalance):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
+    try:
+        done = False
+        with open("bank.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == request.username:
+                user["balance"] += request.amount
+                with open("bank.json","w") as file:
+                    json.dump(data,file)
+                done = True
+        if not done:
+            raise HTTPException(status_code=404,detail="User not found")            
+
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error something went wrong : {e}")
+        
+
+class Start_Game(BaseModel):
+    username:str
+    bet:int
+    timestamp: float = Field(default_factory=time.time)
+    signature:str
+
+@app.post("/start/game")
+async def start_game(request:Start_Game):
+    request_dict = request.dict()
+    if not verify_signature(request_dict, request.signature):
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid signature - data tampered"
+        )
+    found = False
+    with open("game.json","r") as file:
+        data = json.load(file)
+    found_id = ""    
+    for game in data:
+        if len(game["players"]) == 1 and game["bet"] == request.bet and request.username not in game["players"]:
+            game["players"].append(request.username)
+            found = True
+            found_id = game["id"]
+            add_game(user_id = request.username)
+            add_win(user_id = request.username)
+    if found:
+        with open("game.json","w") as file:
+            json.dump(data,file)
+        return found_id
+    else:
+        for game in data:
+            if len(game["players"]) == 0:
+                game["bet"] = request.bet  
+                game["players"].append(request.username)
+                with open("game.json","w") as file:
+                    json.dump(data,file)
+                raise HTTPException(status_code=400,detail=game["id"])
+
 def count_procent_of_wins(user_id:str) -> float:
     try:
         found = False
