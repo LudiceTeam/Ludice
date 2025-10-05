@@ -211,7 +211,9 @@ async def withdraw(request:IncreaseUserBalance):
             if user["username"] == request.username:
                 try:
                     if user["balance"] >= request.amount:
-                        return user["balance"] - request.amount
+                        user["balance"] -= request.amount
+                        with open("bank.json","w") as file:
+                            json.dump(data,file)
                     raise HTTPException(status_code=400,detail=f"User balance doesnt have this much money :(")
                 except Exception as e:
                     raise HTTPException(status_code=400,detail=f"Error while withdraw : {e}")    
