@@ -239,6 +239,22 @@ async def get_user_balance(username:str):
         raise HTTPException(status_code=400,detail=f"Error : {e}")
 
 
+@app.get("/count_money")
+async def count_all_money():
+    try:
+        with open("bank.json","r") as file:
+            data = json.load(file)
+        total = 0
+        for user in data:
+            try:
+                total += user["balance"]
+            except Exception as e:
+                raise HTTPException(status_code=400,detail=f"Error while counting {e}")       
+        return total     
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Something went wrong {e}")
+
+
 class Start_Game(BaseModel):
     username:str
     bet:int
