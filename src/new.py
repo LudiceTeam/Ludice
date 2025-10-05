@@ -20,6 +20,7 @@ import hmac
 import secrets
 import time
 import requests
+import uvicorn
 
 
 
@@ -604,3 +605,6 @@ async def user_pay(request:Payment):
 class SendStars_To_Winner:
     def __init__(self,bot_token):
         self.bot_token  = bot_token
+
+if __name__ == "__main__":
+    uvicorn.run(app,host = "0.0.0.0",port = 8080)
