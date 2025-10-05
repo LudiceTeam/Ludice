@@ -220,7 +220,21 @@ async def withdraw(request:IncreaseUserBalance):
         raise HTTPException(status_code=400,detail=f"Something went wrong : {e}")
 
 
-
+@app.get("/get/{username}/balance")
+async def get_user_balance(username:str):
+    try:
+        with open("bank.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == username:
+                try:
+                    return user["balance"]
+                except Exception as e:
+                    raise HTTPException(status_code=400,detail=f"Error while result:{e}")  
+        raise HTTPException(status_code=404,detail=f"User:{username} not found")         
+            
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")
 
 
 class Start_Game(BaseModel):
