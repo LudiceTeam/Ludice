@@ -58,7 +58,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
 
-#75
+#75 stars
 @start_router.callback_query(F == "star75")
 async def send_invoice(callback: types.CallbackQuery):
     prices = [LabeledPrice(lebel="75 ⭐", amount=100)]
@@ -81,7 +81,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
 
-#100
+#100 stars
 @start_router.callback_query(F.data == "star100")
 async def send_invoice(callback: types.CallbackQuery):
     prices = [LabeledPrice(lebel="100 ⭐",amount=133)] 
@@ -103,7 +103,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
 
-#150
+#150 stars
 @start_router.callback_query(F.data == "star150")
 async def send_invoice(callback: types.CallbackQuery):
     prices = [LabeledPrice(lebel="150 ⭐",amount=200)] 
@@ -125,7 +125,27 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
 
-
+#250 stars
+@start_router.callback_query(F.data == "star250")
+async def send_invoice(callback: types.CallbackQuery):
+    prices = [LabeledPrice(lebel="250 ⭐",amount=333)] 
+    pay_kb = InlineKeyboardMarkup(
+        InlineKeyboardButton(text="Pay 333 ⭐")
+        )
+    
+    await callback.message.answer_invoice(
+        title="❖ Telegram Stars",
+        discription="Your account will be credited with 250 stars for 333 starts when you complete the payment.",
+        playload="topup_333",
+        provider_token="",
+        prices=prices,
+        currency ="XTR",
+        reply_markup=pay_kb
+    )
+    
+    await callback.answer()
+    await callback.message.delete()
+    await callback.message.edit_reply_markup(reply_markup=None) 
 
 @start_router.pre_checkout_query()
 async def pre_checkout(pre_q: PreCheckoutQuery):
