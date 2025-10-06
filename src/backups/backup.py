@@ -59,7 +59,29 @@ def wirte_default_bank(username:str) -> bool:
             json.dump(data,file)
     except Exception as e:
         return False
-    
+
+class Increase_Balacne(BaseModel):
+    username:str
+    amount:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)    
+@app.post("/incr")
+async def inc(request:Increase_Balacne):
+    request_dict = request.model_dump()
+    if not verify_signature(request_dict,request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    try:
+        with open(data_base["bank"],"r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == request.username:
+                user["balance"] += request.amount
+                with open(data_base["bank"],"w") as file:
+                    json.dump(data,file)
+                return True
+        raise HTTPException(status_code=404,detail="User not found")           
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")    
 
 
 
