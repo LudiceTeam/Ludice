@@ -84,4 +84,20 @@ async def inc(request:Increase_Balacne):
         raise HTTPException(status_code=400,detail=f"Error : {e}")    
 
 
-
+@app.post("/withdraw")
+async def witdraw(request:Increase_Balacne):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    try:
+        with open(data_base["bank"],"r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == request.username:
+                if user["balance"] >= request.amount:
+                    user["balance"] -= request.amount
+                    with open(data_base["bank"],"w") as file:
+                        json.dump(data,file)
+                else:
+                    raise HTTPException(status_code=400,detail="User doesnt have that much money")            
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")
