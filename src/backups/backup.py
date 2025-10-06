@@ -57,6 +57,7 @@ def wirte_default_bank(username:str) -> bool:
         })    
         with open(data_base["bank"],"w") as file:
             json.dump(data,file)
+        return True    
     except Exception as e:
         return False
 
@@ -124,3 +125,17 @@ async def add_game(request:AddGaneStat):
                     
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Smth went wrong : {e}")   
+class WriteDefData(BaseModel):
+    username:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/def/bank")
+async def def_bank(request:WriteDefData):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+
+    try:
+        ind  = wirte_default_bank(username=request.username)
+        return ind
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")        
