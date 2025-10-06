@@ -59,12 +59,12 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.message.edit_reply_markup(reply_markup=None) 
 
 #75
-@start_router.callback_query(F == "stars75")
+@start_router.callback_query(F == "star75")
 async def send_invoice(callback: types.CallbackQuery):
     prices = [LabeledPrice(lebel="75 ⭐", amount=100)]
     
     pay_kb = InlineKeyboardMarkup(
-        InlineKeyboardButton(text="100 ⭐")
+        InlineKeyboardButton(text="Pay 100 ⭐")
     )
     
     await callback.message.answer_invoice(
@@ -82,11 +82,11 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.message.edit_reply_markup(reply_markup=None) 
 
 #100
-@start_router.callback_query(F.data == 100)
+@start_router.callback_query(F.data == "star100")
 async def send_invoice(callback: types.CallbackQuery):
     prices = [LabeledPrice(lebel="100 ⭐",amount=133)] 
     pay_kb = InlineKeyboardMarkup(
-        InlineKeyboardButton(text="133 ⭐")
+        InlineKeyboardButton(text="Pay 133 ⭐")
         )
     
     await callback.message.answer_invoice(
@@ -102,6 +102,29 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+
+#150
+@start_router.callback_query(F.data == "star150")
+async def send_invoice(callback: types.CallbackQuery):
+    prices = [LabeledPrice(lebel="150 ⭐",amount=200)] 
+    pay_kb = InlineKeyboardMarkup(
+        InlineKeyboardButton(text="Pay 200 ⭐")
+        )
+    
+    await callback.message.answer_invoice(
+        title="❖ Telegram Stars",
+        discription="Your account will be credited with 150 stars for 200 starts when you complete the payment.",
+        playload="topup_150",
+        provider_token="",
+        prices=prices,
+        currency ="XTR",
+        reply_markup=pay_kb
+    )
+    
+    await callback.answer()
+    await callback.message.delete()
+    await callback.message.edit_reply_markup(reply_markup=None) 
+
 
 
 @start_router.pre_checkout_query()
