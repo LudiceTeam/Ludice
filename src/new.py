@@ -570,7 +570,7 @@ class Get_User_Balance(BaseModel):
     user_id:str
     signature:str
     timestamp:float = Field(default_factory=time.time)
-@app.post("get/user/balance")
+
 async def get_user_balance(request:Get_User_Balance):
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
@@ -589,7 +589,7 @@ class Payment(BaseModel):
     amount:int
     signature:str
     timestamp:float = Field(default_factory=time.time)
-@app.post("/user/pay")
+
 async def user_pay(request:Payment):
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):

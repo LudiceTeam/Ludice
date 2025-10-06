@@ -152,4 +152,5 @@ async def all_default(request:WriteDefData):
         return True    
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error while writing : {e}")
-    
+if __name__ == "__main__":
+    uvicorn.run(app,host="0.0.0.0",post = 8080)    
