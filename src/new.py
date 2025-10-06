@@ -1,5 +1,4 @@
 from fastapi import FastAPI,HTTPException,Header
-from pydantic import BaseModel
 from pydantic import BaseModel,Field
 import json
 import threading
@@ -55,8 +54,10 @@ def write_def_stats(user_id:str) -> bool:
     except Exception as e:
         return False
 
-
-redis = redis.Redis('localhost',6379,0,decode_responses=True)
+try:
+    redis = redis.Redis('localhost',6379,0,decode_responses=True)
+except Exception as e:
+    print(f"Redis is not start")    
 
 app = FastAPI()
 
