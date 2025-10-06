@@ -168,7 +168,28 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+
+# 1000 stars 
+@start_router.callback_query(F.data == "star1000")
+async def send_invoice(callback: types.CallbackQuery):
+    prices = [LabeledPrice(lebel="1000 ⭐",amount=1333)] 
+    pay_kb = InlineKeyboardMarkup(
+        InlineKeyboardButton(text="Pay 1333 ⭐")
+        )
     
+    await callback.message.answer_invoice(
+        title="❖ Telegram Stars",
+        discription="Your account will be credited with 1000 stars for 1333 starts when you complete the payment.",
+        playload="topup_1333",
+        provider_token="",
+        prices=prices,
+        currency ="XTR",
+        reply_markup=pay_kb
+    )
+ 
+    await callback.answer()
+    await callback.message.delete()
+    await callback.message.edit_reply_markup(reply_markup=None)
 
 @start_router.pre_checkout_query()
 async def pre_checkout(pre_q: PreCheckoutQuery):
