@@ -130,12 +130,26 @@ class WriteDefData(BaseModel):
     signature:str
     timestamp:float = Field(default_factory=time.time)
 @app.post("/def/bank")
-async def def_bank(request:WriteDefData):
+async def all_default(request:WriteDefData):
     if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code=403,detail="Invalid signature")
-
+    
     try:
         ind  = wirte_default_bank(username=request.username)
-        return ind
     except Exception as e:
-        raise HTTPException(status_code=400,detail=f"Error : {e}")        
+        raise HTTPException(status_code=400,detail=f"Error : {e}")    
+
+    with open(data_base["stats.json"],"r") as file:
+        data = json.load(file)
+    try:    
+        data.append({
+            "username":request.username,
+            "wins":0,
+            "total_games":0
+        })    
+        with open(data_base["stats"],"w") as file:
+            json.dump(data,file)
+        return True    
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error while writing : {e}")
+    
