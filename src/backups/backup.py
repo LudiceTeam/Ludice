@@ -101,3 +101,26 @@ async def witdraw(request:Increase_Balacne):
                     raise HTTPException(status_code=400,detail="User doesnt have that much money")            
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")
+
+
+class AddGaneStat(BaseModel):
+    username:str 
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/add")
+async def add_game(request:AddGaneStat):
+    if verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code=400,detail="Invalid siganture")
+    try:
+        with open(data_base["stats"],"r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == request.username:
+                user["total_games"] += 1
+                with open(data_base["stats"],"w") as file:
+                    json.dump(data,file)
+                return True
+        raise HTTPException(status_code=404,detail="Error user not found :(")        
+                    
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Smth went wrong : {e}")   
