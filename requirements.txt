@@ -30,5 +30,5 @@ starlette==0.48.0
 typing-inspection==0.4.1
 typing_extensions==4.15.0
 urllib3==2.5.0
-yarl==1.20.1
+yarl==1.22.0
 passlib==1.7.4
