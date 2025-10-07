@@ -1,0 +1,32 @@
+name: Go Redis Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Run tests
+        working-directory: ./src/redis
+        run: |
+          go mod init github.com/yourusername/ludice/redis || true
+          go mod tidy
+          go test -v
