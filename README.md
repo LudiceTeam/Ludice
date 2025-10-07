@@ -16,7 +16,7 @@
 
 
 
-[English](#english) | [Русский](#russian) | [MindMap](#mindmap)
+[English](#english) | [Русский](#russian) 
 
 ## English
 
