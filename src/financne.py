@@ -96,3 +96,17 @@ async def pay(request:Pay):
             raise HTTPException(status_code=400,detail=f"Error : {e}")    
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")
+
+class GetHistory(BaseModel):
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/get/history")
+async def get_history(request:GetHistory):
+    if verify_signature(request.model_dump,request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    try:
+        with open(cache["payments"],"r") as file:
+            data = json.load(file)
+        return data    
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")        
