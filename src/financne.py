@@ -7,6 +7,16 @@ import hmac
 import hashlib
 
 
+
+cache = {
+    "payments":"payments.json",
+    "api_token":"some_token",
+    "url":"some_url",
+    "key":"some_key",
+    "ton_wallet":"key"
+}
+
+
 KEY = ""
 def verify_signature(data: dict, received_signature: str) -> bool:
     if time.time() - data.get('timestamp', 0) > 300:
@@ -57,11 +67,7 @@ class TON_Payment(Payment):
             headers=headers
         )
         return response.json()
-def get_token():
-    pass
 
-def get_url():
-    pass
 
 class Pay(BaseModel):
     username:str
@@ -69,13 +75,24 @@ class Pay(BaseModel):
     message:str
     signature:str
     timestamp:float = Field(default_factory=time.time)
+TON = TON_Payment(cache["url"],cache["api_token"])
+
+
+
 @app.post("/user/pay")
 async def pay(request:Pay):
-    pass
-
-
-
-
-
-
-
+    if verify_signature(request.model_dump,request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    try:
+        result_pay = TON.pay(cache["ton_wallet"],request.username,request.amount,message="")
+        with open(cache["payments"],"r") as file:
+            data = json.load(file)
+        try:
+            data.append(result_pay)
+            with open(cache["payments"],"w") as file:
+                json.dump(data,file)
+            return True    
+        except Exception as e:
+            raise HTTPException(status_code=400,detail=f"Error : {e}")    
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")
