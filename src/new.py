@@ -59,52 +59,6 @@ try:
 except Exception as e:
     print(f"Redis is not start")    
 
-app = FastAPI()
-
-
-
-@app.get("/")
-async def main():
-    return "Ludice API"
-
-
-
-
-class Register(BaseModel):
-    username:str# передавай id юзера
-    psw:str# это бялть зачем здесь?
-
-def redis_register(username:str,pasw:str) -> bool:
-    if redis.exists(f"user:{username}"):
-        return False
-    else:
-        redis.set(f"user:{username}",pasw)
-        return True
-    
-
-
-@app.post("/register")
-async def register(request:Register):
-    with open("data/users.json","r") as file:
-        data = json.load(file)
-    if request.username in data:
-        raise HTTPException(status_code=400,detail="User already exists")
-    else:
-        write_deafault_bank(request.username)
-        data[request.username] = request.psw
-        with open("data/users.json","w") as file:
-            json.dump(data,file)  
-        # DEFAULT LOBBY DATA
-        with open("lobby.json","r") as file:
-            lobs = json.load(file)
-        lobs.append({
-            "username":request.username,
-            "lobbys":[]
-        })
-        with open("lobby.json","w") as file:
-            json.dump(lobs,file)
-        write_def_stats(request.username)    
-
 def get_key() -> str:
     with open("secrets.json","r") as file:
         data = json.load(file)
@@ -125,6 +79,59 @@ def verify_signature(data: dict, received_signature: str) -> bool:
     expected_signature = hmac.new(KEY.encode(), data_str.encode(), hashlib.sha256).hexdigest()
     
     return hmac.compare_digest(received_signature, expected_signature)
+
+
+
+app = FastAPI()
+
+
+
+@app.get("/")
+async def main():
+    return "Ludice API"
+
+
+
+
+class Register(BaseModel):
+    username:str# передавай id юзера
+    psw:str# это бялть зачем здесь?
+    psw:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+
+def redis_register(username:str,pasw:str) -> bool:
+    if redis.exists(f"user:{username}"):
+        return False
+    else:
+        redis.set(f"user:{username}",pasw)
+        return True
+    
+
+
+@app.post("/register")
+async def register(request:Register):
+    if not verify_signature(request.dict(),request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    with open("data/users.json","r") as file:
+        data = json.load(file)
+    if request.username in data:
+        raise HTTPException(status_code=400,detail="User already exists")
+    else:
+        write_deafault_bank(request.username)
+        data[request.username] = request.psw
+        with open("data/users.json","w") as file:
+            json.dump(data,file)  
+        # DEFAULT LOBBY DATA
+        with open("lobby.json","r") as file:
+            lobs = json.load(file)
+        lobs.append({
+            "username":request.username,
+            "lobbys":[]
+        })
+        with open("lobby.json","w") as file:
+            json.dump(lobs,file)
+        write_def_stats(request.username)    
 
 
 def delete_the_same(bet:int,user_id1 : str,user_id2:str,id_that_we_need:str) -> bool:
@@ -564,7 +571,7 @@ class Get_User_Balance(BaseModel):
     user_id:str
     signature:str
     timestamp:float = Field(default_factory=time.time)
-@app.post("get/user/balance")
+
 async def get_user_balance(request:Get_User_Balance):
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):

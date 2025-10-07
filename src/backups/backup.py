@@ -57,6 +57,7 @@ def wirte_default_bank(username:str) -> bool:
         })    
         with open(data_base["bank"],"w") as file:
             json.dump(data,file)
+        return True    
     except Exception as e:
         return False
 
@@ -124,3 +125,32 @@ async def add_game(request:AddGaneStat):
                     
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Smth went wrong : {e}")   
+class WriteDefData(BaseModel):
+    username:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/def/bank")
+async def all_default(request:WriteDefData):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    
+    try:
+        ind  = wirte_default_bank(username=request.username)
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")    
+
+    with open(data_base["stats.json"],"r") as file:
+        data = json.load(file)
+    try:    
+        data.append({
+            "username":request.username,
+            "wins":0,
+            "total_games":0
+        })    
+        with open(data_base["stats"],"w") as file:
+            json.dump(data,file)
+        return True    
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error while writing : {e}")
+if __name__ == "__main__":
+    uvicorn.run(app,host="0.0.0.0",post = 8080)    
