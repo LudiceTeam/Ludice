@@ -1,6 +1,20 @@
-# **Ludicé** 🎲
+<p align="center">
+  <img src="docs/ludice-logo.png" height="200">
+</p>
+<h1 align="center">
+  Ludicé
+</h1>
 
-![Ludice Logo](docs/ludice-logo.png)
+![In development](https://img.shields.io/badge/In%20development-🔧-orange?style=for-the-badge)
+[![Telegram](https://img.shields.io/badge/Telegram-Bot-0088cc?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/ludicebot)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005f73?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Python](https://img.shields.io/badge/Python-3.9%20%7C%203.10-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+[![Aiogram](https://img.shields.io/badge/Aiogram-3.x-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://docs.aiogram.dev/)
+[![JSON](https://img.shields.io/badge/JSON-data-000?style=for-the-badge&logo=json&logoColor=white)](https://www.json.org/)
+[![Build](https://img.shields.io/badge/CL%20Build-passing-brightgreen?style=for-the-badge&logo=gnu-bash&logoColor=white)](#)
+
 
 
 [English](#english) | [Русский](#russian) | [MindMap](#mindmap)
@@ -14,8 +28,7 @@
 - [Features](#features)
 - [Commands](#commands)
 - [Notification Settings](#notification-settings)
-- [Installation for Developers](#installation-for-developers)
-- [Contributing](#contributing)
+
 
 ### Overview
 
