@@ -13,7 +13,6 @@
 [![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 [![Aiogram](https://img.shields.io/badge/Aiogram-3.x-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://docs.aiogram.dev/)
 [![JSON](https://img.shields.io/badge/JSON-data-000?style=for-the-badge&logo=json&logoColor=white)](https://www.json.org/)
-[![Build](https://img.shields.io/badge/CL%20Build-passing-brightgreen?style=for-the-badge&logo=gnu-bash&logoColor=white)](#)
 
 
 
