@@ -72,7 +72,7 @@ async def main():
 
 class Register(BaseModel):
     username:str# передавай id юзера
-    psw:str
+    psw:str# это бялть зачем здесь?
 
 def redis_register(username:str,pasw:str) -> bool:
     if redis.exists(f"user:{username}"):
@@ -88,7 +88,7 @@ async def register(request:Register):
     with open("data/users.json","r") as file:
         data = json.load(file)
     if request.username in data:
-        raise HTTPException(status_code=400,detail="User alredy exists")
+        raise HTTPException(status_code=400,detail="User already exists")
     else:
         write_deafault_bank(request.username)
         data[request.username] = request.psw
