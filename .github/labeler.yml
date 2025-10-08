@@ -1,24 +1,32 @@
 frontend:
-  - 'frontend/**'
-  - 'src/routers/**'
+  paths:
+    - 'frontend/**'
+    - 'src/routers/**'
 
 backend:
-  - 'backend/**'
-  - 'src/new.py/**'
+  paths:
+    - 'backend/**'
+    - 'src/new.py'
+    - 'src/new/**'
 
 bot:
-  - 'bot/**'
-  - 'src/app.py/**'
+  paths:
+    - 'bot/**'
+    - 'src/app.py'
+    - 'src/app/**'
 
 docs:
-  - '**/*.md'
-  - 'docs/**'
+  paths:
+    - '**/*.md'
+    - 'docs/**'
 
 config:
-  - '.github/**'
-  - '**/*.yml'
-  - '**/*.yaml'
+  paths:
+    - '.github/**'
+    - '**/*.yml'
+    - '**/*.yaml'
 
 tests:
-  - 'tests/**'
-  - '**/*_test.py'
+  paths:
+    - 'tests/**'
+    - '**/*_test.py'
