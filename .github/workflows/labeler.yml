@@ -1,4 +1,8 @@
 # .github/workflows/labeler.yml
+permissions:
+  contents: read
+  pull-requests: write
+
 
 name: Labeler
 
