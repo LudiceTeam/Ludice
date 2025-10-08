@@ -619,6 +619,8 @@ def is_game2_already_played_by_user(username:str) -> bool:
     return False        
 
 
+
+
 class Start_Second_Game(BaseModel):
     username:str
     bet:int
@@ -633,23 +635,46 @@ async def start_new_game(request:Start_Second_Game):
     try:
         with open("data_second_game.json","r") as file:
             data = json.load(file)
+        id = str(uuid.uuid4())    
         if not is_game2_already_played_by_user(request.username):
             data.append({
                 "username":request.username,
                 "bet":request.bet,
                 "win":False,
                 "num":request.num,
-                "id":str(uuid.uuid4())
+                "id":id
             })
             with open("data_second_game.json","w") as file:
                 json.dump(data,file)
-            return True    
+            return id
         else:
             raise HTTPException(status_code=400,detail="User is already playing")    
 
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")    
-
+class Delete_Game(BaseModel):
+    usernmae:str
+    id:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/delete_game")
+async def delete_game(request:Delete_Game):
+    if not verify_signature(request.model_dump,request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    else:
+        try:
+            with open("data_second_game=.json","r") as file:
+                data = json.load(file)
+            for game in data:
+                if game["username"] == request.usernmae and game["id"] == request.id:
+                    index = data.index(game)
+                    data.pop(index)
+                    with open("data_second_game.json","w") as file:
+                        json.dump(data,file)
+                    return True
+            raise HTTPException(status_code=404,detail="Game not found")            
+        except Exception as e:
+            raise HTTPException(status_code=400,detail=f"Error : {e}")        
 
 if __name__ == "__main__":
     uvicorn.run(app,host = "0.0.0.0",port = 8080)
