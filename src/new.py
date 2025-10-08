@@ -610,19 +610,43 @@ async def user_pay(request:Payment):
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")
 
+def is_game2_already_played_by_user(username:str) -> bool:
+    with open("data_second_game.json","r") as file:
+        data = json.load(file)
+    for user in data:
+        if user["username"] == username:
+            return True
+    return False        
+
 
 class Start_Second_Game(BaseModel):
     username:str
     bet:int
     num:int
     signature:str
+    id:str = Field(default_factory=lambda: str(uuid.uuid4()))
     timestamp:float = Field(default_factory = time.time)
 @app.post("/start/new/game2")
 async def start_new_game(request:Start_Second_Game):
     if not verify_signature(request.model_dump,request.signature):
         raise HTTPException(status_code=403,detail="Invalid signature")
     try:
-        pass
+        with open("data_second_game.json","r") as file:
+            data = json.load(file)
+        if not is_game2_already_played_by_user(request.username):
+            data.append({
+                "username":request.username,
+                "bet":request.bet,
+                "win":False,
+                "num":request.num,
+                "id":str(uuid.uuid4())
+            })
+            with open("data_second_game.json","w") as file:
+                json.dump(data,file)
+            return True    
+        else:
+            raise HTTPException(status_code=400,detail="User is already playing")    
+
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")    
 
