@@ -30,3 +30,27 @@ tests:
   paths:
     - 'tests/**'
     - '**/*_test.py'
+payment:
+  paths:
+    - 'payment/**'
+    - 'src/payment/**'
+
+security:
+  paths:
+    - 'SECURITY.md'
+    - 'src/security/**'
+    - '.github/security/**'
+
+gameplay:
+  paths:
+    - 'game/**'
+    - 'src/gameplay/**'
+    - 'src/game/**'
+
+refactor:
+  paths:
+    - '**'
+
+ci:
+  paths:
+    - '.github/workflows/**'
