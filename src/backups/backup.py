@@ -46,6 +46,27 @@ def verify_signature(data: dict, received_signature: str) -> bool:
     
     return hmac.compare_digest(received_signature, expected_signature)
 
+class Register(BaseModel):
+    username:str
+    pws:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/register")
+async def register(request:Register):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    try:
+        with open(data_base["users"],"r") as file:
+            data = json.load(file)
+        if request.username in data:
+            raise HTTPException(status_code=403,detail="This user already exists")
+        data[request.username] = request.psw
+        with open(data_base["users"],"w") as file:
+            json.dump(data,file)
+        return True     
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")    
+
 
 def wirte_default_bank(username:str) -> bool:
     try:
