@@ -81,7 +81,7 @@ TON = TON_Payment(cache["url"],cache["api_token"])
 
 @app.post("/user/pay")
 async def pay(request:Pay):
-    if not verify_signature(request.model_dump,request.signature):
+    if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code=403,detail="Invalid signature")
     try:
         result_pay = TON.pay(cache["ton_wallet"],request.username,request.amount,message="")
@@ -102,7 +102,7 @@ class GetHistory(BaseModel):
     timestamp:float = Field(default_factory=time.time)
 @app.post("/get/history")
 async def get_history(request:GetHistory):
-    if not verify_signature(request.model_dump,request.signature):
+    if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code=403,detail="Invalid signature")
     try:
         with open(cache["payments"],"r") as file:

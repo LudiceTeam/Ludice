@@ -36,9 +36,12 @@ def write_deafault_bank(username:str) -> bool:
     except Exception as e:
         return False        
 
+def get_ton_url() -> str:
+    with open("secrets.json","r") as file:
+        data = json.load(file)
 
-
-        
+def pay() -> bool:
+    pass
 
 def write_def_stats(user_id:str) -> bool:
     try:
@@ -619,6 +622,8 @@ def is_game2_already_played_by_user(username:str) -> bool:
     return False        
 
 
+
+
 class Start_Second_Game(BaseModel):
     username:str
     bet:int
@@ -628,28 +633,76 @@ class Start_Second_Game(BaseModel):
     timestamp:float = Field(default_factory = time.time)
 @app.post("/start/new/game2")
 async def start_new_game(request:Start_Second_Game):
-    if not verify_signature(request.model_dump,request.signature):
+    if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code=403,detail="Invalid signature")
     try:
         with open("data_second_game.json","r") as file:
             data = json.load(file)
+        id = str(uuid.uuid4())    
         if not is_game2_already_played_by_user(request.username):
             data.append({
                 "username":request.username,
                 "bet":request.bet,
                 "win":False,
                 "num":request.num,
-                "id":str(uuid.uuid4())
+                "id":id
             })
             with open("data_second_game.json","w") as file:
                 json.dump(data,file)
-            return True    
+            return id
         else:
             raise HTTPException(status_code=400,detail="User is already playing")    
 
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")    
 
+class Delete_Game(BaseModel):
+    usernmae:str
+    id:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/delete_game")
+async def delete_game(request:Delete_Game):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    else:
+        try:
+            with open("data_second_game=.json","r") as file:
+                data = json.load(file)
+            for game in data:
+                if game["username"] == request.usernmae and game["id"] == request.id:
+                    index = data.index(game)
+                    data.pop(index)
+                    with open("data_second_game.json","w") as file:
+                        json.dump(data,file)
+                    return True
+            raise HTTPException(status_code=404,detail="Game not found")            
+        except Exception as e:
+            raise HTTPException(status_code=400,detail=f"Error : {e}")  
+class GetUserGuess(BaseModel):
+    username:str
+    siganture:str
+    timestamp : float = Field(default_factory = time.time)
+    id:str = Optional[str]
+@app.post("/get/user/num")
+async def get_user_num(request:GetUserGuess):
+    if not verify_signature(request.model_dump(),request.siganture):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    else:
+        try:
+            with open("data_second_game.json","r") as file:
+                data = json.load(file)
+            if request.id:
+                for game in data:
+                    if game["id"] == request.id:
+                        return game["num"]
+            else:
+                for game in data:
+                    if game["username"] == request.username:
+                        return game["num"]
+            raise HTTPException(status_code=404,detail="Game not found")                    
+        except Exception as e:
+            raise HTTPException(status_code=400,detail=f"Error : {e}")           
 
 if __name__ == "__main__":
     uvicorn.run(app,host = "0.0.0.0",port = 8080)
