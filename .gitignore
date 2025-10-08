@@ -7,3 +7,5 @@ venv/
 .env
 __pycache__/
 secrets.json
+
+docs
