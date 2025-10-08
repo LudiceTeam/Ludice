@@ -37,6 +37,7 @@ def write_deafault_bank(username:str) -> bool:
         return False        
 
 
+
         
 
 def write_def_stats(user_id:str) -> bool:
@@ -608,11 +609,23 @@ async def user_pay(request:Payment):
         return True
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")
-    
 
-class SendStars_To_Winner:
-    def __init__(self,bot_token):
-        self.bot_token  = bot_token
+
+class Start_Second_Game(BaseModel):
+    username:str
+    bet:int
+    num:int
+    signature:str
+    timestamp:float = Field(default_factory = time.time)
+@app.post("/start/new/game2")
+async def start_new_game(request:Start_Second_Game):
+    if not verify_signature(request.model_dump,request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    try:
+        pass
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")    
+
 
 if __name__ == "__main__":
     uvicorn.run(app,host = "0.0.0.0",port = 8080)
