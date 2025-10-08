@@ -2,7 +2,17 @@ from aiogram import F,Router, types
 from aiogram.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import CommandStart
 from keyboard import start
-import aiohttp
+from dotenv import load_dotenv, find_dotenv
+import os
+import requests
+import json
+import hashlib
+import hmac
+
+load_dotenv(find_dotenv())
+secret_token = os.getenv("secret_token")
+
+API_URL = "http://127.0.0.1:8000/register"
 
 start_router = Router()
 payment_router = Router()
@@ -10,25 +20,34 @@ game = Router()
 
 @start_router.message(CommandStart())
 async def cmd_start(message: types.Message):
-    pay_kb = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="Pay 67 ⭐", pay=True)]]
-    )
-    await message.answer("Welcome to the ludicé bot. Choose an option:", reply_markup=start.start_kb)
-    # username = message.from_user.username or str(message.from_user.id)
-
-    # async with aiohttp.ClientSession() as session:
-    #     async with session.post(
-    #         "http://localhost:8080/register",
-    #         json={"username": username, "psw": "1234"}
-    #     ) as response:
-    #         if response.status == 200:
-    #             await message.answer("✅ You have been registered successfully!")
-    #         elif response.status == 400:
-    #             await message.answer("⚠️ You are already registered!")
-    #         else:
-    #             await message.answer(f"❌ Server error: {await response.text()}")
     
+    terms_and_conditions = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Agree ✅", pay=True)]]
+    )
+    
+    
+    await message.answer("Welcome to the ludicé bot. Choose an option:", reply_markup=start.start_kb)
+    user_username = message.from_user.username
+    user_id = message.from_user.id
+    data = {
+        "username": user_username,
+        "id": user_id
+    }
+    data_str = json.dumps(data, sort_keys=True, separators=(',', ':'))
+    
+    signature = hmac.new(
+        SYSTE_SECRET.encode(),
+        data_str.encode(),
+        hashlib.sha256
+    )
+    
+    headers ={
+        "Content-Type": "application/json",
+        "X-Signature": signature.hexdigest()
+    }
 
+    response = requests.post(API_URL, headers=headers, json=data)
+    print(response.status_code, response.text)
 
 @start_router.message(F.text == "Top up 🔝")
 async def stars(message: types.Message):

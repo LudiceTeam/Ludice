@@ -1,0 +1,24 @@
+frontend:
+  - 'frontend/**'
+  - 'src/routers/**'
+
+backend:
+  - 'backend/**'
+  - 'src/new.py/**'
+
+bot:
+  - 'bot/**'
+  - 'src/app.py/**'
+
+docs:
+  - '**/*.md'
+  - 'docs/**'
+
+config:
+  - '.github/**'
+  - '**/*.yml'
+  - '**/*.yaml'
+
+tests:
+  - 'tests/**'
+  - '**/*_test.py'
