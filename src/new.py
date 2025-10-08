@@ -448,6 +448,14 @@ async def get_leader_board():
 
 @app.get("/getme/{user_id}")
 async def get_me(user_id:str):
+    with open("bank.json","r") as file:
+        data = json.load(file)
+    balance = None    
+    for user in data:
+        if user["username"] == user_id:
+            balance = user["balance"]
+
+
     try:
         with open("stats.json","r") as file:
             data = json.load(file)
@@ -457,7 +465,8 @@ async def get_me(user_id:str):
                 return {
                     "Total games":user["total_games"],
                     "Wins":user["wins"],
-                    "Wins procent" : wins_pocent
+                    "Wins procent" : wins_pocent,
+                    "Balance":balance
                 }
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")        
