@@ -2,8 +2,7 @@ from aiogram import F,Router, types
 from aiogram.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import CommandStart
 from keyboard import start
-import new as backend
-import requests
+import aiohttp
 
 start_router = Router()
 payment_router = Router()
@@ -11,12 +10,25 @@ game = Router()
 
 @start_router.message(CommandStart())
 async def cmd_start(message: types.Message):
-    new_user =  backend.Register()
-    new_user.username = message.from_user.username
-    new_user.psw = 1234
-    res = await requests.post("/register")
-    
+    pay_kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Pay 67 ⭐", pay=True)]]
+    )
     await message.answer("Welcome to the ludicé bot. Choose an option:", reply_markup=start.start_kb)
+    # username = message.from_user.username or str(message.from_user.id)
+
+    # async with aiohttp.ClientSession() as session:
+    #     async with session.post(
+    #         "http://localhost:8080/register",
+    #         json={"username": username, "psw": "1234"}
+    #     ) as response:
+    #         if response.status == 200:
+    #             await message.answer("✅ You have been registered successfully!")
+    #         elif response.status == 400:
+    #             await message.answer("⚠️ You are already registered!")
+    #         else:
+    #             await message.answer(f"❌ Server error: {await response.text()}")
+    
+
 
 @start_router.message(F.text == "Top up 🔝")
 async def stars(message: types.Message):
@@ -77,7 +89,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.message.answer_invoice(
         title="❖ Telegram Stars",
         description="Your account will be credited with 75 stars for 100 starts when you complete the payment.",
-        payload="topup_67",
+        payload="topup_100",
         provider_token="",
         prices=prices,
         currency ="XTR",
@@ -99,7 +111,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.message.answer_invoice(
         title="❖ Telegram Stars",
         description="Your account will be credited with 100 stars for 133 starts when you complete the payment.",
-        payload="topup_67",
+        payload="topup_133",
         provider_token="",
         prices=prices,
         currency ="XTR",
@@ -112,47 +124,45 @@ async def send_invoice(callback: types.CallbackQuery):
 #150 stars
 @start_router.callback_query(F.data == "star150")
 async def send_invoice(callback: types.CallbackQuery):
-    prices = [LabeledPrice(lebel="150 ⭐",amount=200)] 
+    prices = [LabeledPrice(label="150 ⭐", amount=200)]
+    
     pay_kb = InlineKeyboardMarkup(
-        InlineKeyboardButton(text="Pay 200 ⭐")
-        )
+        inline_keyboard=[[InlineKeyboardButton(text="Pay 200 ⭐", pay=True)]]
+    )
     
     await callback.message.answer_invoice(
         title="❖ Telegram Stars",
-        discription="Your account will be credited with 150 stars for 200 starts when you complete the payment.",
-        playload="topup_150",
+        description="Your account will be credited with 150 stars for 200 starts when you complete the payment.",
+        payload="topup_200",
         provider_token="",
         prices=prices,
         currency ="XTR",
         reply_markup=pay_kb
     )
-    
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
-
-#250 stars
+#250 stars 333
 @start_router.callback_query(F.data == "star250")
 async def send_invoice(callback: types.CallbackQuery):
-    prices = [LabeledPrice(lebel="250 ⭐",amount=333)] 
+    prices = [LabeledPrice(label="250 ⭐", amount=333)]
+    
     pay_kb = InlineKeyboardMarkup(
-        InlineKeyboardButton(text="Pay 333 ⭐")
-        )
+        inline_keyboard=[[InlineKeyboardButton(text="Pay 333 ⭐", pay=True)]]
+    )
     
     await callback.message.answer_invoice(
         title="❖ Telegram Stars",
-        discription="Your account will be credited with 250 stars for 333 starts when you complete the payment.",
-        playload="topup_333",
+        description="Your account will be credited with 250 stars for 333 starts when you complete the payment.",
+        payload="topup_333",
         provider_token="",
         prices=prices,
         currency ="XTR",
         reply_markup=pay_kb
     )
-    
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
-    
 # 750 stars
 @start_router.callback_query(F.data == "star750")
 async def send_invoice(callback: types.CallbackQuery):
