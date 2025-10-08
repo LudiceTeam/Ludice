@@ -1,56 +1,43 @@
 frontend:
-  paths:
-    - 'frontend/**'
-    - 'src/routers/**'
+  - changed-files:
+      - any-glob-to-any-file: ['frontend/**', 'src/routers/**']
 
 backend:
-  paths:
-    - 'backend/**'
-    - 'src/new.py'
-    - 'src/new/**'
+  - changed-files:
+      - any-glob-to-any-file: ['backend/**', 'src/new.py', 'src/new/**']
 
 bot:
-  paths:
-    - 'bot/**'
-    - 'src/app.py'
-    - 'src/app/**'
+  - changed-files:
+      - any-glob-to-any-file: ['bot/**', 'src/app.py', 'src/app/**']
 
 docs:
-  paths:
-    - '**/*.md'
-    - 'docs/**'
+  - changed-files:
+      - any-glob-to-any-file: ['**/*.md', 'docs/**']
 
 config:
-  paths:
-    - '.github/**'
-    - '**/*.yml'
-    - '**/*.yaml'
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**', '**/*.yml', '**/*.yaml']
 
 tests:
-  paths:
-    - 'tests/**'
-    - '**/*_test.py'
+  - changed-files:
+      - any-glob-to-any-file: ['tests/**', '**/*_test.py']
+
 payment:
-  paths:
-    - 'payment/**'
-    - 'src/payment/**'
+  - changed-files:
+      - any-glob-to-any-file: ['payment/**', 'src/payment/**']
 
 security:
-  paths:
-    - 'SECURITY.md'
-    - 'src/security/**'
-    - '.github/security/**'
+  - changed-files:
+      - any-glob-to-any-file: ['SECURITY.md', 'src/security/**', '.github/security/**']
 
 gameplay:
-  paths:
-    - 'game/**'
-    - 'src/gameplay/**'
-    - 'src/game/**'
+  - changed-files:
+      - any-glob-to-any-file: ['game/**', 'src/gameplay/**', 'src/game/**']
 
 refactor:
-  paths:
-    - '**'
+  - changed-files:
+      - any-glob-to-any-file: ['**']
 
 ci:
-  paths:
-    - '.github/workflows/**'
+  - changed-files:
+      - any-glob-to-any-file: ['.github/workflows/**']
