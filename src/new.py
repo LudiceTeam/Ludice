@@ -753,7 +753,28 @@ async def start_drotic_game(request:StartnewGame):
                         json.dump(data,file)
                     raise HTTPException(status_code = 400,detail = f"Lobby not found : {id}")            
                        
-    
+class DeleteGame(BaseModel):
+    id:str
+    signature:str
+    timestamp:float = Field(default_factory = time.time) 
+@app.post("/delete/drotic/game")
+async def delete_drotic_game(request:DeleteGame):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code = 403,detail = "Invalid Signature")
+    else:
+        try:
+            with open("drotic.json","r") as file:
+                data = json.load(file)
+            for game in data:
+                if data["id"] == request.id:
+                    ind = data.index(game)    
+                    data.pop(ind)
+                    with open("drotic.json","w") as file:
+                        json.dump(data,file)
+                    return True
+            raise HTTPException(status_code = 404,detail = "User not found")        
+        except Exception as e:
+            raise HTTPException(status_code = 400,detail = f"Error : {e}")           
 
 
 if __name__ == "__main__":
