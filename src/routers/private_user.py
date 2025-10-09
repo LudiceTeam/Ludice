@@ -21,33 +21,33 @@ game = Router()
 @start_router.message(CommandStart())
 async def cmd_start(message: types.Message):
     
-    terms_and_conditions = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="Agree ✅", pay=True)]]
-    )
+    # terms_and_conditions = InlineKeyboardMarkup(
+    #     inline_keyboard=[[InlineKeyboardButton(text="Agree ✅", pay=True)]]
+    # )
     
     
     await message.answer("Welcome to the ludicé bot. Choose an option:", reply_markup=start.start_kb)
-    user_username = message.from_user.username
-    user_id = message.from_user.id
-    data = {
-        "username": user_username,
-        "id": user_id
-    }
-    data_str = json.dumps(data, sort_keys=True, separators=(',', ':'))
+    # user_username = message.from_user.username
+    # user_id = message.from_user.id
+    # data = {
+    #     "username": user_username,
+    #     "id": user_id
+    # }
+    # data_str = json.dumps(data, sort_keys=True, separators=(',', ':'))
     
-    signature = hmac.new(
-        SYSTE_SECRET.encode(),
-        data_str.encode(),
-        hashlib.sha256
-    )
+    # signature = hmac.new(
+    #     SYSTE_SECRET.encode(),
+    #     data_str.encode(),
+    #     hashlib.sha256
+    # )
     
-    headers ={
-        "Content-Type": "application/json",
-        "X-Signature": signature.hexdigest()
-    }
+    # headers ={
+    #     "Content-Type": "application/json",
+    #     "X-Signature": signature.hexdigest()
+    # }
 
-    response = requests.post(API_URL, headers=headers, json=data)
-    print(response.status_code, response.text)
+    # response = requests.post(API_URL, headers=headers, json=data)
+    # print(response.status_code, response.text)
 
 @start_router.message(F.text == "Top up 🔝")
 async def stars(message: types.Message):
@@ -243,3 +243,14 @@ async def payment_success(msg: types.Message):
     )
 
 # Game section
+@game.message(F == "Play ")
+async def play_game(message: types.Message):
+    await message.answer("Choose a game to play:", reply_markup=start.game_kb)
+
+@game.callback_query(F.data == "Dice 🎲")
+async def play_dice(callback: types.CallbackQuery):
+    await callback.answer("You chose to play Dice 🎲! What amount are you willing to bet?")
+
+@game.callback_query(F.data == "Target 🎯")
+async def play_target(callback: types.CallbackQuery):
+    await callback.answer("In development...")
