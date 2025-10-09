@@ -723,6 +723,11 @@ async def get_user_num(request:GetUserGuess):
 class StartnewGame(BaseModel):
     usernmae:str
     bet:int
+    id:str =  Field(default_factory=lambda: str(uuid.uuid4()))
+    signature:str
+    timestamp:float = Field(default_factory = time.time)
+    
+    
     
 
 
