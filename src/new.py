@@ -717,7 +717,13 @@ async def get_user_num(request:GetUserGuess):
             raise HTTPException(status_code=404,detail="Game not found")                    
         except Exception as e:
             raise HTTPException(status_code=400,detail=f"Error : {e}")           
-
+######### Drotic Game #########
+###############################
+###############################
+class StartnewGame(BaseModel):
+    usernmae:str
+    bet:int
+    
 
 
 if __name__ == "__main__":
