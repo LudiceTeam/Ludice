@@ -723,11 +723,36 @@ async def get_user_num(request:GetUserGuess):
 class StartnewGame(BaseModel):
     usernmae:str
     bet:int
-    id:str =  Field(default_factory=lambda: str(uuid.uuid4()))
     signature:str
     timestamp:float = Field(default_factory = time.time)
-    
-    
+@app.post("/start/drotic/game")
+async def start_drotic_game(request:StartnewGame):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code = 403,detail = "Invalid signature") 
+    else:
+        with open("drotic.json","r") as file:
+            data = json.load(file)
+        found = False    
+        for game in data:
+            if game["bet"] == request.bet and len(game["players"]) == 1 and request.username not in game["players"]:
+                game["players"].append(request.usernmae)
+                id = game["id"]
+                with open("drotic.json","w") as file:
+                    json.dump(data,file)
+                found = True    
+                return id
+        if not found:
+            with open("drotic.json","r") as file:
+                data = json.load(file)
+            for game in data:
+                if game["bet"] == request.bet and len(game["players"]) == 0:
+                    game["players"].append(request.username)
+                    game["bet"] = request.bet
+                    id = game["id"]
+                    with open("drotic.json","w") as file:
+                        json.dump(data,file)
+                    raise HTTPException(status_code = 400,detail = f"Lobby not found : {id}")            
+                       
     
 
 
