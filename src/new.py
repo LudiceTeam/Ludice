@@ -775,7 +775,32 @@ async def delete_drotic_game(request:DeleteGame):
             raise HTTPException(status_code = 404,detail = "User not found")        
         except Exception as e:
             raise HTTPException(status_code = 400,detail = f"Error : {e}")           
-
+class WriteOneTry(BaseModel):
+    username:str
+    result:str
+    id:str
+    signature:str
+    timestamp:float = Field(default_factory = time.time)
+@app.post("/write/one/try")
+async def write_one_try(request:WriteOneTry):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code = 403,detail = "Invalid signature")
+    else:
+        try:
+            with open("drotic.json","r") as file:
+                data = json.load(file)
+            for game in data:
+                if game["id"] == request.id:
+                    game["cache"].append({
+                        "username":request.username,
+                        "result":request.result
+                    })
+                    with open("drotic.json","w") as file:
+                        json.dump(data,file)
+                    return True
+            raise HTTPException(status_code = 404,detail = "User not found")        
+        except Exception as e:
+            raise HTTPException(status_code = 400,deatail = f"Error : {e}")    
 
 if __name__ == "__main__":
     uvicorn.run(app,host = "0.0.0.0",port = 8080)
