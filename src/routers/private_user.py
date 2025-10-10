@@ -241,3 +241,5 @@ async def payment_success(msg: types.Message):
     await msg.answer(
         f"✅ Your payment has been added to your balance. Thank you for choosing Ludicé"
     )
+
+# Game section
