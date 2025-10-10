@@ -3,6 +3,16 @@ from aiogram.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, 
 from aiogram.filters import CommandStart
 from keyboard import start
 from dotenv import load_dotenv, find_dotenv
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import Message
+from aiogram_dialog import (
+    Dialog,
+    DialogManager,
+    Window,
+)
+from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.kbd import Next
+from aiogram_dialog.widgets.text import Const, Jinja
 import os
 import requests
 import json
@@ -12,11 +22,14 @@ import hmac
 load_dotenv(find_dotenv())
 secret_token = os.getenv("secret_token")
 
+class SG(StatesGroup):
+    bet = State()
+
 API_URL = "http://127.0.0.1:8000/register"
 
 start_router = Router()
 payment_router = Router()
-game = Router()
+game_router = Router()
 
 @start_router.message(CommandStart())
 async def cmd_start(message: types.Message):
@@ -243,14 +256,38 @@ async def payment_success(msg: types.Message):
     )
 
 # Game section
-@game.message(F == "Play ")
+@game_router.message(F.text == "Roll 🎲")
 async def play_game(message: types.Message):
     await message.answer("Choose a game to play:", reply_markup=start.game_kb)
 
-@game.callback_query(F.data == "Dice 🎲")
-async def play_dice(callback: types.CallbackQuery):
-    await callback.answer("You chose to play Dice 🎲! What amount are you willing to bet?")
+@game_router.message(F.text == "Roll Dice 🎲")
+async def play_dice(message: types.Message):
+    await message.answer("You chose to play Dice 🎲! What amount are you willing to bet?")
 
-@game.callback_query(F.data == "Target 🎯")
+@game_router.message(F.text == int)
+async def process_bet(message: types.Message):
+    bet_amount = int(message.text)
+    await message.answer(f"You are betting {bet_amount} 🎲!, if you win, you will receive {bet_amount * 2} 🎲. To reset bey /start!")
+
+# @game_router.message(SG.bet == None or SG.bet == "" or SG.bet.isdigit() == False or SG.bet == "0" or SG.bet.startswith("0"), SG.bet == str)
+# async def error(
+#         message: Message,
+#         dialog_: Any,
+#         manager: DialogManager,
+#         error_: ValueError
+# ):
+#     await message.answer("Bet must be a number!")
+
+
+
+# async def getter(dialog_manager: DialogManager, **kwargs):
+#     return {
+#         "bet": dialog_manager.find("bet").get_value(),
+#         "country": dialog_manager.find("country").get_value(),
+#     }
+
+    
+
+@game_router.message(F.text == "Target 🎯")
 async def play_target(callback: types.CallbackQuery):
     await callback.answer("In development...")
