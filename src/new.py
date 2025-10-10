@@ -717,8 +717,90 @@ async def get_user_num(request:GetUserGuess):
             raise HTTPException(status_code=404,detail="Game not found")                    
         except Exception as e:
             raise HTTPException(status_code=400,detail=f"Error : {e}")           
-
-
+######### Drotic Game #########
+###############################
+###############################
+class StartnewGame(BaseModel):
+    usernmae:str
+    bet:int
+    signature:str
+    timestamp:float = Field(default_factory = time.time)
+@app.post("/start/drotic/game")
+async def start_drotic_game(request:StartnewGame):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code = 403,detail = "Invalid signature") 
+    else:
+        with open("drotic.json","r") as file:
+            data = json.load(file)
+        found = False    
+        for game in data:
+            if game["bet"] == request.bet and len(game["players"]) == 1 and request.username not in game["players"]:
+                game["players"].append(request.usernmae)
+                id = game["id"]
+                with open("drotic.json","w") as file:
+                    json.dump(data,file)
+                found = True    
+                return id
+        if not found:
+            with open("drotic.json","r") as file:
+                data = json.load(file)
+            for game in data:
+                if game["bet"] == request.bet and len(game["players"]) == 0:
+                    game["players"].append(request.username)
+                    game["bet"] = request.bet
+                    id = game["id"]
+                    with open("drotic.json","w") as file:
+                        json.dump(data,file)
+                    raise HTTPException(status_code = 400,detail = f"Lobby not found : {id}")            
+                       
+class DeleteGame(BaseModel):
+    id:str
+    signature:str
+    timestamp:float = Field(default_factory = time.time) 
+@app.post("/delete/drotic/game")
+async def delete_drotic_game(request:DeleteGame):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code = 403,detail = "Invalid Signature")
+    else:
+        try:
+            with open("drotic.json","r") as file:
+                data = json.load(file)
+            for game in data:
+                if data["id"] == request.id:
+                    ind = data.index(game)    
+                    data.pop(ind)
+                    with open("drotic.json","w") as file:
+                        json.dump(data,file)
+                    return True
+            raise HTTPException(status_code = 404,detail = "User not found")        
+        except Exception as e:
+            raise HTTPException(status_code = 400,detail = f"Error : {e}")           
+class WriteOneTry(BaseModel):
+    username:str
+    result:str
+    id:str
+    signature:str
+    timestamp:float = Field(default_factory = time.time)
+@app.post("/write/one/try")
+async def write_one_try(request:WriteOneTry):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code = 403,detail = "Invalid signature")
+    else:
+        try:
+            with open("drotic.json","r") as file:
+                data = json.load(file)
+            for game in data:
+                if game["id"] == request.id:
+                    game["cache"].append({
+                        "username":request.username,
+                        "result":request.result
+                    })
+                    with open("drotic.json","w") as file:
+                        json.dump(data,file)
+                    return True
+            raise HTTPException(status_code = 404,detail = "User not found")        
+        except Exception as e:
+            raise HTTPException(status_code = 400,deatail = f"Error : {e}")    
 
 if __name__ == "__main__":
     uvicorn.run(app,host = "0.0.0.0",port = 8080)
