@@ -801,6 +801,10 @@ async def write_one_try(request:WriteOneTry):
             raise HTTPException(status_code = 404,detail = "User not found")        
         except Exception as e:
             raise HTTPException(status_code = 400,deatail = f"Error : {e}")    
-
+def payment(amount:int,user_id:str) -> bool:
+    try:
+        pass
+    except Exception as e:
+        raise HTTPException(status_code = 400,detail = "Error")
 if __name__ == "__main__":
     uvicorn.run(app,host = "0.0.0.0",port = 8080)
