@@ -3,16 +3,13 @@ from aiogram.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, 
 from aiogram.filters import CommandStart
 from keyboard import start
 from dotenv import load_dotenv, find_dotenv
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from aiogram_dialog import (
-    Dialog,
-    DialogManager,
-    Window,
-)
-from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import Next
-from aiogram_dialog.widgets.text import Const, Jinja
+from aiogram.enums import ParseMode
+from aiogram.filters import Command
+import asyncio
 import os
 import requests
 import json
@@ -22,8 +19,9 @@ import hmac
 load_dotenv(find_dotenv())
 secret_token = os.getenv("secret_token")
 
-class SG(StatesGroup):
-    bet = State()
+# State group
+class Form(StatesGroup):
+    waiting_for_bet = State()
 
 API_URL = "http://127.0.0.1:8000/register"
 
@@ -260,33 +258,31 @@ async def payment_success(msg: types.Message):
 async def play_game(message: types.Message):
     await message.answer("Choose a game to play:", reply_markup=start.game_kb)
 
-@game_router.message(F.text == "Roll Dice 🎲")
-async def play_dice(message: types.Message):
-    await message.answer("You chose to play Dice 🎲! What amount are you willing to bet?")
-
-@game_router.message(F.text == int)
-async def process_bet(message: types.Message):
-    bet_amount = int(message.text)
-    await message.answer(f"You are betting {bet_amount} 🎲!, if you win, you will receive {bet_amount * 2} 🎲. To reset bey /start!")
-
-# @game_router.message(SG.bet == None or SG.bet == "" or SG.bet.isdigit() == False or SG.bet == "0" or SG.bet.startswith("0"), SG.bet == str)
-# async def error(
-#         message: Message,
-#         dialog_: Any,
-#         manager: DialogManager,
-#         error_: ValueError
-# ):
-#     await message.answer("Bet must be a number!")
+@game_router.message(F.text == "Dice 🎲")
+async def play_dice(message: types.Message, state: FSMContext):
+    await message.answer("🎲 You chose to play Dice! What amount are you willing to bet?")
+    await state.set_state(Form.waiting_for_bet)
 
 
+@game_router.message(Form.waiting_for_bet)
+async def process_bet(message: types.Message, state: FSMContext):
+    bet_amount = message.text
 
-# async def getter(dialog_manager: DialogManager, **kwargs):
-#     return {
-#         "bet": dialog_manager.find("bet").get_value(),
-#         "country": dialog_manager.find("country").get_value(),
-#     }
+    if not bet_amount.isdigit():
+        await message.answer("❌ Please enter a valid number for your bet.")
+        return
 
+    await state.update_data(bet=int(bet_amount))
+    await message.answer(f"You have placed a bet of {bet_amount} ⭐. Good luck!")
+    print(bet_amount, 'Bet amount received')
     
+    try:
+        if int(bet_amount) < 10:
+            await message.answer("❌ Minimum bet is 10 stars. Please enter a valid bet amount.")
+            return
+    except ValueError:
+        await message.answer("❌ Please enter a valid number for your bet.")
+        return
 
 @game_router.message(F.text == "Target 🎯")
 async def play_target(callback: types.CallbackQuery):
