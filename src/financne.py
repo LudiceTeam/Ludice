@@ -5,6 +5,7 @@ from fastapi import FastAPI,HTTPException,Header
 import time 
 import hmac
 import hashlib
+import uvicorn
 
 
 
@@ -109,4 +110,6 @@ async def get_history(request:GetHistory):
             data = json.load(file)
         return data    
     except Exception as e:
-        raise HTTPException(status_code=400,detail=f"Error : {e}")        
+        raise HTTPException(status_code=400,detail=f"Error : {e}")   
+if __name__ == "__main__":
+    uvicorn.run(app,host = "0.0.0.0",port = 8080)         

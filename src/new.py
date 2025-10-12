@@ -1,6 +1,9 @@
 from fastapi import FastAPI,HTTPException,Header,Depends
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel,Field
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import json
 import threading
 import socket
@@ -23,9 +26,13 @@ import requests
 import uvicorn
 
 
-
+### INIT API ###
 app = FastAPI()
 security = HTTPBearer()
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 
 @app.get("/")
@@ -98,19 +105,31 @@ def verify_signature(data: dict, received_signature: str) -> bool:
     return hmac.compare_digest(received_signature, expected_signature)
 
 
-
+time_lock = threading.Lock()
 def check_time_seciruty(username:str) -> bool:
-    with open("time_sec.json","r") as file:
-        data = json.load(file)
-    cur_time = time.time()   
-    if username in data:
-        if cur_time - data[username] < 1:
-            return False
-    data[username] = cur_time
-    with open("time_sec.json","w") as file:
-        json.dump(data,file)
-            
+    with time_lock:
+        with open("time_sec.json","r") as file:
+            data = json.load(file)
+        cur_time = time.time()   
+        if username in data:
+            if cur_time - data[username] < 1:
+                return False
+        data[username] = cur_time
+        #clear all old data
 
+        cleaned_data = {}
+
+        for user,user_time in data.items():
+            if cur_time - user_time < 3600:
+                cleaned_data[user] = user_time
+        with open("time_sec.json","w") as file:
+            json.dump(data,file)
+        return True
+                
+
+
+
+            
 
 
 class Register(BaseModel):
@@ -130,7 +149,10 @@ def redis_register(username:str,pasw:str) -> bool:
 
 
 @app.post("/register")
+
 async def register(request:Register):
+    if not check_time_seciruty(request.username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     if not verify_signature(request.dict(),request.signature):
         raise HTTPException(status_code=403,detail="Invalid signature")
     with open("data/users.json","r") as file:
