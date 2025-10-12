@@ -127,11 +127,6 @@ def check_time_seciruty(username:str) -> bool:
         return True
                 
 
-
-
-            
-
-
 class Register(BaseModel):
     username:str# передавай id юзера
     psw:str# это бялть зачем здесь?
@@ -225,6 +220,8 @@ class IncreaseUserBalance(BaseModel):
     timestamp:float = Field(default_factory=time.time)
 @app.post("/user/increase")
 async def increase_user_balance(request:IncreaseUserBalance):
+    if not check_time_seciruty(request.username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
         raise HTTPException(
@@ -248,6 +245,8 @@ async def increase_user_balance(request:IncreaseUserBalance):
         raise HTTPException(status_code=400,detail=f"Error something went wrong : {e}")
 @app.post("/user/withdraw")
 async def withdraw(request:IncreaseUserBalance):
+    if not check_time_seciruty(request.username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
         raise HTTPException(
@@ -275,6 +274,8 @@ async def withdraw(request:IncreaseUserBalance):
 
 @app.get("/get/{username}/balance")
 async def get_user_balance(username:str):
+    if not check_time_seciruty(username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     try:
         with open("bank.json","r") as file:
             data = json.load(file)
@@ -314,6 +315,8 @@ class Start_Game(BaseModel):
 
 @app.post("/start/game")
 async def start_game(request:Start_Game):
+    if not check_time_seciruty(request.username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
         raise HTTPException(
@@ -367,6 +370,8 @@ class Cancel_My_Find(BaseModel):
     timestamp: float = Field(default_factory=time.time)
 @app.post("/cancel/find")
 async def cancel_find(request:Cancel_My_Find):
+    if not check_time_seciruty(request.username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
         raise HTTPException(
@@ -396,6 +401,8 @@ class Win(BaseModel):
     timestamp: float = Field(default_factory=time.time)
 @app.post("/write/winner")
 async def write_winner(request:Win):
+    if not check_time_seciruty(request.username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
         raise HTTPException(
@@ -421,6 +428,8 @@ class Leave(BaseModel):
     timestamp: float = Field(default_factory=time.time)
 @app.post("/leave")
 async def leave(request:Leave):
+    if not check_time_seciruty(request.user_id):
+        raise HTTPException(status_code=429,detail="Too many requests")
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
         raise HTTPException(
@@ -449,6 +458,8 @@ class Procent_Of_Wins(BaseModel):
     timestamp: float = Field(default_factory=time.time)
 @app.post("/count/wins") 
 async def count_of_wins(request:Procent_Of_Wins):
+    if not check_time_seciruty(request.user_id):
+        raise HTTPException(status_code=429,detail="Too many requests")
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
         raise HTTPException(
@@ -462,6 +473,7 @@ async def count_of_wins(request:Procent_Of_Wins):
         raise HTTPException(status_code=400,detail=f"Error: {e}")    
 @app.get("/get/leader/board/most_games")
 async def get_leader_board_games():
+    
     try:
         with open("stats.json","r") as file:
             data = json.load(file)
@@ -486,6 +498,8 @@ async def get_leader_board():
 
 @app.get("/getme/{user_id}")
 async def get_me(user_id:str):
+    if not check_time_seciruty(user_id):
+        raise HTTPException(status_code=429,detail="Too many requests")
     with open("bank.json","r") as file:
         data = json.load(file)
     balance = None    
@@ -522,6 +536,8 @@ def is_user_playing(user_id:str) -> bool:
 
 @app.get("/isuser/playing/{user_id}")
 async def is_playing(user_id:str) -> bool:
+    if not check_time_seciruty(user_id):
+        raise HTTPException(status_code=429,detail="Too many requests")
     try:
        return is_user_playing(user_id)
     except Exception as e:
@@ -560,6 +576,8 @@ async def write_res(request:WriteRes):
 
 @app.get("/join/link/{game_id}/{user_id}/{bet}")
 async def join_by_the_link(user_id:str,bet:int,game_id:str):
+    if not check_time_seciruty(user_id):
+        raise HTTPException(status_code=429,detail="Too many requests")
     try:
         with open("game.json","r") as file:
             data = json.load(file)
@@ -624,6 +642,8 @@ class Get_User_Balance(BaseModel):
     timestamp:float = Field(default_factory=time.time)
 
 async def get_user_balance(request:Get_User_Balance):
+    if not check_time_seciruty(request.user_id):
+        raise HTTPException(status_code=429,detail="Too many requests")
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
         raise HTTPException(
@@ -643,6 +663,8 @@ class Payment(BaseModel):
     timestamp:float = Field(default_factory=time.time)
 @app.post("/user/pay")
 async def user_pay(request:Payment):
+    if not check_time_seciruty(request.user_id):
+        raise HTTPException(status_code=429,detail="Too many requests")
     request_dict = request.dict()
     if not verify_signature(request_dict, request.signature):
         raise HTTPException(
@@ -685,6 +707,8 @@ class Start_Second_Game(BaseModel):
     timestamp:float = Field(default_factory = time.time)
 @app.post("/start/new/game2")
 async def start_new_game(request:Start_Second_Game):
+    if not check_time_seciruty(request.username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code=403,detail="Invalid signature")
     try:
@@ -715,6 +739,8 @@ class Delete_Game(BaseModel):
     timestamp:float = Field(default_factory=time.time)
 @app.post("/delete_game")
 async def delete_game(request:Delete_Game):
+    if not check_time_seciruty(request.username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code=403,detail="Invalid signature")
     else:
@@ -738,6 +764,8 @@ class GetUserGuess(BaseModel):
     id:str = Optional[str]
 @app.post("/get/user/num")
 async def get_user_num(request:GetUserGuess):
+    if not check_time_seciruty(request.username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     if not verify_signature(request.model_dump(),request.siganture):
         raise HTTPException(status_code=403,detail="Invalid signature")
     else:
@@ -821,6 +849,8 @@ class WriteOneTry(BaseModel):
     timestamp:float = Field(default_factory = time.time)
 @app.post("/write/one/try")
 async def write_one_try(request:WriteOneTry):
+    if not check_time_seciruty(request.username):
+        raise HTTPException(status_code=429,detail="Too many requests")
     if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code = 403,detail = "Invalid signature")
     else:
