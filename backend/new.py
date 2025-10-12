@@ -870,8 +870,28 @@ async def write_one_try(request:WriteOneTry):
         except Exception as e:
             raise HTTPException(status_code = 400,deatail = f"Error : {e}")    
 def payment(amount:int,user_id:str) -> bool:
+    url = "http://0.0.0.0:8080/user/pay"
+    sig= "TEST SIGNATURE"
     try:
-        pass
+        data = {
+            "username": user_id,
+            "amount": amount,
+            "message":""
+        }
+        data_str = json.dumps(data, sort_keys=True, separators=(',', ':'))
+        
+        signature = hmac.new(
+            sig.encode(),
+            data_str.encode(),
+            hashlib.sha256
+        )
+        
+        headers ={
+            "Content-Type": "application/json",
+            "X-Signature": signature.hexdigest()
+        }
+
+        response = requests.post(url, headers=headers, json=data)
     except Exception as e:
         raise HTTPException(status_code = 400,detail = "Error")
 if __name__ == "__main__":
