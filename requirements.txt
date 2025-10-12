@@ -32,3 +32,4 @@ typing_extensions==4.15.0
 urllib3==2.5.0
 yarl==1.22.0
 passlib==1.7.4
+slowapi==0.1.9
