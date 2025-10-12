@@ -1,4 +1,5 @@
-from fastapi import FastAPI,HTTPException,Header
+from fastapi import FastAPI,HTTPException,Header,Depends
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel,Field
 import json
 import threading
@@ -23,6 +24,15 @@ import uvicorn
 
 
 
+app = FastAPI()
+security = HTTPBearer()
+
+
+@app.get("/")
+async def main():
+    return "Ludice API"
+
+
 def write_deafault_bank(username:str) -> bool:
     try:
         with open("bank.json","r") as file:
@@ -39,6 +49,8 @@ def write_deafault_bank(username:str) -> bool:
 def get_ton_url() -> str:
     with open("secrets.json","r") as file:
         data = json.load(file)
+
+
 
 def pay() -> bool:
     pass
@@ -57,6 +69,7 @@ def write_def_stats(user_id:str) -> bool:
         return True    
     except Exception as e:
         return False
+    
 
 try:
     redis = redis.Redis('localhost',6379,0,decode_responses=True)
@@ -86,14 +99,17 @@ def verify_signature(data: dict, received_signature: str) -> bool:
 
 
 
-app = FastAPI()
-
-
-
-@app.get("/")
-async def main():
-    return "Ludice API"
-
+def check_time_seciruty(username:str) -> bool:
+    with open("time_sec.json","r") as file:
+        data = json.load(file)
+    cur_time = time.time()   
+    if username in data:
+        if cur_time - data[username] < 1:
+            return False
+    data[username] = cur_time
+    with open("time_sec.json","w") as file:
+        json.dump(data,file)
+            
 
 
 
