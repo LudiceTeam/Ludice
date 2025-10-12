@@ -56,3 +56,15 @@ keyboard_stars = InlineKeyboardMarkup(
     resize_keyboard=True,
     input_field_placeholder="Choose a payment amount:"
     )
+
+game_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="Dice 🎲", callback_data="game_dice"),
+            KeyboardButton(text="Target 🎯", callback_data="game_target"),
+        ]
+    ],
+    one_time_keyboard=True,
+    resize_keyboard=True,
+    input_field_placeholder="Choose a game to play:"
+)

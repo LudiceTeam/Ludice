@@ -3,6 +3,13 @@ from aiogram.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, 
 from aiogram.filters import CommandStart
 from keyboard import start
 from dotenv import load_dotenv, find_dotenv
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message
+from aiogram.enums import ParseMode
+from aiogram.filters import Command
+import asyncio
 import os
 import requests
 import json
@@ -12,42 +19,46 @@ import hmac
 load_dotenv(find_dotenv())
 secret_token = os.getenv("secret_token")
 
+# State group
+class Form(StatesGroup):
+    waiting_for_bet = State()
+
 API_URL = "http://127.0.0.1:8000/register"
 
 start_router = Router()
 payment_router = Router()
-game = Router()
+game_router = Router()
 
 @start_router.message(CommandStart())
 async def cmd_start(message: types.Message):
     
-    terms_and_conditions = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="Agree ✅", pay=True)]]
-    )
+    # terms_and_conditions = InlineKeyboardMarkup(
+    #     inline_keyboard=[[InlineKeyboardButton(text="Agree ✅", pay=True)]]
+    # )
     
     
     await message.answer("Welcome to the ludicé bot. Choose an option:", reply_markup=start.start_kb)
-    user_username = message.from_user.username
-    user_id = message.from_user.id
-    data = {
-        "username": user_username,
-        "id": user_id
-    }
-    data_str = json.dumps(data, sort_keys=True, separators=(',', ':'))
+    # user_username = message.from_user.username
+    # user_id = message.from_user.id
+    # data = {
+    #     "username": user_username,
+    #     "id": user_id
+    # }
+    # data_str = json.dumps(data, sort_keys=True, separators=(',', ':'))
     
-    signature = hmac.new(
-        SYSTE_SECRET.encode(),
-        data_str.encode(),
-        hashlib.sha256
-    )
+    # signature = hmac.new(
+    #     SYSTE_SECRET.encode(),
+    #     data_str.encode(),
+    #     hashlib.sha256
+    # )
     
-    headers ={
-        "Content-Type": "application/json",
-        "X-Signature": signature.hexdigest()
-    }
+    # headers ={
+    #     "Content-Type": "application/json",
+    #     "X-Signature": signature.hexdigest()
+    # }
 
-    response = requests.post(API_URL, headers=headers, json=data)
-    print(response.status_code, response.text)
+    # response = requests.post(API_URL, headers=headers, json=data)
+    # print(response.status_code, response.text)
 
 @start_router.message(F.text == "Top up 🔝")
 async def stars(message: types.Message):
@@ -243,3 +254,36 @@ async def payment_success(msg: types.Message):
     )
 
 # Game section
+@game_router.message(F.text == "Roll 🎲")
+async def play_game(message: types.Message):
+    await message.answer("Choose a game to play:", reply_markup=start.game_kb)
+
+@game_router.message(F.text == "Dice 🎲")
+async def play_dice(message: types.Message, state: FSMContext):
+    await message.answer("🎲 You chose to play Dice! What amount are you willing to bet?")
+    await state.set_state(Form.waiting_for_bet)
+
+
+@game_router.message(Form.waiting_for_bet)
+async def process_bet(message: types.Message, state: FSMContext):
+    bet_amount = message.text
+
+    if not bet_amount.isdigit():
+        await message.answer("❌ Please enter a valid number for your bet.")
+        return
+
+    await state.update_data(bet=int(bet_amount))
+    await message.answer(f"You have placed a bet of {bet_amount} ⭐. Good luck!")
+    print(bet_amount, 'Bet amount received')
+    
+    try:
+        if int(bet_amount) < 10:
+            await message.answer("❌ Minimum bet is 10 stars. Please enter a valid bet amount.")
+            return
+    except ValueError:
+        await message.answer("❌ Please enter a valid number for your bet.")
+        return
+
+@game_router.message(F.text == "Target 🎯")
+async def play_target(callback: types.CallbackQuery):
+    await callback.answer("In development...")
