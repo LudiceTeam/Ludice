@@ -273,8 +273,13 @@ async def process_bet(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(bet=int(bet_amount))
+    
     await message.answer(f"You have placed a bet of {bet_amount} ⭐. Good luck!")
     print(bet_amount, 'Bet amount received')
+    
+    
+    
+    
     # api call to backend with bet amount and user id
     # data = {
     #     "user_id": message.from_user.id,
