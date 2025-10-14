@@ -913,7 +913,55 @@ async def get_last_throw(request:Get_Last_Throw):
         raise HTTPException(status_code=400,detail="Error game not found")    
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")
-     
+    
+
+
+######### ADMIN #########
+#########################
+#########################
+
+
+class DeleteUser(BaseModel):
+    username:str
+    siganture:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/delete/user")  
+async def delete_user(request:DeleteUser):
+    if not verify_signature(request.model_dump(),request.siganture):
+        raise HTTPException(status_code=403,detail="Invalide signature")
+    found = False
+    try:
+        with open("users.json","r") as file:
+            data = json.load(file)
+        if request.username in data:
+            del data[request.username]
+            with open("users.json","w") as file:
+                json.dump(data,file)
+            found = True    
+
+        with open("stats.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["user_id"] == request.username:
+                ind = data.index(user)
+                data.pop(ind)
+                found = True
+                with open("stats.json","w") as file:
+                    json.dump(data,file)
+        with open("bank.json","r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == request.username:
+                ind = data.index(user)
+                data.pop(ind)
+                found = True
+                with open("stats.json","w") as file:
+                    json.dump(data,file)
+        if found:
+            return True
+        raise HTTPException(status_code=404,detail="Error user not found")
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")
 
 
 if __name__ == "__main__":
