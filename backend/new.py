@@ -894,8 +894,27 @@ def payment(amount:int,user_id:str) -> bool:
         response = requests.post(url, headers=headers, json=data)
     except Exception as e:
         raise HTTPException(status_code = 400,detail = "Error")
-    
+class Get_Last_Throw(BaseModel):
+    game_id:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/get/last/throw")    
+async def get_last_throw(request:Get_Last_Throw):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    try:
+        with open("drotic.json","r") as file:
+            data = json.load(file)
+        for game in data:
+            if game["id"] == request.id:
+                if len(game["players"]) == 2 and len(game["cache"]) != 0:
+                    return game["cache"][-1]
+                raise HTTPException(status_code=400 ,detail="Error the cache is empty -> zero bets or there are less than 2 players")
+        raise HTTPException(status_code=400,detail="Error game not found")    
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")
+     
 
-    
+
 if __name__ == "__main__":
     uvicorn.run(app,host = "0.0.0.0",port = 8080)
