@@ -1,14 +1,18 @@
 frontend:
   - changed-files:
-      - any-glob-to-any-file: ['frontend/**', 'src/routers/**']
+      - any-glob-to-any-file: ['frontend/**']
 
 backend:
   - changed-files:
-      - any-glob-to-any-file: ['backend/**', 'src/new.py', 'src/new/**']
+      - any-glob-to-any-file: ['backend/**/*.py', 'backend/new.py', 'backend/financne.py', 'backend/helper.py']
+
+redis:
+  - changed-files:
+      - any-glob-to-any-file: ['backend/redis/**', '**/*.go', 'go.mod', 'go.sum']
 
 bot:
   - changed-files:
-      - any-glob-to-any-file: ['bot/**', 'src/app.py', 'src/app/**']
+      - any-glob-to-any-file: ['frontend/app.py', 'frontend/routers/**', 'frontend/keyboard/**']
 
 docs:
   - changed-files:
@@ -16,27 +20,23 @@ docs:
 
 config:
   - changed-files:
-      - any-glob-to-any-file: ['.github/**', '**/*.yml', '**/*.yaml']
+      - any-glob-to-any-file: ['.github/**', '**/*.yml', '**/*.yaml', 'Dockerfile*', 'docker-compose.yml']
 
 tests:
   - changed-files:
-      - any-glob-to-any-file: ['tests/**', '**/*_test.py']
+      - any-glob-to-any-file: ['test/**', '**/*_test.py', '**/*_test.go']
 
-payment:
+data:
   - changed-files:
-      - any-glob-to-any-file: ['payment/**', 'src/payment/**']
+      - any-glob-to-any-file: ['data/**/*.json']
 
 security:
   - changed-files:
-      - any-glob-to-any-file: ['SECURITY.md', 'src/security/**', '.github/security/**']
+      - any-glob-to-any-file: ['SECURITY.md']
 
-gameplay:
+dependencies:
   - changed-files:
-      - any-glob-to-any-file: ['game/**', 'src/gameplay/**', 'src/game/**']
-
-refactor:
-  - changed-files:
-      - any-glob-to-any-file: ['**']
+      - any-glob-to-any-file: ['requirements.txt', 'go.mod', 'go.sum']
 
 ci:
   - changed-files:
