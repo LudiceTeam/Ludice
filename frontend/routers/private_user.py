@@ -273,16 +273,42 @@ async def process_bet(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(bet=int(bet_amount))
+    
     await message.answer(f"You have placed a bet of {bet_amount} ⭐. Good luck!")
     print(bet_amount, 'Bet amount received')
     
-    try:
-        if int(bet_amount) < 10:
-            await message.answer("❌ Minimum bet is 10 stars. Please enter a valid bet amount.")
-            return
-    except ValueError:
-        await message.answer("❌ Please enter a valid number for your bet.")
-        return
+    
+    
+    
+    # api call to backend with bet amount and user id
+    # data = {
+    #     "user_id": message.from_user.id,
+    #     "bet": bet_amount
+    # }
+    # data_str = json.dumps(data, sort_keys=True, separators=(',', ':'))
+    
+    # signature = hmac.new(
+    #     SYSTE_SECRET.encode(),
+    #     data_str.encode(),
+    #     hashlib.sha256
+    # )
+    
+        # headers ={
+    #     "Content-Type": "application/json",
+    #     "X-Signature": signature.hexdigest()
+    # }
+
+    # response = requests.post(API_URL, headers=headers, json=data)
+    # print(response.status_code, response.text)
+    
+    # check if bet amount is a number and greater than 10
+    # try:
+    #     if int(bet_amount) < 10:
+    #         await message.answer("❌ Minimum bet is 10 stars. Please enter a valid bet amount.")
+    #         return
+    # except ValueError:
+    #     await message.answer("❌ Please enter a valid number for your bet.")
+    #     return
 
 @game_router.message(F.text == "Target 🎯")
 async def play_target(callback: types.CallbackQuery):
