@@ -962,6 +962,52 @@ async def delete_user(request:DeleteUser):
         raise HTTPException(status_code=404,detail="Error user not found")
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error : {e}")
+class GetAllGames(BaseModel):
+    signature:str
+    username:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/get/all/games")
+async def get_all_games(request:GetAllGames):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code=403,detail="Invalid signature")
+    games = []
+    try:
+        with open("game.json","r") as file:
+            data = json.load(file)
+        for game in data:
+            if request.username in game["players"]:
+                games.append({
+                    "Name":"Ludice main game",
+                    "Game":game
+                })
+            break
+
+        with open("data_second_game.json","r") as file:
+            second_ = json.load(file)
+        for game in second_:
+            if game["username"] == request.username:
+                game.append({
+                    "Name":"Data second Game",
+                    "Game":game
+                })
+                break
+
+        with open("drotic.json","r") as file:
+            drotic = json.load(file)
+
+        for game in drotic:
+            if request.username in game["players"]:
+                games.append({
+                    "Name":"Drotic",
+                    "Game":game
+                })    
+                break   
+        if len(games) != 0:
+            return games
+        raise HTTPException(status_code=404,detail="Right now user is not playing")        
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")    
+
 
 
 if __name__ == "__main__":
