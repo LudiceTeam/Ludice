@@ -1,0 +1,30 @@
+# Testing dependencies for Ludicé
+# Install with: pip install -r requirements-test.txt
+
+# Core testing framework
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Coverage reporting
+pytest-cov>=4.1.0
+
+# FastAPI testing
+httpx>=0.24.0
+
+# Parallel test execution (optional)
+pytest-xdist>=3.3.0
+
+# Better test output (optional)
+pytest-sugar>=0.9.7
+
+# Test profiling (optional)
+pytest-profiling>=1.7.0
+
+# Mock and fixtures
+pytest-mock>=3.11.0
+freezegun>=1.2.2  # For time-based testing
+
+# Note: These are in addition to main requirements.txt
+# Make sure to install main dependencies first:
+# pip install -r requirements.txt
+# pip install -r requirements-test.txt
