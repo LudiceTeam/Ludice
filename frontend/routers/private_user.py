@@ -16,49 +16,113 @@ import json
 import hashlib
 import hmac
 
+
+
+
+
+# Legal text import
+from common.legal_text import TERMS_FULL
+
+# Gambling reminder function
+GAMBLING_REMINDER = """
+⚠️ **Responsible Gaming Reminder**
+
+• Only bet what you can afford to lose
+• Gambling should be entertainment, not income
+• Set limits and stick to them
+• Take breaks regularly
+
+🔞 By continuing, you confirm you are 18+ and accept the risks.
+"""
+
+async def show_gambling_reminder(message):
+    """Show responsible gambling reminder before playing."""
+    await message.answer(GAMBLING_REMINDER, parse_mode="Markdown")
+
 load_dotenv(find_dotenv())
 secret_token = os.getenv("secret_token")
 
 # State group
-class Form(StatesGroup):
+class BetStates(StatesGroup):
     waiting_for_bet = State()
+
+class LegalStates(StatesGroup):
+    """FSM states for terms acceptance flow."""
+    waiting_for_acceptance = State()
+    age_verification = State()
+
 
 API_URL = "http://127.0.0.1:8000/register"
 
+# Routers
 start_router = Router()
 payment_router = Router()
 game_router = Router()
+legal_router = Router()
+
+# Helper function for legal keyboard
+def get_legal_nav_keyboard() -> InlineKeyboardMarkup:
+    """Create keyboard for terms acceptance."""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ I Accept (18+)", callback_data="accept_terms"),
+            InlineKeyboardButton(text="📖 Read Full Terms", callback_data="view_full_terms")
+        ],
+        [
+            InlineKeyboardButton(text="❌ I Decline", callback_data="decline_terms")
+        ]
+    ])
+
 
 @start_router.message(CommandStart())
-async def cmd_start(message: types.Message):
-    
-    # terms_and_conditions = InlineKeyboardMarkup(
-    #     inline_keyboard=[[InlineKeyboardButton(text="Agree ✅", pay=True)]]
-    # )
-    
-    
-    await message.answer("Welcome to the ludicé bot. Choose an option:", reply_markup=start.start_kb)
-    # user_username = message.from_user.username
-    # user_id = message.from_user.id
-    # data = {
-    #     "username": user_username,
-    #     "id": user_id
-    # }
-    # data_str = json.dumps(data, sort_keys=True, separators=(',', ':'))
-    
-    # signature = hmac.new(
-    #     SYSTE_SECRET.encode(),
-    #     data_str.encode(),
-    #     hashlib.sha256
-    # )
-    
-    # headers ={
-    #     "Content-Type": "application/json",
-    #     "X-Signature": signature.hexdigest()
-    # }
+async def cmd_start(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
 
-    # response = requests.post(API_URL, headers=headers, json=data)
-    # print(response.status_code, response.text)
+    # Show terms and set FSM state to wait for acceptance
+    await state.set_state(LegalStates.waiting_for_acceptance)
+    await message.answer(
+        TERMS_FULL,
+        parse_mode="Markdown",
+        reply_markup=get_legal_nav_keyboard()
+    )
+
+
+# Callback handlers for terms acceptance
+@start_router.callback_query(F.data == "accept_terms", LegalStates.waiting_for_acceptance)
+async def accept_terms_handler(callback: types.CallbackQuery, state: FSMContext):
+    """Handle user accepting terms of service."""
+    user_id = callback.from_user.id
+
+    await state.clear()
+    await callback.message.edit_text("✅ Thank you for accepting the terms!")
+    await callback.message.answer(
+        "Welcome to Ludicé! Choose an option:",
+        reply_markup=start.start_kb
+    )
+    await callback.answer()
+
+
+@start_router.callback_query(F.data == "decline_terms", LegalStates.waiting_for_acceptance)
+async def decline_terms_handler(callback: types.CallbackQuery, state: FSMContext):
+    """Handle user declining terms of service."""
+    await state.clear()
+    await callback.message.edit_text(
+        "❌ You must accept the terms to use Ludicé.\n\n"
+        "If you change your mind, use /start to try again."
+    )
+    await callback.answer()
+
+
+@start_router.callback_query(F.data == "view_full_terms", LegalStates.waiting_for_acceptance)
+async def view_full_terms_handler(callback: types.CallbackQuery):
+    """Show full terms in a separate message."""
+    await callback.answer("Showing full terms...")
+    await callback.message.answer(
+        f"{TERMS_FULL}\n\n"
+        "Please return to the previous message to accept or decline.",
+        parse_mode="Markdown"
+    )
+
 
 @start_router.message(F.text == "Top up 🔝")
 async def stars(message: types.Message):
@@ -196,43 +260,43 @@ async def send_invoice(callback: types.CallbackQuery):
 # 750 stars
 @start_router.callback_query(F.data == "star750")
 async def send_invoice(callback: types.CallbackQuery):
-    prices = [LabeledPrice(lebel="750 ⭐",amount=1000)] 
+    prices = [LabeledPrice(label="750 ⭐", amount=1000)]
     pay_kb = InlineKeyboardMarkup(
-        InlineKeyboardButton(text="Pay 1000 ⭐")
-        )
-    
+        inline_keyboard=[[InlineKeyboardButton(text="Pay 1000 ⭐", pay=True)]]
+    )
+
     await callback.message.answer_invoice(
         title="❖ Telegram Stars",
-        discription="Your account will be credited with 750 stars for 1000 starts when you complete the payment.",
-        playload="topup_1000",
+        description="Your account will be credited with 750 stars for 1000 stars when you complete the payment.",
+        payload="topup_1000",
         provider_token="",
         prices=prices,
-        currency ="XTR",
+        currency="XTR",
         reply_markup=pay_kb
     )
- 
+
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
 
-# 1000 stars 
+# 1000 stars
 @start_router.callback_query(F.data == "star1000")
 async def send_invoice(callback: types.CallbackQuery):
-    prices = [LabeledPrice(lebel="1000 ⭐",amount=1333)] 
+    prices = [LabeledPrice(label="1000 ⭐", amount=1333)]
     pay_kb = InlineKeyboardMarkup(
-        InlineKeyboardButton(text="Pay 1333 ⭐")
-        )
-    
+        inline_keyboard=[[InlineKeyboardButton(text="Pay 1333 ⭐", pay=True)]]
+    )
+
     await callback.message.answer_invoice(
         title="❖ Telegram Stars",
-        discription="Your account will be credited with 1000 stars for 1333 starts when you complete the payment.",
-        playload="topup_1333",
+        description="Your account will be credited with 1000 stars for 1333 stars when you complete the payment.",
+        payload="topup_1333",
         provider_token="",
         prices=prices,
-        currency ="XTR",
+        currency="XTR",
         reply_markup=pay_kb
     )
- 
+
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None)
@@ -260,11 +324,14 @@ async def play_game(message: types.Message):
 
 @game_router.message(F.text == "Dice 🎲")
 async def play_dice(message: types.Message, state: FSMContext):
+    # Show responsible gambling reminder
+    await show_gambling_reminder(message)
+
     await message.answer("🎲 You chose to play Dice! What amount are you willing to bet?")
-    await state.set_state(Form.waiting_for_bet)
+    await state.set_state(BetStates.waiting_for_bet)
 
 
-@game_router.message(Form.waiting_for_bet)
+@game_router.message(BetStates.waiting_for_bet)
 async def process_bet(message: types.Message, state: FSMContext):
     bet_amount = message.text
 
