@@ -1,0 +1,21 @@
+# Core bot framework
+aiogram==3.22.0
+
+# Environment variables
+python-dotenv==1.1.1
+
+# HTTP requests (for backend API calls)
+requests==2.32.5
+
+# Async support (aiogram dependencies)
+aiohttp==3.13.0
+aiofiles==25.1.0
+magic-filter==1.0.12
+
+# Data validation
+pydantic==2.12.0
+pydantic_core==2.41.1
+
+# URL handling
+yarl==1.22.0
+idna==3.11
