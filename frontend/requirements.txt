@@ -14,7 +14,7 @@ magic-filter==1.0.12
 
 # Data validation
 pydantic==2.12.2
-pydantic_core==2.41.1
+pydantic_core==2.41.4
 
 # URL handling
 yarl==1.22.0
