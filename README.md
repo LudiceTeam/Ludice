@@ -55,6 +55,7 @@ Ludicé is a Telegram bot that offers dice-rolling game where users can compete 
 
 - `/start` - Initialize the bot
 - `/play` - Start a new game
+- `/menu` - Main menu
 - (More commands coming soon)
 
 ### Notification Settings
@@ -112,6 +113,7 @@ Ludicé - это Telegram бот, предлагающий игру в кост�
 
 - `/start` - Инициализация бота
 - `/play` - Начать новую игру
+- `/menu` - Главное меню
 - (Скоро будут добавлены новые команды)
 
 ### Настройка уведомлений
