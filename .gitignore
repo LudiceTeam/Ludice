@@ -8,3 +8,17 @@ venv/
 __pycache__/
 secrets.json
 
+# Go dependencies and build files
+vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# Go build cache
+.cache/
