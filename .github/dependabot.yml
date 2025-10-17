@@ -12,7 +12,7 @@ updates:
       - "python"
 
   - package-ecosystem: "gomod"
-    directory: "/"
+    directory: "/backend/redis"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
