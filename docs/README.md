@@ -6,7 +6,7 @@ Complete documentation for the Ludicé Telegram bot dice-rolling game.
 
 ### Getting Started
 
-- **[Setup Guide](setup-guide)** - Complete installation and configuration guide
+- **[Setup Guide](SETUP_GUIDE.md)** - Complete installation and configuration guide
   - Prerequisites and system requirements
   - Environment setup
   - Running the application
@@ -14,14 +14,14 @@ Complete documentation for the Ludicé Telegram bot dice-rolling game.
 
 ### Technical Documentation
 
-- **[Technical Architecture](technical-architecture)** - System design and architecture
+- **[Technical Architecture](TECHNICAL_ARCHITECTURE.md)** - System design and architecture
   - Architecture overview
   - Component descriptions
   - Data flow diagrams
   - Technology stack
   - Scalability considerations
 
-- **[API Documentation](api-documentation)** - Complete API reference
+- **[API Documentation](API_DOCUMENTATION.md)** - Complete API reference
   - Backend Game API
   - Balance Service API
   - Frontend Bot Integration
@@ -30,7 +30,7 @@ Complete documentation for the Ludicé Telegram bot dice-rolling game.
 
 ### Development
 
-- **[Development Guide](development-guide)** - For contributors and developers
+- **[Development Guide](DEVELOPMENT_GUIDE.md)** - For contributors and developers
   - Development environment setup
   - Code structure
   - Adding features
@@ -41,10 +41,10 @@ Complete documentation for the Ludicé Telegram bot dice-rolling game.
 
 - **[Legal Documents](legal/)** - Terms, privacy, and compliance
   - [Bot Summary](legal/BOT_SUMMARY.md) - Quick legal reference
-  - [Terms of Service](legal/TERMS_OF_SERVICE) - Full terms
-  - [Privacy Policy](legal/PRIVACY_POLICY) - Privacy and data handling
-  - [Responsible Gambling](legal/RESPONSIBLE_GAMBLING) - Gambling policy
-  - [Legal Implementation Guide](/docs/legal/README) - Integration instructions
+  - [Terms of Service](legal/TERMS_OF_SERVICE.md) - Full terms
+  - [Privacy Policy](legal/PRIVACY_POLICY.md) - Privacy and data handling
+  - [Responsible Gambling](legal/RESPONSIBLE_GAMBLING.md) - Gambling policy
+  - [Legal Implementation Guide](legal/README.md) - Integration instructions
 
 ---
 
@@ -53,16 +53,16 @@ Complete documentation for the Ludicé Telegram bot dice-rolling game.
 ### 🚀 I want to...
 
 **Get started quickly:**
-→ [Setup Guide](setup-guide)
+→ [Setup Guide](SETUP_GUIDE.md)
 
 **Understand the architecture:**
-→ [Technical Architecture](technical-architecture)
+→ [Technical Architecture](TECHNICAL_ARCHITECTURE.md)
 
 **Integrate with the API:**
-→ [API Documentation](api-documentation)
+→ [API Documentation](API_DOCUMENTATION.md)
 
 **Add new features:**
-→ [Development Guide](development-guide)
+→ [Development Guide](DEVELOPMENT_GUIDE.md)
 
 **Review legal requirements:**
 → [Legal Documents](legal/)
@@ -129,7 +129,7 @@ Ludicé is a Telegram bot that lets users play dice-rolling games against each o
 ```
 
 **For detailed architecture:**
-→ [Technical Architecture](technical-architecture)
+→ [Technical Architecture](TECHNICAL_ARCHITECTURE.md)
 
 ---
 
@@ -193,7 +193,7 @@ python app.py
 ```
 
 **For detailed setup:**
-→ [Setup Guide](setup-guide)
+→ [Setup Guide](SETUP_GUIDE.md)
 
 ---
 
@@ -219,7 +219,7 @@ python app.py
 4. **Credit** - Balance updated (~25% fee applied)
 
 **For API details:**
-→ [API Documentation](api-documentation)
+→ [API Documentation](API_DOCUMENTATION.md)
 
 ---
 
@@ -247,14 +247,14 @@ Ludice/
 
 ### Adding a Feature
 
-1. Read [Development Guide](development-guide)
+1. Read [Development Guide](DEVELOPMENT_GUIDE.md)
 2. Create feature branch: `git checkout -b feature/my-feature`
 3. Implement changes
 4. Test locally
 5. Submit pull request to `dev` branch
 
 **For contribution guidelines:**
-→ [Development Guide](development-guide)
+→ [Development Guide](DEVELOPMENT_GUIDE.md)
 
 ---
 
@@ -282,7 +282,7 @@ Ludice/
 | `/modify_balance` | POST | Add/subtract balance |
 
 **For complete API reference:**
-→ [API Documentation](api-documentation)
+→ [API Documentation](API_DOCUMENTATION.md)
 
 ---
 
@@ -318,7 +318,7 @@ Never commit:
 - API tokens
 
 **For security details:**
-→ [Technical Architecture](technical-architecture#security-architecture)
+→ [Technical Architecture](TECHNICAL_ARCHITECTURE.md#security-architecture)
 
 ---
 
@@ -353,7 +353,7 @@ curl http://localhost:8000/get_balance?username=testuser
 ```
 
 **For testing guide:**
-→ [Development Guide](development-guide#testing)
+→ [Development Guide](DEVELOPMENT_GUIDE.md#testing)
 
 ---
 
@@ -419,7 +419,7 @@ docker-compose up -d
 6. Implement backups
 
 **For deployment guide:**
-→ [Setup Guide](setup-guide#production-deployment)
+→ [Setup Guide](SETUP_GUIDE.md#production-deployment)
 
 ---
 
@@ -440,7 +440,7 @@ docker-compose up -d
 → `lsof -i :8080` then `kill -9 <PID>`
 
 **For more troubleshooting:**
-→ [Setup Guide](setup-guide#troubleshooting)
+→ [Setup Guide](SETUP_GUIDE.md#troubleshooting)
 
 ---
 
@@ -464,7 +464,7 @@ docker-compose up -d
 
 We welcome contributions! Please:
 
-1. Read [Development Guide](development-guide)
+1. Read [Development Guide](DEVELOPMENT_GUIDE.md)
 2. Fork the repository
 3. Create feature branch
 4. Make changes
