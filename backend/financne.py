@@ -78,8 +78,6 @@ class Pay(BaseModel):
     timestamp:float = Field(default_factory=time.time)
 TON = TON_Payment(cache["url"],cache["api_token"])
 
-
-
 @app.post("/user/pay")
 async def pay(request:Pay):
     if not verify_signature(request.model_dump(),request.signature):

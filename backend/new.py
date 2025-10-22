@@ -104,6 +104,13 @@ def verify_signature(data: dict, received_signature: str) -> bool:
     
     return hmac.compare_digest(received_signature, expected_signature)
 
+def generate_siganture(data:dict) -> str:
+    data_to_ver = data.copy()
+    data_to_ver.pop("signature",None)
+    data_str = json.dumps(data_to_ver, sort_keys=True, separators=(',', ':'))
+    expected_signature = hmac.new(KEY.encode(), data_str.encode(), hashlib.sha256).hexdigest()
+    return str(expected_signature)
+
 
 time_lock = threading.Lock()
 def check_time_seciruty(username:str) -> bool:
@@ -141,6 +148,32 @@ def redis_register(username:str,pasw:str) -> bool:
         redis.set(f"user:{username}",pasw)
         return True
     
+
+
+def payment(username:str,amount:int,message:str = "") -> bool:
+    url = "http://0.0.0.0:8080/user/pay"
+    main_data = {
+        "username":username,
+        "amount":amount,
+        "message":message,
+        "timestamp":time.time()
+    }
+    data_str = json.dumps(main_data, sort_keys=True, separators=(',', ':'))
+        
+    signature = hmac.new(
+        KEY.encode(),
+        data_str.encode(),
+        hashlib.sha256
+    ).hexdigest()
+    main_data["signature"] = signature
+    
+    headers ={
+        "Content-Type": "application/json"
+    }
+    try:
+        resp = requests.post(url,json = main_data,headers=headers)
+    except Exception as e:
+        print(f"Error : {e}")
 
 
 @app.post("/register")
@@ -745,7 +778,7 @@ async def delete_game(request:Delete_Game):
         raise HTTPException(status_code=403,detail="Invalid signature")
     else:
         try:
-            with open("data_second_game=.json","r") as file:
+            with open("data_second_game.json","r") as file:
                 data = json.load(file)
             for game in data:
                 if game["username"] == request.usernmae and game["id"] == request.id:
@@ -868,32 +901,9 @@ async def write_one_try(request:WriteOneTry):
                     return True
             raise HTTPException(status_code = 404,detail = "User not found")        
         except Exception as e:
-            raise HTTPException(status_code = 400,deatail = f"Error : {e}")    
-def payment(amount:int,user_id:str) -> bool:
-    url = "http://0.0.0.0:8080/user/pay"
-    sig= "TEST SIGNATURE"
-    try:
-        data = {
-            "username": user_id,
-            "amount": amount,
-            "message":""
-        }
-        data_str = json.dumps(data, sort_keys=True, separators=(',', ':'))
-        
-        signature = hmac.new(
-            sig.encode(),
-            data_str.encode(),
-            hashlib.sha256
-        )
-        
-        headers ={
-            "Content-Type": "application/json",
-            "X-Signature": signature.hexdigest()
-        }
+            raise HTTPException(status_code = 400,deatail = f"Error : {e}") 
+#write to call payment   
 
-        response = requests.post(url, headers=headers, json=data)
-    except Exception as e:
-        raise HTTPException(status_code = 400,detail = "Error")
 class Get_Last_Throw(BaseModel):
     game_id:str
     signature:str
