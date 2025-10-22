@@ -172,8 +172,10 @@ def payment(username:str,amount:int,message:str = "") -> bool:
     }
     try:
         resp = requests.post(url,json = main_data,headers=headers)
+        return resp.status_code == 200
     except Exception as e:
         print(f"Error : {e}")
+        return False
 
 
 @app.post("/register")
@@ -295,6 +297,8 @@ async def withdraw(request:IncreaseUserBalance):
                 try:
                     if user["balance"] >= request.amount:
                         user["balance"] -= request.amount
+                        #payment(username:str,amount:int,message:str = "")
+                        payment(request.username,request.amount,"")
                         with open("bank.json","w") as file:
                             json.dump(data,file)
                     raise HTTPException(status_code=400,detail=f"User balance doesnt have this much money :(")
