@@ -24,6 +24,7 @@ import secrets
 import time
 import requests
 import uvicorn
+from datetime import datetime
 
 
 ### INIT API ###
@@ -132,14 +133,7 @@ def check_time_seciruty(username:str) -> bool:
         with open("time_sec.json","w") as file:
             json.dump(data,file)
         return True
-                
-
-class Register(BaseModel):
-    username:str# передавай id юзера
-    psw:str# это бялть зачем здесь?
-    psw:str
-    signature:str
-    timestamp:float = Field(default_factory=time.time)
+    
 
 def redis_register(username:str,pasw:str) -> bool:
     if redis.exists(f"user:{username}"):
@@ -172,10 +166,32 @@ def payment(username:str,amount:int,message:str = "") -> bool:
     }
     try:
         resp = requests.post(url,json = main_data,headers=headers)
+        return resp.status_code == 200
     except Exception as e:
         print(f"Error : {e}")
+        return False
+                
+#------- ЛОГИ -------
+def write_logs(error:str):
+    try:
+        with open("data/logs.json","r") as file:
+            data = json.load(file)
+        data.append({
+            "time":datetime.now(),
+            "error":error,
+            "id":uuid.uuid4()
+        })    
+        with open("data/logs.json","w") as file:
+            json.dump(data,file)
+    except Exception as e:
+        write_logs(str(e))
+        print(f"Error : {e}")
 
-
+class Register(BaseModel):
+    username:str# передавай id юзера
+    psw:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
 @app.post("/register")
 
 async def register(request:Register):
@@ -275,6 +291,7 @@ async def increase_user_balance(request:IncreaseUserBalance):
             raise HTTPException(status_code=404,detail="User not found")            
 
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error something went wrong : {e}")
 @app.post("/user/withdraw")
 async def withdraw(request:IncreaseUserBalance):
@@ -295,13 +312,17 @@ async def withdraw(request:IncreaseUserBalance):
                 try:
                     if user["balance"] >= request.amount:
                         user["balance"] -= request.amount
+                        #payment(username:str,amount:int,message:str = "")
+                        payment(request.username,request.amount,"")
                         with open("bank.json","w") as file:
                             json.dump(data,file)
                     raise HTTPException(status_code=400,detail=f"User balance doesnt have this much money :(")
                 except Exception as e:
+                    write_logs(str(e))
                     raise HTTPException(status_code=400,detail=f"Error while withdraw : {e}")    
 
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Something went wrong : {e}")
 
 
@@ -317,10 +338,12 @@ async def get_user_balance(username:str):
                 try:
                     return user["balance"]
                 except Exception as e:
+                    write_logs(str(e))
                     raise HTTPException(status_code=400,detail=f"Error while result:{e}")  
         raise HTTPException(status_code=404,detail=f"User:{username} not found")         
             
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error : {e}")
 
 
@@ -334,9 +357,11 @@ async def count_all_money():
             try:
                 total += user["balance"]
             except Exception as e:
+                write_logs(str(e))
                 raise HTTPException(status_code=400,detail=f"Error while counting {e}")       
         return total     
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Something went wrong {e}")
 
 
@@ -366,7 +391,6 @@ async def start_game(request:Start_Game):
             found = True
             found_id = game["id"]
             add_game(user_id = request.username)
-            add_win(user_id = request.username)
     if found:
         with open("game.json","w") as file:
             json.dump(data,file)
@@ -423,6 +447,7 @@ async def cancel_find(request:Cancel_My_Find):
                 return True
         return False             
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Exception as {e}")         
 
 
@@ -452,6 +477,7 @@ async def write_winner(request:Win):
                     with open("game.json","w") as file:
                         json.dump(data,file)
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error {e}")   
 
 class Leave(BaseModel):
@@ -483,6 +509,7 @@ async def leave(request:Leave):
                     return True
         raise HTTPException(status_code=400,detail="Error lobby not found :(")        
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error: {e}")    
 
 class Procent_Of_Wins(BaseModel):
@@ -503,6 +530,7 @@ async def count_of_wins(request:Procent_Of_Wins):
     try:
         return result
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error: {e}")    
 @app.get("/get/leader/board/most_games")
 async def get_leader_board_games():
@@ -515,6 +543,7 @@ async def get_leader_board_games():
             result[user["user_id"]] = user["total_games"]   
         return result     
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error: {e}")
 @app.get("/get/procent/wins")
 async def get_leader_board():
@@ -554,6 +583,7 @@ async def get_me(user_id:str):
                     "Balance":balance
                 }
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error : {e}")        
 
 
@@ -574,6 +604,7 @@ async def is_playing(user_id:str) -> bool:
     try:
        return is_user_playing(user_id)
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error {e}")
 
 class WriteRes(BaseModel):
@@ -602,6 +633,7 @@ async def write_res(request:WriteRes):
                     return True
         return False         
     except Exception as e:
+        write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error : {e}")        
         
 
@@ -628,10 +660,39 @@ async def join_by_the_link(user_id:str,bet:int,game_id:str):
                         raise HTTPException(status_code=400,detail="Lobby is full")
                      
                 except Exception as e:
+                    write_logs(str(e))
                     raise HTTPException(status_code=400,detail=f"Error : {e}")        
 
     except Exception as e:
         raise HTTPException(status_code=400,detail=f"Error while joining : {e}")
+    
+class GetLogs(BaseModel):
+    siganture:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/get/server/logs")
+async def get_logs(request:GetLogs):
+    if not verify_signature(request.model_dump(),request.siganture):
+        raise HTTPException(status_code = 429,detail = "Invalid siganture")
+    else:
+        with open("data/logs.json","r") as file:
+            data = json.load(file)
+        try:
+            return data
+        except Exception as e:
+            write_logs(str(e))
+            raise HTTPException(status_code = 400 ,detail = f"Error: {e} ")
+        
+
+class GetLogsByDate(BaseModel):
+    date:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)      
+@app.post("/get/log/date")
+async def get_log_by_date(request:GetLogsByDate):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code=429,detail = "Invalid signature")
+    else:
+        pass
 # Интрефейс Платежки
 class PaymentInter:
     def __init__(self):

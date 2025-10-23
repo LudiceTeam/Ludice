@@ -6,6 +6,7 @@ import time
 import hmac
 import hashlib
 import uvicorn
+import math
 
 
 
@@ -69,6 +70,13 @@ class TON_Payment(Payment):
         )
         return response.json()
 
+def count_commision(amount:int) -> int:
+    our_commmis = round(amount * 0.7)
+    return amount - our_commmis
+
+
+
+
 
 class Pay(BaseModel):
     username:str
@@ -83,7 +91,7 @@ async def pay(request:Pay):
     if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code=403,detail="Invalid signature")
     try:
-        result_pay = TON.pay(cache["ton_wallet"],request.username,request.amount,message="")
+        result_pay = TON.pay(cache["ton_wallet"],request.username,count_commision(request.amount),message="")
         with open(cache["payments"],"r") as file:
             data = json.load(file)
         try:
