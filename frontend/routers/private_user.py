@@ -24,7 +24,7 @@ import time
 # Legal text import
 from common.legal_text import TERMS_FULL
 
-# Gambling reminder function
+# Gamling reminder function
 GAMBLING_REMINDER = """
 ⚠️ **Responsible Gaming Reminder**
 
