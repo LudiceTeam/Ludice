@@ -1,0 +1,84 @@
+{
+  "_language_name": "English",
+  "_language_flag": "🇬🇧",
+
+  "language": {
+    "select": "Please select your language:",
+    "selected": "✅ Language set to English!",
+    "change": "🌐 Change Language"
+  },
+
+  "menu": {
+    "welcome": "Welcome to Ludicé! Choose an option:",
+    "main_menu": "🏠 Main Menu",
+    "choose_game": "Choose a game to play:",
+    "choose_option": "Choose an option..."
+  },
+
+  "buttons": {
+    "roll": "Roll 🎲",
+    "help": "Help ❓",
+    "profile": "Profile 👤",
+    "top_up": "Top up 🔝",
+    "dice": "Dice 🎲",
+    "target": "Target 🎯",
+    "play_again": "🎲 Play Again",
+    "cancel_search": "❌ Cancel Search",
+    "roll_dice": "🎲 Roll Dice"
+  },
+
+  "terms": {
+    "accept": "✅ I Accept",
+    "decline": "❌ I Decline",
+    "read_full": "📖 Read Full Terms",
+    "accepted": "✅ Thank you for accepting the terms!",
+    "declined": "❌ You must accept the terms to use Ludicé.\n\nIf you change your mind, use /start to try again.",
+    "view_full": "Showing full terms...",
+    "return_to_accept": "Please return to the previous message to accept or decline."
+  },
+
+  "payment": {
+    "choose_amount": "Choose a payment amount:",
+    "title": "❖ Telegram Stars",
+    "description_15": "Your account will be credited with 15 stars for 20 starts when you complete the payment.",
+    "description_50": "Your account will be credited with 50 stars for 67 starts when you complete the payment.",
+    "description_75": "Your account will be credited with 75 stars for 100 starts when you complete the payment.",
+    "description_100": "Your account will be credited with 100 stars for 133 starts when you complete the payment.",
+    "description_150": "Your account will be credited with 150 stars for 200 starts when you complete the payment.",
+    "description_250": "Your account will be credited with 250 stars for 333 starts when you complete the payment.",
+    "description_750": "Your account will be credited with 750 stars for 1000 stars when you complete the payment.",
+    "description_1000": "Your account will be credited with 1000 stars for 1333 stars when you complete the payment.",
+    "success": "✅ Your payment has been added to your balance. Thank you for choosing Ludicé",
+    "pay_button": "Pay {amount} ⭐"
+  },
+
+  "game": {
+    "dice_selected": "🎲 You chose to play Dice! What amount are you willing to bet?",
+    "invalid_bet": "❌ Please enter a valid number for your bet.",
+    "minimum_bet": "❌ Minimum bet is 10 stars. Please enter a valid bet amount.",
+    "opponent_found": "🎮 Opponent found!\nBet: {bet} ⭐\n\nRoll your dice!",
+    "searching": "🔍 Searching for opponent...\nBet: {bet} ⭐\n\nPlease wait while we find you a match.",
+    "rolling": "🎲 Rolling...",
+    "your_roll": "Your roll: {roll}\n\n⏳ Waiting for opponent's roll...",
+    "search_cancelled": "❌ Search cancelled.",
+    "welcome_back": "Welcome back to Ludicé!",
+    "cancel_error": "⚠️ Could not cancel search. The game may have already started.",
+    "cancel_exception": "❌ Error canceling search: {error}",
+    "submit_error": "❌ Error submitting result: {error}",
+    "timeout_search": "⏰ Search timeout. No opponent found.\nPlease try again.",
+    "timeout_game": "⏰ Game timeout. Opponent did not roll in time.",
+    "in_development": "In development..."
+  },
+
+  "gambling": {
+    "reminder": "⚠️ **Responsible Gaming Reminder**\n\n• Only bet what you can afford to lose\n• Set limits and stick to them\n• Take breaks regularly"
+  },
+
+  "errors": {
+    "auth_failed": "❌ Authentication failed. Please try again.",
+    "rate_limit": "❌ Too many requests. Please wait a moment and try again.",
+    "network_error": "❌ Network error. Please check your connection and try again.\nError: {error}",
+    "unexpected": "❌ An unexpected error occurred: {error}",
+    "generic": "❌ Error: {error}"
+  }
+}

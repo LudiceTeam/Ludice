@@ -1,0 +1,84 @@
+{
+  "_language_name": "Français",
+  "_language_flag": "🇫🇷",
+
+  "language": {
+    "select": "Veuillez sélectionner votre langue:",
+    "selected": "✅ Langue définie sur français!",
+    "change": "🌐 Changer de langue"
+  },
+
+  "menu": {
+    "welcome": "Bienvenue sur Ludicé! Choisissez une option:",
+    "main_menu": "🏠 Menu principal",
+    "choose_game": "Choisissez un jeu:",
+    "choose_option": "Choisissez une option..."
+  },
+
+  "buttons": {
+    "roll": "Lancer 🎲",
+    "help": "Aide ❓",
+    "profile": "Profil 👤",
+    "top_up": "Recharger 🔝",
+    "dice": "Dés 🎲",
+    "target": "Cible 🎯",
+    "play_again": "🎲 Rejouer",
+    "cancel_search": "❌ Annuler la recherche",
+    "roll_dice": "🎲 Lancer les dés"
+  },
+
+  "terms": {
+    "accept": "✅ J'accepte",
+    "decline": "❌ Je refuse",
+    "read_full": "📖 Lire les conditions complètes",
+    "accepted": "✅ Merci d'avoir accepté les conditions!",
+    "declined": "❌ Vous devez accepter les conditions pour utiliser Ludicé.\n\nSi vous changez d'avis, utilisez /start pour réessayer.",
+    "view_full": "Affichage des conditions complètes...",
+    "return_to_accept": "Veuillez revenir au message précédent pour accepter ou refuser."
+  },
+
+  "payment": {
+    "choose_amount": "Choisissez un montant de paiement:",
+    "title": "❖ Telegram Stars",
+    "description_15": "Votre compte sera crédité de 15 étoiles pour 20 étoiles lorsque vous complétez le paiement.",
+    "description_50": "Votre compte sera crédité de 50 étoiles pour 67 étoiles lorsque vous complétez le paiement.",
+    "description_75": "Votre compte sera crédité de 75 étoiles pour 100 étoiles lorsque vous complétez le paiement.",
+    "description_100": "Votre compte sera crédité de 100 étoiles pour 133 étoiles lorsque vous complétez le paiement.",
+    "description_150": "Votre compte sera crédité de 150 étoiles pour 200 étoiles lorsque vous complétez le paiement.",
+    "description_250": "Votre compte sera crédité de 250 étoiles pour 333 étoiles lorsque vous complétez le paiement.",
+    "description_750": "Votre compte sera crédité de 750 étoiles pour 1000 étoiles lorsque vous complétez le paiement.",
+    "description_1000": "Votre compte sera crédité de 1000 étoiles pour 1333 étoiles lorsque vous complétez le paiement.",
+    "success": "✅ Votre paiement a été ajouté à votre solde. Merci d'avoir choisi Ludicé",
+    "pay_button": "Payer {amount} ⭐"
+  },
+
+  "game": {
+    "dice_selected": "🎲 Vous avez choisi de jouer aux dés! Quel montant êtes-vous prêt à parier?",
+    "invalid_bet": "❌ Veuillez entrer un nombre valide pour votre pari.",
+    "minimum_bet": "❌ La mise minimale est de 10 étoiles. Veuillez entrer un montant valide.",
+    "opponent_found": "🎮 Adversaire trouvé!\nPari: {bet} ⭐\n\nLancez vos dés!",
+    "searching": "🔍 Recherche d'adversaire...\nPari: {bet} ⭐\n\nVeuillez patienter pendant que nous vous trouvons un adversaire.",
+    "rolling": "🎲 Lancement...",
+    "your_roll": "Votre lancer: {roll}\n\n⏳ En attente du lancer de l'adversaire...",
+    "search_cancelled": "❌ Recherche annulée.",
+    "welcome_back": "Bienvenue de retour sur Ludicé!",
+    "cancel_error": "⚠️ Impossible d'annuler la recherche. Le jeu a peut-être déjà commencé.",
+    "cancel_exception": "❌ Erreur lors de l'annulation de la recherche: {error}",
+    "submit_error": "❌ Erreur lors de la soumission du résultat: {error}",
+    "timeout_search": "⏰ Délai de recherche dépassé. Aucun adversaire trouvé.\nVeuillez réessayer.",
+    "timeout_game": "⏰ Délai de jeu dépassé. L'adversaire n'a pas lancé à temps.",
+    "in_development": "En développement..."
+  },
+
+  "gambling": {
+    "reminder": "⚠️ **Rappel de Jeu Responsable**\n\n• Ne pariez que ce que vous pouvez vous permettre de perdre\n• Fixez des limites et respectez-les\n• Faites des pauses régulièrement"
+  },
+
+  "errors": {
+    "auth_failed": "❌ Échec de l'authentification. Veuillez réessayer.",
+    "rate_limit": "❌ Trop de requêtes. Veuillez attendre un moment et réessayer.",
+    "network_error": "❌ Erreur réseau. Veuillez vérifier votre connexion et réessayer.\nErreur: {error}",
+    "unexpected": "❌ Une erreur inattendue s'est produite: {error}",
+    "generic": "❌ Erreur: {error}"
+  }
+}
