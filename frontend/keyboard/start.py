@@ -1,5 +1,19 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
+pre_start_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="english 🇺🇸", callback_data="lang_en"),
+            KeyboardButton(text="русский 🇷🇺", callback_data="lang_ru"),
+            KeyboardButton(text="español 🇪🇸", callback_data="lang_es"),
+            KeyboardButton(text="français 🇫🇷", callback_data="lang_fr"),
+            KeyboardButton(text="italiano 🇮🇹", callback_data="lang_it"),
+        ]
+    ],
+    one_time_keyboard=True,
+    resize_keyboard=True,
+    input_field_placeholder="Choose a language:"
+)
 
 start_kb = ReplyKeyboardMarkup(
     keyboard=[

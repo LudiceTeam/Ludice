@@ -8,11 +8,13 @@ load_dotenv(find_dotenv())
 TOKEN = os.getenv("TOKEN")
 
 from routers.private_user import start_router, game_router
+from routers.admin_user import admin_router
 
 bot = Bot(TOKEN)
 dp = Dispatcher()
 dp.include_router(start_router)
 dp.include_router(game_router)
+dp.include_router(admin_router)
 
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
@@ -21,7 +23,7 @@ async def main():
     time.sleep(0.5)
     print("Press Ctrl+C to stop the bot.")
     time.sleep(1)
-    print("Included routers: start_router, game_router")
+    print("Included routers: start_router from routers.private_user, game_router from routers.private_user, admin_router from routers.admin_user")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":

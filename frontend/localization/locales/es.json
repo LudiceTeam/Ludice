@@ -1,0 +1,84 @@
+{
+  "_language_name": "Español",
+  "_language_flag": "🇪🇸",
+
+  "language": {
+    "select": "Por favor, seleccione su idioma:",
+    "selected": "✅ ¡Idioma establecido en español!",
+    "change": "🌐 Cambiar idioma"
+  },
+
+  "menu": {
+    "welcome": "¡Bienvenido a Ludicé! Elige una opción:",
+    "main_menu": "🏠 Menú principal",
+    "choose_game": "Elige un juego:",
+    "choose_option": "Elige una opción..."
+  },
+
+  "buttons": {
+    "roll": "Tirar 🎲",
+    "help": "Ayuda ❓",
+    "profile": "Perfil 👤",
+    "top_up": "Recargar 🔝",
+    "dice": "Dados 🎲",
+    "target": "Objetivo 🎯",
+    "play_again": "🎲 Jugar de nuevo",
+    "cancel_search": "❌ Cancelar búsqueda",
+    "roll_dice": "🎲 Tirar dados"
+  },
+
+  "terms": {
+    "accept": "✅ Acepto",
+    "decline": "❌ Rechazo",
+    "read_full": "📖 Leer términos completos",
+    "accepted": "✅ ¡Gracias por aceptar los términos!",
+    "declined": "❌ Debes aceptar los términos para usar Ludicé.\n\nSi cambias de opinión, usa /start para intentarlo de nuevo.",
+    "view_full": "Mostrando términos completos...",
+    "return_to_accept": "Por favor, regresa al mensaje anterior para aceptar o rechazar."
+  },
+
+  "payment": {
+    "choose_amount": "Elige un monto de pago:",
+    "title": "❖ Telegram Stars",
+    "description_15": "Tu cuenta será acreditada con 15 estrellas por 20 estrellas cuando completes el pago.",
+    "description_50": "Tu cuenta será acreditada con 50 estrellas por 67 estrellas cuando completes el pago.",
+    "description_75": "Tu cuenta será acreditada con 75 estrellas por 100 estrellas cuando completes el pago.",
+    "description_100": "Tu cuenta será acreditada con 100 estrellas por 133 estrellas cuando completes el pago.",
+    "description_150": "Tu cuenta será acreditada con 150 estrellas por 200 estrellas cuando completes el pago.",
+    "description_250": "Tu cuenta será acreditada con 250 estrellas por 333 estrellas cuando completes el pago.",
+    "description_750": "Tu cuenta será acreditada con 750 estrellas por 1000 estrellas cuando completes el pago.",
+    "description_1000": "Tu cuenta será acreditada con 1000 estrellas por 1333 estrellas cuando completes el pago.",
+    "success": "✅ Tu pago ha sido agregado a tu saldo. Gracias por elegir Ludicé",
+    "pay_button": "Pagar {amount} ⭐"
+  },
+
+  "game": {
+    "dice_selected": "🎲 ¡Elegiste jugar a los dados! ¿Cuánto estás dispuesto a apostar?",
+    "invalid_bet": "❌ Por favor, ingresa un número válido para tu apuesta.",
+    "minimum_bet": "❌ La apuesta mínima es de 10 estrellas. Por favor, ingresa una cantidad válida.",
+    "opponent_found": "🎮 ¡Oponente encontrado!\nApuesta: {bet} ⭐\n\n¡Tira tus dados!",
+    "searching": "🔍 Buscando oponente...\nApuesta: {bet} ⭐\n\nPor favor, espera mientras te encontramos un rival.",
+    "rolling": "🎲 Tirando...",
+    "your_roll": "Tu tirada: {roll}\n\n⏳ Esperando la tirada del oponente...",
+    "search_cancelled": "❌ Búsqueda cancelada.",
+    "welcome_back": "¡Bienvenido de nuevo a Ludicé!",
+    "cancel_error": "⚠️ No se pudo cancelar la búsqueda. El juego puede haber comenzado ya.",
+    "cancel_exception": "❌ Error al cancelar la búsqueda: {error}",
+    "submit_error": "❌ Error al enviar el resultado: {error}",
+    "timeout_search": "⏰ Tiempo de búsqueda agotado. No se encontró oponente.\nPor favor, inténtalo de nuevo.",
+    "timeout_game": "⏰ Tiempo de juego agotado. El oponente no tiró a tiempo.",
+    "in_development": "En desarrollo..."
+  },
+
+  "gambling": {
+    "reminder": "⚠️ **Recordatorio de Juego Responsable**\n\n• Solo apuesta lo que puedas permitirte perder\n• Establece límites y respétalos\n• Toma descansos regularmente"
+  },
+
+  "errors": {
+    "auth_failed": "❌ Fallo de autenticación. Por favor, inténtalo de nuevo.",
+    "rate_limit": "❌ Demasiadas solicitudes. Por favor, espera un momento e inténtalo de nuevo.",
+    "network_error": "❌ Error de red. Por favor, verifica tu conexión e inténtalo de nuevo.\nError: {error}",
+    "unexpected": "❌ Ocurrió un error inesperado: {error}",
+    "generic": "❌ Error: {error}"
+  }
+}
