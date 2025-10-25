@@ -60,8 +60,6 @@ def get_ton_url() -> str:
 
 
 
-def pay() -> bool:
-    pass
 
 def write_def_stats(user_id:str) -> bool:
     try:
@@ -692,7 +690,17 @@ async def get_log_by_date(request:GetLogsByDate):
     if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code=429,detail = "Invalid signature")
     else:
-        pass
+        with open("data/logs.json","r") as file:
+            data = json.load(file)
+        result = []    
+        for log in data:
+            tm = str(log["time"]).split()[0]
+            if tm == request.date:
+                result.append(tm)
+        try:
+            return result
+        except Exception as e:
+            raise HTTPException(status_code=400,detail = f"Error : {e}")        
 # Интрефейс Платежки
 class PaymentInter:
     def __init__(self):
