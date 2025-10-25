@@ -143,6 +143,7 @@ def redis_register(username:str,pasw:str) -> bool:
 
 
 def payment(username:str,amount:int,message:str = "") -> bool:
+    #payment url change to real payment url
     url = "http://0.0.0.0:8080/user/pay"
     main_data = {
         "username":username,
