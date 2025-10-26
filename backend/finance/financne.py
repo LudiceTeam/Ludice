@@ -99,11 +99,12 @@ def get_order_status(order_id:str):
     r.raise_for_status()
 
 #history of the payments
-def write_payment(payment:list[str]):
+def write_payment(payment:list[str],username:str):
     try:
         with open("data/payments.json","r") as file:
             data = json.load(file)
         data.append({
+            "username":username,
             "id":uuid.uuid4(),
             "time":time.time(),
             "info":payment
@@ -149,6 +150,24 @@ async def pay(request:Payment):
             result = payer.pay_ton(order["ton_address"],order["amount_nano"],"Your win. Play Ludice")
         except Exception as e:
             print(f"Error : {e}")
+class GetMyPaymentHistory(BaseModel):
+    username:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/get/my_history/payments")
+async def get_my_history_payment(request:GetMyPaymentHistory):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code=429,detail="Invalid signature")
+    result = []
+    try:
+        with open("data/payments.json","r") as file:
+            data = json.load(file)
+        for payment in data:
+            if payment["username"] == request.username:
+                result.append(payment)
+        return result           
+    except Exception as e:
+        raise HTTPException(status_code=400,detail = f"Error : {e}")                
 
 if __name__ == "__main__":
     uvicorn.run(app,host = "0.0.0.0",port = 8080)         
