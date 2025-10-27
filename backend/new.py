@@ -139,7 +139,8 @@ def redis_register(username:str,pasw:str) -> bool:
     else:
         redis.set(f"user:{username}",pasw)
         return True
-    
+      
+
 
 
 def payment(username:str,amount:int,message:str = "") -> bool:

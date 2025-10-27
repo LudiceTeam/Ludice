@@ -50,6 +50,15 @@ def write_wallet_balance(balance:int):
     with open("data/wallet_bal.json","w") as file:
         json.dump(data,file)
 
+def get_api_key():
+    with open("data/secrest.json","r") as file:
+        data = json.load(file)
+    return data["api_key"]      
+    
+def notify():
+    url = "http://0.0.0.0:1488/notify"
+    
+
 
 NANOTON = 10**9
 
@@ -76,7 +85,7 @@ class TonPayer:
         """
         # 1. Проверяем баланс
         balance = self._wallet.get_balance()
-        write_wallet_balance(int(balance))
+        write_wallet_balance(round(balance/NANOTON))
         fee_reserve = int(0.05 * NANOTON)  # запас на комиссию
         if balance < amount_nano + fee_reserve:
             raise RuntimeError(
@@ -127,8 +136,14 @@ def write_payment(payment:list[str],username:str):
     except Exception as e:
         print(f"Error : {e}")
 
-
-
+@app.get("/get/wallet/balance")
+async def get_wallet_balance():
+    try:
+        with open("data/wallet_bal.json","r") as file:
+            data = json.load(file)
+        return data["wallet"]    
+    except Exception as e:
+        raise HTTPException(status_code=400,detail = f"Error : {e}")
 
 mnemo = [
         "слово1", "слово2", "слово3", "слово4", "слово5", "слово6",
