@@ -50,6 +50,15 @@ def write_wallet_balance(balance:int):
     with open("data/wallet_bal.json","w") as file:
         json.dump(data,file)
 
+def get_api_key():
+    with open("data/secrest.json","r") as file:
+        data = json.load(file)
+    return data["api_key"]      
+    
+def notify():
+    url = "http://0.0.0.0:1488/notify"
+    
+
 
 NANOTON = 10**9
 
@@ -76,7 +85,7 @@ class TonPayer:
         """
         # 1. Проверяем баланс
         balance = self._wallet.get_balance()
-        write_wallet_balance(int(balance))
+        write_wallet_balance(round(balance/NANOTON))
         fee_reserve = int(0.05 * NANOTON)  # запас на комиссию
         if balance < amount_nano + fee_reserve:
             raise RuntimeError(

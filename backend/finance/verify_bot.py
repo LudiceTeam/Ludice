@@ -1,7 +1,7 @@
 #Этот бот будет информировать нас когда у нас на балансе не будет хватать денег
 import telebot
 import json
-from fastapi import FastAPI,HTTPException
+from fastapi import FastAPI,HTTPException,Request,Depends
 from pydantic import BaseModel,Field
 import uvicorn
 import requests
@@ -10,6 +10,7 @@ import uuid
 import time
 import hashlib
 import threading
+from secrets import compare_digest
 
 
 
@@ -38,8 +39,15 @@ def get_balance():
         return req.json()
     except Exception as e:
         print(f"Exception as {e}")    
-        
+def get_api_key():
+    with open("data/secrest.json","r") as file:
+        data = json.load(file)
+    return data["api_key"]        
 
+async def require_api_header(req:Request):
+    api = req.headers.get("X-API-Key")
+    if not api or not compare_digest(api,get_api_key()):
+        raise HTTPException(status_code=401,details = "Invalid api key")        
 
 def get_token() -> str:
     with open("secrets.json","r") as file:
@@ -56,22 +64,39 @@ def get_all_user_balances():
         return req.json()
     except Exception as e:
         print(f"Exception : {e}")
+     
 
-
+#----- INIT -----
 TOKEN = get_token()
 bot = telebot.TeleBot(TOKEN)
 app = FastAPI()
+
+
+
 @app.get("/")
 async def main():
     return "Notify bot"
 
+chat_id_text = None
 @bot.message_handler(commands=["start"])
 def start(message):
+    chat_id_text = message.chat.id
     balance = get_balance()
     bot.send_message(message.chat.id,f"Наш баланс: {balance}")
     user_balances = get_all_user_balances()
     bot.send_message(message.chat.id,f"Все деньги в обороте : {user_balances}")
 
+class Notify(BaseModel):
+    siganture:str
+@app.get("/notify",dependencies=[Depends(require_api_header)])
+async def notify(request:Notify):
+    try:
+        if chat_id_text is not None:
+            bot.send_message(chat_id_text,"НА СЧЕТУ НЕ ХВАТАЕТ TON")
+        else:
+            raise HTTPException(status_code  = 400,detail="Error : no chat id")   
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error : {e}")
 
 def run_bot():
     bot.polling(none_stop=True)
