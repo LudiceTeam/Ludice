@@ -12,7 +12,12 @@ from ton import Tonlib, Wallet
 import uuid
 
 # МЫ В ПИЗДЕ 
-#НАДО ПОЛЬНОСТЬЮ ПЕРЕПИСЫВАТЬ ВСЕ ЭТУ ЕБЕНЬ
+#НАДО ПОЛНОСТЬЮ ПЕРЕПИСЫВАТЬ ВСЕ ЭТУ ЕБЕНЬ
+
+app = FastAPI()
+@app.get("/")
+async def main():
+    return "Finance API"
 
 cache = {
     "payments":"payments.json",
@@ -24,7 +29,7 @@ cache = {
 PROVIDER  = "SOME PROVIDER" # Fragment
 PROVIDER_KEY  = "YOUR_PROVIDER_API_KEY"   
 
-
+#Подставь ключ для кодирования
 KEY = ""
 def verify_signature(data: dict, received_signature: str) -> bool:
     if time.time() - data.get('timestamp', 0) > 300:
@@ -38,6 +43,12 @@ def verify_signature(data: dict, received_signature: str) -> bool:
     expected_signature = hmac.new(KEY.encode(), data_str.encode(), hashlib.sha256).hexdigest()
     
     return hmac.compare_digest(received_signature, expected_signature)
+def write_wallet_balance(balance:int):
+    with open("data/wallet_bal.json","r") as file:
+        data = json.load(file)
+    data["wallet"] = balance
+    with open("data/wallet_bal.json","w") as file:
+        json.dump(data,file)
 
 
 NANOTON = 10**9
@@ -65,6 +76,7 @@ class TonPayer:
         """
         # 1. Проверяем баланс
         balance = self._wallet.get_balance()
+        write_wallet_balance(int(balance))
         fee_reserve = int(0.05 * NANOTON)  # запас на комиссию
         if balance < amount_nano + fee_reserve:
             raise RuntimeError(
@@ -80,6 +92,7 @@ class TonPayer:
         )
 
         return tx_info
+   
 
 
 def count_commission(amount:int) -> int:
@@ -113,10 +126,7 @@ def write_payment(payment:list[str],username:str):
             json.dump(data,file)
     except Exception as e:
         print(f"Error : {e}")
-app = FastAPI()
-@app.get("/")
-async def main():
-    return "Finance API"
+
 
 
 
@@ -141,7 +151,7 @@ async def pay(request:Payment):
         raise HTTPException(status_code=429,detail = "Invalid signature")
     else:
         #create an order to fragment
-        #Тут создаеться заказ (так работает Fragment)
+        #Тут создается заказ (так работает Fragment)
         order = create_fragment_order(request.to,count_commission(request.amount),"Your win. Play Ludice")
         write_payment([order["id"]],order["status"],order["amount_nano"],request.to)
         nano = int(request.amount * NANOTON)
