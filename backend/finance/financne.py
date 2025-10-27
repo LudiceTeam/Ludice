@@ -127,8 +127,14 @@ def write_payment(payment:list[str],username:str):
     except Exception as e:
         print(f"Error : {e}")
 
-
-
+@app.get("/get/wallet/balance")
+async def get_wallet_balance():
+    try:
+        with open("data/wallet_bal.json","r") as file:
+            data = json.load(file)
+        return data["wallet"]    
+    except Exception as e:
+        raise HTTPException(status_code=400,detail = f"Error : {e}")
 
 mnemo = [
         "слово1", "слово2", "слово3", "слово4", "слово5", "слово6",
