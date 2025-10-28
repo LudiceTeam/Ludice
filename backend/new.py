@@ -1,4 +1,4 @@
-from fastapi import FastAPI,HTTPException,Header,Depends
+from fastapi import FastAPI,HTTPException,Header,Depends,Request
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel,Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -25,6 +25,7 @@ import time
 import requests
 import uvicorn
 from datetime import datetime
+from secrets import compare_digest
 
 
 ### INIT API ###
@@ -34,8 +35,15 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+def get_api_key() -> str:
+    with open("secrets.json","r") as file:
+        data = json.load(file)
+    return data["x-api-normal"]    
 
-
+async def verify_headeer(req:Request):
+    api = req.headers.get("X-API-Key")
+    if not api or not compare_digest(api,get_api_key()):
+        raise HTTPException(status_code=401,detail = "Invalid api key")
 @app.get("/")
 async def main():
     return "Ludice API"
@@ -326,7 +334,7 @@ async def withdraw(request:IncreaseUserBalance):
         raise HTTPException(status_code=400,detail=f"Something went wrong : {e}")
 
 
-@app.get("/get/{username}/balance")
+@app.get("/get/{username}/balance",dependencies = [Depends(verify_headeer)])
 async def get_user_balance(username:str):
     if not check_time_seciruty(username):
         raise HTTPException(status_code=429,detail="Too many requests")
@@ -347,7 +355,7 @@ async def get_user_balance(username:str):
         raise HTTPException(status_code=400,detail=f"Error : {e}")
 
 
-@app.get("/count_money")
+@app.get("/count_money",dependencies = [Depends(verify_headeer)])
 async def count_all_money():
     try:
         with open("bank.json","r") as file:
@@ -532,7 +540,7 @@ async def count_of_wins(request:Procent_Of_Wins):
     except Exception as e:
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error: {e}")    
-@app.get("/get/leader/board/most_games")
+@app.get("/get/leader/board/most_games",dependencies = [Depends(verify_headeer)])
 async def get_leader_board_games():
     
     try:
@@ -545,7 +553,7 @@ async def get_leader_board_games():
     except Exception as e:
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error: {e}")
-@app.get("/get/procent/wins")
+@app.get("/get/procent/wins",dependencies = [Depends(verify_headeer)])
 async def get_leader_board():
     try:
         with open("stats.json","r") as file:
@@ -597,7 +605,7 @@ def is_user_playing(user_id:str) -> bool:
         
 
 
-@app.get("/isuser/playing/{user_id}")
+@app.get("/isuser/playing/{user_id}",dependencies = [Depends(verify_headeer)])
 async def is_playing(user_id:str) -> bool:
     if not check_time_seciruty(user_id):
         raise HTTPException(status_code=429,detail="Too many requests")
@@ -639,7 +647,7 @@ async def write_res(request:WriteRes):
 
 
 
-@app.get("/join/link/{game_id}/{user_id}/{bet}")
+@app.get("/join/link/{game_id}/{user_id}/{bet}",dependencies = [Depends(verify_headeer)])
 async def join_by_the_link(user_id:str,bet:int,game_id:str):
     if not check_time_seciruty(user_id):
         raise HTTPException(status_code=429,detail="Too many requests")
@@ -1009,7 +1017,7 @@ class DeleteUser(BaseModel):
 @app.post("/delete/user")  
 async def delete_user(request:DeleteUser):
     if not verify_signature(request.model_dump(),request.siganture):
-        raise HTTPException(status_code=403,detail="Invalide signature")
+        raise HTTPException(status_code=403,detail="Invalid signature")
     found = False
     try:
         with open("users.json","r") as file:
