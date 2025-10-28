@@ -2,13 +2,13 @@
 aiogram==3.22.0
 
 # Environment variables
-python-dotenv==1.1.1
+python-dotenv==1.2.1
 
 # HTTP requests (for backend API calls)
 requests==2.32.5
 
 # Async support (aiogram dependencies)
-aiohttp==3.13.1
+aiohttp==3.13.2
 aiofiles==25.1.0
 magic-filter==1.0.12
 
