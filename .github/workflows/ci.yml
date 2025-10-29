@@ -1,0 +1,170 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black mypy
+          pip install -r requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          # Stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Exit-zero treats all errors as warnings
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Check formatting with black
+        run: |
+          black --check .
+
+  test-python:
+    name: Test Python
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-asyncio
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest --cov=. --cov-report=xml --cov-report=html
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  test-go:
+    name: Test Go Service
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        working-directory: ./backend/redis
+        run: go mod download
+
+      - name: Run tests
+        working-directory: ./backend/redis
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/redis/coverage.txt
+          flags: go-unittests
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install safety
+        run: pip install safety
+
+      - name: Check for security vulnerabilities
+        run: safety check --json
+
+      - name: Run Bandit security linter
+        run: |
+          pip install bandit
+          bandit -r . -f json -o bandit-report.json || true
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build backend image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          push: false
+          tags: ludice-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          push: false
+          tags: ludice-frontend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
