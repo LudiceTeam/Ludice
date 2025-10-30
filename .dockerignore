@@ -9,14 +9,16 @@ env/
 ENV/
 .venv
 
-# Development
-.git/
-.gitignore
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
+
+# Git
+.git/
+.gitignore
+.github/
 
 # Testing
 .pytest_cache/
@@ -24,30 +26,28 @@ ENV/
 htmlcov/
 *.log
 
-# Documentation
-*.md
-docs/
-!README.md
-
-# Data (should be mounted as volume)
+# Data
 data/
 *.db
-*.sqlite
 
 # Environment
-.env
-.env.local
+.env*
+!.env.example
 secrets.json
+
+# Documentation
+docs/
+*.md
+!README.md
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Build artifacts
+# Build
 dist/
 build/
 *.egg-info/
 
-# Node (if any)
+# Node
 node_modules/
-npm-debug.log

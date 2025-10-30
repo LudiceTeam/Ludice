@@ -1,23 +1,25 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies needed for Python packages
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    g++ \
     libffi-dev \
-    libssl-dev \
-    cargo \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements from parent directory
-COPY ../requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Upgrade pip
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Copy application code
+# Copy requirements
+COPY requirements.txt* ./
+RUN if [ ! -f requirements.txt ]; then \
+        echo "Using parent requirements.txt"; \
+    fi && \
+    pip install --no-cache-dir -r requirements.txt 2>/dev/null || \
+    pip install --no-cache-dir -r ../requirements.txt
+
+# Copy code
 COPY . .
 
-# Run the bot
 CMD ["python", "app.py"]
