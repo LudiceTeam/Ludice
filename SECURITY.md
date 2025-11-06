@@ -6,9 +6,7 @@ We only provide security updates for the following versions:
 
 | Version | Supported          |
 |----------|--------------------|
-| 3.x      | ✅ Supported       |
-| 2.x      | ⚠️ Security fixes only |
-| < 2.0    | ❌ Not supported   |
+| 1.x      | ✅ Supported       |
 
 ---
 
