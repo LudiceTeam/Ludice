@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ludice-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+  redis-service:
+    build:
+      context: ./backend/redis
+      dockerfile: Dockerfile
+    container_name: ludice-redis-service
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ludice-backend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./backend:/app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+      - redis-service
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: ludice-bot
+    volumes:
+      - ./frontend:/app
+      - ./data:/app/data
+    environment:
+      - BACKEND_URL=http://backend:8080
+      - REDIS_SERVICE_URL=http://redis-service:8000
+    env_file:
+      - frontend/.env
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  web:
+    image: nginx:alpine
+    container_name: ludice-web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  default:
+    name: ludice-network

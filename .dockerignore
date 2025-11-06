@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Data
+data/
+*.db
+
+# Environment
+.env*
+!.env.example
+secrets.json
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Node
+node_modules/

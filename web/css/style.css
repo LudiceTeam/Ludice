@@ -1,0 +1,329 @@
+/* Telegram Mini App Styles for Ludicé */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Telegram Theme Colors (will be overridden by WebApp API) */
+    --tg-theme-bg-color: #ffffff;
+    --tg-theme-text-color: #000000;
+    --tg-theme-hint-color: #999999;
+    --tg-theme-link-color: #2481cc;
+    --tg-theme-button-color: #2481cc;
+    --tg-theme-button-text-color: #ffffff;
+    --tg-theme-secondary-bg-color: #f4f4f5;
+
+    /* Custom Colors */
+    --primary-color: #2481cc;
+    --success-color: #4caf50;
+    --danger-color: #f44336;
+    --warning-color: #ff9800;
+    --card-bg: var(--tg-theme-secondary-bg-color);
+    --border-radius: 12px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+    line-height: 1.5;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+#app {
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Screens */
+.screen {
+    display: none;
+    min-height: 100vh;
+    padding: 20px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.container {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* Loading Screen */
+#loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader {
+    text-align: center;
+}
+
+.dice-loader {
+    font-size: 64px;
+    animation: roll 1s infinite;
+}
+
+@keyframes roll {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.header h1 {
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: var(--tg-theme-hint-color);
+    font-size: 16px;
+}
+
+/* User Info */
+.user-info {
+    margin-bottom: 32px;
+}
+
+.balance-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.balance-card .label {
+    color: var(--tg-theme-hint-color);
+    font-size: 14px;
+}
+
+.balance-card .balance {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Buttons */
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+}
+
+.btn-secondary {
+    background: var(--card-bg);
+    color: var(--tg-theme-text-color);
+}
+
+.btn .icon {
+    font-size: 24px;
+}
+
+.btn-large {
+    padding: 20px 24px;
+    font-size: 18px;
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    color: var(--tg-theme-link-color);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px;
+    margin: -8px;
+}
+
+/* Game Screen */
+.game-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.game-header h2 {
+    flex: 1;
+    text-align: center;
+    font-size: 24px;
+}
+
+.bet-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.bet-section label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.bet-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--tg-theme-bg-color);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.bet-input-group input {
+    flex: 1;
+    border: none;
+    background: none;
+    color: var(--tg-theme-text-color);
+    font-size: 24px;
+    font-weight: bold;
+    outline: none;
+}
+
+.bet-input-group .currency {
+    font-size: 24px;
+}
+
+.hint {
+    margin-top: 8px;
+    color: var(--tg-theme-hint-color);
+    font-size: 14px;
+}
+
+.game-status {
+    text-align: center;
+    margin-top: 32px;
+    padding: 24px;
+}
+
+.game-status.hidden {
+    display: none;
+}
+
+.status-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.status-text {
+    font-size: 16px;
+    color: var(--tg-theme-hint-color);
+}
+
+/* Profile Screen */
+.profile-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 32px 20px;
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    margin: 0 auto 16px;
+}
+
+.profile-card h3 {
+    font-size: 24px;
+    margin-bottom: 24px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--tg-theme-hint-color);
+}
+
+/* Responsive */
+@media (max-width: 360px) {
+    .header h1 {
+        font-size: 40px;
+    }
+
+    .balance-card .balance {
+        font-size: 28px;
+    }
+}
