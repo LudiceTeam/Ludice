@@ -15,8 +15,7 @@ import uuid
 import redis
 import secrets
 import hashlib
-from jose import JWTError
-import jwt
+from jose import jwt,JWTError
 from passlib.context import CryptContext
 from filelock import FileLock
 import hmac
@@ -28,15 +27,26 @@ from datetime import datetime
 from secrets import compare_digest
 
 
+
 ### INIT API ###
 app = FastAPI()
 security = HTTPBearer()
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+#PATHS
+secrets_path = "/Users/ivan/Ludice/data/secrets.json"
+bank_path = "/Users/ivan/Ludice/data/bank.json"
+bets_path = "/Users/ivan/Ludice/data/bets.json"
+game_paths = "/Users/ivan/Ludice/data/game.json"
+stats_path = "/Users/ivan/Ludice/data/stats.json"
+users_path = "/Users/ivan/Ludice/data/users.json"
+
+
+
 
 def get_api_key() -> str:
-    with open("secrets.json","r") as file:
+    with open(secrets_path,"r") as file:
         data = json.load(file)
     return data["x-api-normal"]    
 
@@ -51,7 +61,7 @@ async def main():
 
 def write_deafault_bank(username:str) -> bool:
     try:
-        with open("bank.json","r") as file:
+        with open(bank_path,"r") as file:
             data = json.load(file)
         data.append({
             "username":username,
@@ -542,7 +552,6 @@ async def count_of_wins(request:Procent_Of_Wins):
         raise HTTPException(status_code=400,detail=f"Error: {e}")    
 @app.get("/get/leader/board/most_games",dependencies = [Depends(verify_headeer)])
 async def get_leader_board_games():
-    
     try:
         with open("stats.json","r") as file:
             data = json.load(file)
