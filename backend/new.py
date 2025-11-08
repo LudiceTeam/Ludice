@@ -627,34 +627,8 @@ async def is_playing(user_id:str) -> bool:
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error {e}")
 
-class WriteRes(BaseModel):
-    user_id:str
-    game_id:str
-    result:int
-    signature:str
-    timestamp: float = Field(default_factory=time.time)
-@app.post("/write/res")
-async def write_res(request:WriteRes):
-    request_dict = request.model_dump()
-    if not verify_signature(request_dict, request.signature):
-        raise HTTPException(
-            status_code=403, 
-            detail="Invalid signature - data tampered"
-        )
-    try:
-        with open(game_paths,"r") as file:
-            data = json.load(file)
-        for game in data:
-            if game["id"] == request.game_id:
-                if len(game["players"]) == 2 and request.user_id in game["players"]:
-                    game[f"result_{request.user_id}"] = request.result
-                    with open(game_paths,"w") as file:
-                        json.dump(data,file)
-                    return True
-        return False         
-    except Exception as e:
-        write_logs(str(e))
-        raise HTTPException(status_code=400,detail=f"Error : {e}")
+
+
 class WriteResult(BaseModel):
     username:str
     result:int
@@ -681,7 +655,6 @@ async def write_game_result(request:WriteResult):
         raise HTTPException(status_code = 400,deatil = f"Error : {e}")    
 
 
-
 @app.get("/get/game/result/{game_id}",dependencies = [Depends(verify_headeer)])
 async def get_game_result(game_id: str):
     """Get game results if both players have submitted their dice rolls."""
@@ -703,15 +676,7 @@ async def get_game_result(game_id: str):
 
                 if result1_key not in game or result2_key not in game:
                     # Not all players have rolled yet
-                    return {
-                        "game_id": game_id,
-                        "status": "waiting",
-                        "players": game["players"],
-                        "results_submitted": {
-                            player1: result1_key in game,
-                            player2: result2_key in game
-                        }
-                    }
+                    raise HTTPException(status_code = 405,detail = "Users are not rooled yet")
 
                 # Both players have rolled - determine winner
                 result1 = game[result1_key]
@@ -723,19 +688,7 @@ async def get_game_result(game_id: str):
                     winner = player2
                 else:
                     winner = "draw"
-
-                return {
-                    "game_id": game_id,
-                    "status": "completed",
-                    "players": game["players"],
-                    "results": {
-                        player1: result1,
-                        player2: result2
-                    },
-                    "winner": winner,
-                    "bet": game["bet"]
-                }
-
+                return winner
         raise HTTPException(status_code=404, detail="Game not found")
 
     except FileNotFoundError:
