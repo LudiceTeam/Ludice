@@ -909,7 +909,7 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                         balance_change_data["signature"] = generate_signature(balance_change_data)
                         bet = user_data = await state.get_data()
                         
-                        if winner == user_id:
+                        if winner == str(user_id):
                              # Winner gets double the bet (original bet + winnings)
                              
                             try:
@@ -930,7 +930,7 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                             )
                             await bot.send_message(message.chat.id, outcome_msg)
                             print(result_data)
-                        elif winner != user_id:
+                        elif winner != str(user_id) and winner != "draw":
                             try:
                                 async with aiohttp.ClientSession() as session:
                                     await session.post(
