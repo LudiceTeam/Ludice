@@ -334,7 +334,7 @@ async def withdraw(request:IncreaseUserBalance):
 @app.post("/user/decrease")
 async def decrease(request:IncreaseUserBalance):
     if not verify_signature(request.model_dump(),request.signature):
-        raise HTTPException(status_code = 403,deatil = "Invalid signature")
+        raise HTTPException(status_code = 403,detail = "Invalid signature")
     try:
         with open(bank_path,"r") as file:
             data = json.load(file)
