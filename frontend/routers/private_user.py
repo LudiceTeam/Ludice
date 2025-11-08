@@ -835,9 +835,9 @@ async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
 
     # Submit result to backend
     data = {
-        "user_id": str(callback.from_user.id),
-        "game_id": game_id,
-        "result": dice_value,
+        "username": str(callback.from_user.id),
+        "result": int(dice_value),
+        "lobby_id": str(game_id),
         "timestamp": time.time()
     }
     data["signature"] = generate_signature(data)
@@ -845,7 +845,7 @@ async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{BACKEND_API_URL}/write/result",
+                f"{BACKEND_API_URL}/write/game/result",
                 json=data,
                 headers={"Content-Type": "application/json"}
             ) as response:
