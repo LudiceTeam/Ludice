@@ -619,7 +619,47 @@ async def poll_for_opponent(message: types.Message, state: FSMContext, game_id: 
             return
 
         try:
-            user_data = await state.get_data()
+            # Check if lobby is full (2 players)
+            data = {
+                "lobby_id": game_id,
+                "timestamp": time.time()
+            }
+            data["signature"] = generate_signature(data)
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{BACKEND_API_URL}/check/lobby/fill",
+                    json=data,
+                    headers={"Content-Type": "application/json"}
+                ) as response:
+                    if response.status == 200:
+                        is_full = await response.json()
+
+                        if is_full:
+                            # Lobby is full - game can start
+                            user_data = await state.get_data()
+                            bet = user_data.get("bet", 0)
+
+                            await state.update_data(lobby_status="game_started")
+                            await state.set_state(BetStates.game_active)
+
+                            await bot.send_message(
+                                message.chat.id,
+                                f"🎮 Opponent found!\n"
+                                f"Bet: {bet} ⭐\n\n"
+                                f"Roll your dice!",
+                                reply_markup=get_dice_keyboard()
+                            )
+                            return
+                    elif response.status == 404:
+                        # Lobby not found - maybe cancelled
+                        await bot.send_message(
+                            message.chat.id,
+                            "❌ Lobby not found. Search cancelled.",
+                            reply_markup=start.start_kb
+                        )
+                        await state.clear()
+                        return
 
         except Exception as e:
             print(f"Polling error: {e}")
