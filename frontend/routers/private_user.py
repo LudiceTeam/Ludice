@@ -132,6 +132,16 @@ def get_play_again_keyboard() -> InlineKeyboardMarkup:
 
 @start_router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
+    # Prepare API request data with signature
+    data = {
+        "timestamp": time.time()
+    }
+    
+    # Generate signature
+    data["signature"] = generate_signature(data)
+    
+    
+    
     
     user_id = message.from_user.id
 
