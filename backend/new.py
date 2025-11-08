@@ -350,7 +350,7 @@ async def decrease(request:IncreaseUserBalance):
                     raise HTTPException(status_code = 400,deatil = "Error user doesnt have enought money")            
     except Exception as e:
         write_logs(str(e))
-        raise HTTPException(status_code = 400,detail = f"Error : {e}")
+        raise HTTPException(status_code = 400,detail = f"Error : {e}x
 
 
 @app.get("/get/{username}/balance",dependencies = [Depends(verify_headeer)])
