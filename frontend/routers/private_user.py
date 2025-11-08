@@ -52,7 +52,7 @@ def get_key_for_api() -> str:
         raise TypeError("Error")
 # System secret for API signature verification
 SYSTEM_SECRET = "our_secret_key"
-BACKEND_API_URL = "http://127.0.0.1:8080"
+BACKEND_API_URL = "http://127.0.0.1:8000"
 
 # State groups
 class BetStates(StatesGroup):
@@ -67,7 +67,7 @@ class LegalStates(StatesGroup):
     verification = State()
 
 
-API_URL = "http://127.0.0.1:8000/register"
+API_URL = BACKEND_API_URL + "/register"
 
 # Routers
 start_router = Router()
