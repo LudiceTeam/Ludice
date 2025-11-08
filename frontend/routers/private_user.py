@@ -69,6 +69,7 @@ class BetStates(StatesGroup):
     waiting_for_opponent = State()
     game_active = State()
     rolling_dice = State()
+    
 
 class LegalStates(StatesGroup):
     """FSM states for terms acceptance flow."""
@@ -137,6 +138,8 @@ def get_play_again_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="🎲 Play Again", callback_data="play_again")],
         [InlineKeyboardButton(text="🏠 Main Menu", callback_data="main_menu")]
     ])
+
+
 
 
 @start_router.message(CommandStart())
@@ -256,6 +259,44 @@ async def balance_test(message: types.Message):
         await message.answer(f"❌ Network error: {str(e)}")
     except Exception as e:
         await message.answer(f"❌ Unexpected error: {str(e)}")
+        
+@start_router.message(F.text == "Profile 👤")
+async def profile_handler(message: types.Message):
+    """Display user profile with balance information."""
+    user_id = str(message.from_user.id)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Get user balance using the backend endpoint
+            async with session.get(
+                f"{BACKEND_API_URL}/get/{user_id}/balance",
+                headers={"X-API-Key": get_api_key_for_get_request()}
+            ) as response:
+                if response.status == 200:
+                    balance = await response.json()
+                    await message.answer(
+                        f"👤 **Your Profile**\n\n"
+                        f"User ID: `{user_id}`\n"
+                        f"Balance: **{balance} ⭐**",
+                        parse_mode="Markdown"
+                    )
+                elif response.status == 404:
+                    await message.answer(
+                        "❌ Profile not found. Please use /start to create your account."
+                    )
+                elif response.status == 401:
+                    await message.answer("❌ Authentication failed. Please try again later.")
+                elif response.status == 429:
+                    await message.answer("❌ Too many requests. Please wait a moment and try again.")
+                else:
+                    error_text = await response.text()
+                    await message.answer(f"❌ Error retrieving profile: {error_text}")
+
+    except aiohttp.ClientError as e:
+        await message.answer(f"❌ Network error: {str(e)}")
+    except Exception as e:
+        await message.answer(f"❌ Unexpected error: {str(e)}")
+
 
 @start_router.message(F.text == "Top up 🔝")
 async def stars(message: types.Message):
@@ -517,8 +558,10 @@ async def process_bet(message: types.Message, state: FSMContext):
                         f"Roll your dice!",
                         reply_markup=get_dice_keyboard()
                     )
+                    
 
                 elif response.status == 400:
+                    
                     # Player created new lobby - waiting for opponent
                     response_data = await response.json()
                     game_id = response_data.get("detail", "")
