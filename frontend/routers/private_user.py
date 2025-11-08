@@ -845,7 +845,7 @@ async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{BACKEND_API_URL}/write/res",
+                f"{BACKEND_API_URL}/write/result",
                 json=data,
                 headers={"Content-Type": "application/json"}
             ) as response:
@@ -879,114 +879,79 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
     for _ in range(max_wait // poll_interval):
         await asyncio.sleep(poll_interval)
 
-        try:
             # Check game results from backend
+        try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
                     f"{BACKEND_API_URL}/get/game/result/{game_id}",
                     headers={"X-API-Key": get_api_key_for_get_request()}
                 ) as response:
                     if response.status == 200:
+                        
                         result_data = await response.json()
-                        if result_data == "completed":
-                            # Game is complete - show results
-                            winner = result_data["winner"]
-                            results = result_data["results"]
-                            bet = result_data["bet"]
-
-                            # Find opponent's ID and result
-                            opponent_id = None
-                            opponent_roll = None
-                            for player_id, roll in results.items():
-                                if player_id != user_id:
-                                    opponent_id = player_id
-                                    opponent_roll = roll
-                                    break
-
-                            # Process winnings/refunds
-                            balance_change_data = {
-                                "username": user_id,
-                                "timestamp": time.time()
-                            }
-
-                            if winner == user_id:
-                                # Winner gets double the bet (original bet + winnings)
-                                balance_change_data["amount"] = bet * 2
-                                balance_change_data["signature"] = generate_signature(balance_change_data)
-
-                                try:
+                        winner = result_data["winner"] 
+                            
+                            
+                        
+                        # Process winnings/refunds
+                        balance_change_data = {
+                            "username": user_id,
+                            "timestamp": time.time()
+                        }
+                        if winner == user_id:
+                             # Winner gets double the bet (original bet + winnings)
+                            try:
                                     async with aiohttp.ClientSession() as session:
                                         await session.post(
                                             f"{BACKEND_API_URL}/user/increase",
                                             json=balance_change_data,
                                             headers={"Content-Type": "application/json"}
                                         )
-                                except Exception as e:
-                                    print(f"Error crediting winner: {e}")
+                            except Exception as e:
+                                print(f"Error crediting winner: {e}")
 
-                                outcome_msg = (
-                                    f"🎉 **YOU WON!**\n\n"
-                                    f"Your roll: {user_roll} 🎲\n"
-                                    f"Opponent's roll: {opponent_roll} 🎲\n\n"
-                                    f"You won {bet} ⭐!\n"
-                                    f"Total credited: {bet * 2} ⭐"
-                                )
-                            elif winner == "draw":
-                                # Return the bet
-                                balance_change_data["amount"] = bet
-                                balance_change_data["signature"] = generate_signature(balance_change_data)
-
-                                try:
-                                    async with aiohttp.ClientSession() as session:
-                                        await session.post(
-                                            f"{BACKEND_API_URL}/user/increase",
-                                            json=balance_change_data,
-                                            headers={"Content-Type": "application/json"}
-                                        )
-                                except Exception as e:
-                                    print(f"Error refunding draw: {e}")
-
-                                outcome_msg = (
-                                    f"🤝 **IT'S A DRAW!**\n\n"
-                                    f"Your roll: {user_roll} 🎲\n"
-                                    f"Opponent's roll: {opponent_roll} 🎲\n\n"
-                                    f"Your bet of {bet} ⭐ has been returned."
-                                )
-                            else:
-                                # Loser gets nothing (already deducted)
-                                outcome_msg = (
-                                    f"😔 **YOU LOST**\n\n"
-                                    f"Your roll: {user_roll} 🎲\n"
-                                    f"Opponent's roll: {opponent_roll} 🎲\n\n"
-                                    f"Lost: {bet} ⭐\n"
-                                    f"Better luck next time!"
-                                )
-
-                            await bot.send_message(
-                                message.chat.id,
-                                outcome_msg,
-                                parse_mode="Markdown",
-                                reply_markup=get_play_again_keyboard()
+                            outcome_msg = (
+                                f"🎉 **YOU WON!**\n\n"
+                                f"Total credited: {bet * 2} ⭐"
+                                
                             )
-                            await state.clear()
-                            return
+                        elif winner != user_id:
+                            try:
+                                async with aiohttp.ClientSession() as session:
+                                    await session.post(
+                                        f"{BACKEND_API_URL}/user/decrease",
+                                        json=balance_change_data,
+                                        headers={"Content-Type": "application/json"}
+                                    )
+                            except Exception as e:
+                                print(f"Error crediting loser: {e}")
+                            
+                            
+                            outcome_msg = (
+                                f"😔 **YOU LOST**\n\n"
+                                f"Better luck next time!"
+                            )
+                        if winner == "draw":
+                            # Refund bet to both players
+                            try:
+                                async with aiohttp.ClientSession() as session:
+                                    await session.post(
+                                        f"{BACKEND_API_URL}/user/increase",
+                                        json=balance_change_data,
+                                        headers={"Content-Type": "application/json"}
+                                    )
+                            except Exception as e:
+                                print(f"Error refunding draw: {e}")
 
-                        # else: status is "waiting" - continue polling
-
-                    elif response.status == 404:
-                        await bot.send_message(
-                            message.chat.id,
-                            "❌ Game not found.",
-                            reply_markup=start.start_kb
-                        )
-                        await state.clear()
-                        return
+                            outcome_msg = (
+                                f"🤝 **IT'S A DRAW!**\n\n"
+                                f"Better luck next time!"
+                            )
 
         except Exception as e:
-            print(f"Polling error: {e}")
+            print(f"Error polling game result: {e}")
             continue
-
-    # Timeout
+        # Timeout
     await bot.send_message(
         message.chat.id,
         "⏰ Game timeout. Opponent did not roll in time.",
