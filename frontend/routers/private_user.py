@@ -562,10 +562,10 @@ async def process_bet(message: types.Message, state: FSMContext):
                 "amount": bet,
                 "timestamp": time.time()
             }
-            signature = generate_signature(decrease_data)
+            decrease_data["signature"] = generate_signature(decrease_data)
             async with session.post(
-                API_URL + "/user/decrease",
-                json={**decrease_data, "amount": bet},
+                BACKEND_API_URL + "/user/decrease",
+                json=decrease_data,
                 headers={"Content-Type": "application/json"}
             ) as decrease_response:
                 if decrease_response.status == 400:
