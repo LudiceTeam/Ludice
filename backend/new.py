@@ -324,12 +324,10 @@ async def withdraw(request:IncreaseUserBalance):
         for user in data:
             if user["username"] == request.username:
                 try:
-                    if user["balance"] >= request.amount:
-                        user["balance"] -= request.amount
-                        #payment(username:str,amount:int,message:str = "")
-                        payment(request.username,request.amount,"")
-                        with open(bank_path,"w") as file:
-                            json.dump(data,file)
+                    payment(request.username,request.amount,"")
+                    user["balance"] = 0
+                    with open(bank_path,"r") as file:
+                        json.dump(data,file)
                     raise HTTPException(status_code=400,detail=f"User balance doesnt have this much money :(")
                 except Exception as e:
                     write_logs(str(e))
@@ -338,6 +336,24 @@ async def withdraw(request:IncreaseUserBalance):
     except Exception as e:
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Something went wrong : {e}")
+@app.post("/user/decrease")
+async def decrease(request:IncreaseUserBalance):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code = 403,deatil = "Invalid signature")
+    try:
+        with open(bank_path,"r") as file:
+            data = json.load(file)
+        for user in data:
+            if user["username"] == request.username:
+                if user["balance"] >= request.amount:
+                    user["balance"] -= request.amount
+                    with open(bank_path,"w") as file:
+                        json.dump(data,file)
+                else:
+                    raise HTTPException(status_code = 400,deatil = "Error user doesnt have enought money")            
+    except Exception as e:
+        write_logs(str(e))
+        raise HTTPException(status_code = 400,deatil = f"Error : {e}")
 
 
 @app.get("/get/{username}/balance",dependencies = [Depends(verify_headeer)])
