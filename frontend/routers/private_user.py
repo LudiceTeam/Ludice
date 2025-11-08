@@ -50,6 +50,15 @@ def get_key_for_api() -> str:
     except Exception as e:
         print(f"Error while geting api key : {e}")
         raise TypeError("Error")
+
+def get_api_key_for_get_request() -> str:
+    try:
+        with open(secrets_path,"r") as file:
+            data = json.load(file)
+        return data["x-api-normal"]    
+    except Exception as e:
+        print(f"Error while geting api key : {e}")
+        raise TypeError("API Error")    
 # System secret for API signature verification
 SYSTEM_SECRET = get_key_for_api()
 BACKEND_API_URL = "http://127.0.0.1:8000"
