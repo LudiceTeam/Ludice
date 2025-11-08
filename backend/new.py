@@ -203,6 +203,17 @@ def write_logs(error:str):
             json.dump(data,file)
     except Exception as e:
         print(f"Error : {e}")
+def is_user_balance_exists(username:str) -> bool:
+    try:
+        with open(bank_path,"r") as file:
+            data = json.load(file)
+        if not data.get(username):
+            return False
+        return True
+
+    except Exception as e:
+        print(f"Exception as {e}")
+
 
 class Register(BaseModel):
     username:str
@@ -225,8 +236,9 @@ async def register(request:Register):
         with open(lobby_path,"w") as file:
             json.dump(lobs,file)
         #DEFAUL DATA
-        write_def_stats(request.username) 
-        write_deafault_bank(request.username)
+        if not is_user_balance_exists(request.username):
+            write_def_stats(request.username) 
+            write_deafault_bank(request.username)
 
 
 
