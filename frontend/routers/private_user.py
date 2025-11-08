@@ -557,22 +557,21 @@ async def process_bet(message: types.Message, state: FSMContext):
 
     try:
         async with aiohttp.ClientSession() as session:
-            refund_data = {
+            decrease_data = {
                 "username": user_id,
                 "amount": bet,
                 "timestamp": time.time()
             }
-            signature = generate_signature(refund_data)
-            
-            
+            signature = generate_signature(decrease_data)
             async with session.post(
-                f"{BACKEND_API_URL}/user/increase",
-                json={**deduct_data, "amount": -bet},  # Negative to deduct
+                API_URL + "/user/decrease",
+                json={**decrease_data, "amount": bet},
                 headers={"Content-Type": "application/json"}
-            ) as deduct_response:
-                if deduct_response.status != 200:
-                    await message.answer("❌ Could not deduct bet from balance. Please try again.")
+            ) as decrease_response:
+                if decrease_response.status == 400:
+                    await message.answer("❌ You don't have enough stars. Please top up your balance.")
                     return
+                
     except Exception as e:
         await message.answer(f"❌ Error deducting bet: {str(e)}")
         return
