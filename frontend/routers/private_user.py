@@ -38,9 +38,18 @@ async def show_gambling_reminder(message):
     """Show responsible gambling reminder before playing."""
     await message.answer(GAMBLING_REMINDER, parse_mode="Markdown")
 
+
+secrets_path = "/Users/ivan/Ludice/data/secrets.json"
 load_dotenv(find_dotenv())
 secret_token = os.getenv("secret_token")
-
+def get_key_for_api() -> str:
+    try:
+        with open(secrets_path,"r") as file:
+            data = json.load(file)
+        return data["key"]  
+    except Exception as e:
+        print(f"Error while geting api key : {e}")
+        raise TypeError("Error")
 # System secret for API signature verification
 SYSTEM_SECRET = "our_secret_key"
 BACKEND_API_URL = "http://127.0.0.1:8080"
