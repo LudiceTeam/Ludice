@@ -335,7 +335,7 @@ async def decrease(request:IncreaseUserBalance):
     except Exception as e:
         print(f"Bad Request : {e}")
         write_logs(str(e))
-        raise HTTPException(status_code = 400,detail = f"Error : {e}")
+        raise HTTPException(status_code = 400,detail = f"Error : {e}x
 
 
 @app.get("/get/{username}/balance",dependencies = [Depends(verify_headeer)])
