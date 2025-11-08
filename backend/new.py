@@ -208,6 +208,7 @@ def write_logs(error:str):
         print(f"Error : {e}")
 
 class Register(BaseModel):
+    username:str
     signature:str
     timestamp:float = Field(default_factory=time.time)
 @app.post("/register")
