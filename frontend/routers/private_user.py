@@ -39,7 +39,7 @@ async def show_gambling_reminder(message):
     await message.answer(GAMBLING_REMINDER, parse_mode="Markdown")
 
 
-secrets_path = "/Users/ivan/Ludice/data/secrets.json"
+secrets_path = "/Users/vikrorkhanin/Ludice/data/secrets.json"
 load_dotenv(find_dotenv())
 secret_token = os.getenv("secret_token")
 def get_key_for_api() -> str:
@@ -51,7 +51,7 @@ def get_key_for_api() -> str:
         print(f"Error while geting api key : {e}")
         raise TypeError("Error")
 # System secret for API signature verification
-SYSTEM_SECRET = "our_secret_key"
+SYSTEM_SECRET = get_key_for_api()
 BACKEND_API_URL = "http://127.0.0.1:8000"
 
 # State groups
@@ -132,6 +132,7 @@ def get_play_again_keyboard() -> InlineKeyboardMarkup:
 
 @start_router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
+    
     user_id = message.from_user.id
 
     # Show terms and set FSM state to wait for acceptance
@@ -178,7 +179,51 @@ async def view_full_terms_handler(callback: types.CallbackQuery):
         "Please return to the previous message to accept or decline.",
         parse_mode="Markdown"
     )
+@start_router.message(F.text == "Balance test")
+async def balance_test(message: types.Message):
+    """Test handler to increase user balance by 100 stars."""
+    user_id = str(message.from_user.id)
+    test_amount = 100  # Test credit amount
 
+    # Prepare API request data with signature
+    data = {
+        "username": user_id,
+        "amount": test_amount,
+        "timestamp": time.time()
+    }
+
+    # Generate signature
+    data["signature"] = generate_signature(data)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Increase balance using the Python backend endpoint
+            async with session.post(
+                f"{BACKEND_API_URL}/user/increase",
+                json=data,
+                headers={"Content-Type": "application/json"}
+            ) as increase_response:
+                if increase_response.status == 200:
+                    await message.answer(
+                        f"✅ Balance test successful!\n\n"
+                        f"Added: {test_amount} ⭐ to your account"
+                    )
+                elif increase_response.status == 404:
+                    await message.answer(
+                        "❌ User not found. Please start a game first to create your account."
+                    )
+                elif increase_response.status == 403:
+                    await message.answer("❌ Authentication failed. Invalid signature.")
+                elif increase_response.status == 429:
+                    await message.answer("❌ Too many requests. Please wait a moment.")
+                else:
+                    error_text = await increase_response.text()
+                    await message.answer(f"❌ Error: {error_text}")
+
+    except aiohttp.ClientError as e:
+        await message.answer(f"❌ Network error: {str(e)}")
+    except Exception as e:
+        await message.answer(f"❌ Unexpected error: {str(e)}")
 
 @start_router.message(F.text == "Top up 🔝")
 async def stars(message: types.Message):
