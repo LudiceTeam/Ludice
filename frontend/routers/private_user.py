@@ -132,19 +132,31 @@ def get_play_again_keyboard() -> InlineKeyboardMarkup:
 
 @start_router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
     # Prepare API request data with signature
     data = {
-        "username": str(message.from_user.id),
+        "username": str(user_id),
         "timestamp": time.time()
     }
     
     # Generate signature
     data["signature"] = generate_signature(data)
-    
-    
-    
-    
-    user_id = message.from_user.id
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Register user using the Python backend endpoint
+            async with session.post(
+                API_URL,
+                json=data,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status == 200:
+                    await message.answer("✅ Registration successful!")
+                else:
+                    await message.answer("❌ Registration failed.")
+    except Exception as e:
+        await message.answer(f"Error: {e}")
+
 
     # Show terms and set FSM state to wait for acceptance
     await state.set_state(LegalStates.waiting_for_acceptance)
