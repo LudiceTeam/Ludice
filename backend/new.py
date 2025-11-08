@@ -35,15 +35,15 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 #PATHS
-secrets_path = "/Users/ivan/Ludice/data/secrets.json"
-bank_path = "/Users/ivan/Ludice/data/bank.json"
-bets_path = "/Users/ivan/Ludice/data/bets.json"
-game_paths = "/Users/ivan/Ludice/data/game.json"
-stats_path = "/Users/ivan/Ludice/data/stats.json"
-users_path = "/Users/ivan/Ludice/data/users.json"
-time_sec_path = "/Users/ivan/Ludice/data/times_sec.json"
-logs_path = "/Users/ivan/Ludice/data/logs.json"
-lobby_path = "/Users/ivan/Ludice/data/lobby.json"
+secrets_path = "/Users/vikrorkhanin/Ludice/data/secrets.json"
+bank_path = "/Users/vikrorkhanin/Ludice/data/bank.json"
+bets_path = "/Users/vikrorkhanin/Ludice/data/bets.json"
+game_paths = "/Users/vikrorkhanin/Ludice/data/game.json"
+stats_path = "/Users/vikrorkhanin/Ludice/data/stats.json"
+users_path = "/Users/vikrorkhanin/Ludice/data/users.json"
+time_sec_path = "/Users/vikrorkhanin/Ludice/data/times_sec.json"
+logs_path = "/Users/vikrorkhanin/Ludice/data/logs.json"
+lobby_path = "/Users/vikrorkhanin/Ludice/data/lobby.json"
 
 def get_api_key() -> str:
     with open(secrets_path,"r") as file:
