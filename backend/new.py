@@ -64,10 +64,7 @@ def write_deafault_bank(username:str) -> bool:
     try:
         with open(bank_path,"r") as file:
             data = json.load(file)
-        data.append({
-            "username":username,
-            "balance":0
-        }) 
+        data[username] = 0
         with open(bank_path,"w") as file:
             json.dump(data,file)
     except Exception as e:
@@ -290,18 +287,12 @@ async def increase_user_balance(request:IncreaseUserBalance):
             detail="Invalid signature - data tampered"
         )
     try:
-        done = False
         with open(bank_path,"r") as file:
             data = json.load(file)
-        for user in data:
-            if user["username"] == request.username:
-                user["balance"] += request.amount
-                with open(bank_path,"w") as file:
-                    json.dump(data,file)
-                done = True
-        if not done:
-            raise HTTPException(status_code=404,detail="User not found")            
+        data[request.username] += request.amount
 
+        with open(bank_path,"w") as file:
+            json.dump(data,file)
     except Exception as e:
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error something went wrong : {e}")
@@ -317,19 +308,13 @@ async def withdraw(request:IncreaseUserBalance):
     try:
         with open(bank_path,"r") as file:
             data = json.load(file)
-        done = False
-        for user in data:
-            if user["username"] == request.username:
-                try:
-                    payment(request.username,request.amount,"")
-                    user["balance"] = 0
-                    with open(bank_path,"r") as file:
-                        json.dump(data,file)
-                    raise HTTPException(status_code=400,detail=f"User balance doesnt have this much money :(")
-                except Exception as e:
-                    write_logs(str(e))
-                    raise HTTPException(status_code=400,detail=f"Error while withdraw : {e}")    
-
+        try:
+            payment(request.username,request.amount,"")
+            data[request.username] = 0
+            with open(bank_path,"w") as file:
+                json.dump(data,file)
+        except Exception as e:
+            raise HTTPException(status_code = 400,detail = f"Error : {e}")    
     except Exception as e:
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Something went wrong : {e}")
@@ -340,15 +325,15 @@ async def decrease(request:IncreaseUserBalance):
     try:
         with open(bank_path,"r") as file:
             data = json.load(file)
-        for user in data:
-            if user["username"] == request.username:
-                if user["balance"] >= request.amount:
-                    user["balance"] -= request.amount
-                    with open(bank_path,"w") as file:
-                        json.dump(data,file)
-                else:
-                    raise HTTPException(status_code = 400,deatil = "Error user doesnt have enought money")            
+        if data[request.username] >= request.amount:
+            data[request.amount] -= request.amount
+            with open(bank_path,"w") as file:
+                json.dump(data,file)
+        else:
+            raise HTTPException(status_code = 400,detail="Error user doesnt have enough money")        
+
     except Exception as e:
+        print(f"Bad Request : {e}")
         write_logs(str(e))
         raise HTTPException(status_code = 400,detail = f"Error : {e}")
 
@@ -359,14 +344,10 @@ async def get_user_balance(username:str):
     try:
         with open(bank_path,"r") as file:
             data = json.load(file)
-        for user in data:
-            if user["username"] == username:
-                try:
-                    return user["balance"]
-                except Exception as e:
-                    write_logs(str(e))
-                    raise HTTPException(status_code=400,detail=f"Error while result:{e}")  
-        raise HTTPException(status_code=404,detail=f"User:{username} not found")         
+        try:
+            return data[username]
+        except Exception as e:
+            raise HTTPException(status_code=404,detail=f"User:{username} not found")         
             
     except Exception as e:
         write_logs(str(e))
@@ -378,14 +359,7 @@ async def count_all_money():
     try:
         with open(bank_path,"r") as file:
             data = json.load(file)
-        total = 0
-        for user in data:
-            try:
-                total += user["balance"]
-            except Exception as e:
-                write_logs(str(e))
-                raise HTTPException(status_code=400,detail=f"Error while counting {e}")       
-        return total     
+        return sum(data.values())
     except Exception as e:
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Something went wrong {e}")
@@ -979,8 +953,6 @@ class WriteOneTry(BaseModel):
     timestamp:float = Field(default_factory = time.time)
 @app.post("/write/one/try")
 async def write_one_try(request:WriteOneTry):
-    if not check_time_seciruty(request.username):
-        raise HTTPException(status_code=429,detail="Too many requests")
     if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code = 403,detail = "Invalid signature")
     else:
