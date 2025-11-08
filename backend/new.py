@@ -338,7 +338,7 @@ async def decrease(request:IncreaseUserBalance):
         with open(bank_path,"r") as file:
             data = json.load(file)
         if data[request.username] >= request.amount:
-            data[request.amount] -= request.amount
+            data[request.username] -= request.amount
             with open(bank_path,"w") as file:
                 json.dump(data,file)
         else:
