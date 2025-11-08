@@ -669,9 +669,70 @@ async def write_res(request:WriteRes):
         return False         
     except Exception as e:
         write_logs(str(e))
-        raise HTTPException(status_code=400,detail=f"Error : {e}")        
-        
+        raise HTTPException(status_code=400,detail=f"Error : {e}")
 
+
+@app.get("/get/game/result/{game_id}",dependencies = [Depends(verify_headeer)])
+async def get_game_result(game_id: str):
+    """Get game results if both players have submitted their dice rolls."""
+    try:
+        with open(game_paths, "r") as file:
+            data = json.load(file)
+
+        for game in data:
+            if game["id"] == game_id:
+                if len(game["players"]) != 2:
+                    raise HTTPException(status_code=400, detail="Game does not have 2 players")
+
+                player1 = game["players"][0]
+                player2 = game["players"][1]
+
+                # Check if both players have submitted results
+                result1_key = f"result_{player1}"
+                result2_key = f"result_{player2}"
+
+                if result1_key not in game or result2_key not in game:
+                    # Not all players have rolled yet
+                    return {
+                        "game_id": game_id,
+                        "status": "waiting",
+                        "players": game["players"],
+                        "results_submitted": {
+                            player1: result1_key in game,
+                            player2: result2_key in game
+                        }
+                    }
+
+                # Both players have rolled - determine winner
+                result1 = game[result1_key]
+                result2 = game[result2_key]
+
+                if result1 > result2:
+                    winner = player1
+                elif result2 > result1:
+                    winner = player2
+                else:
+                    winner = "draw"
+
+                return {
+                    "game_id": game_id,
+                    "status": "completed",
+                    "players": game["players"],
+                    "results": {
+                        player1: result1,
+                        player2: result2
+                    },
+                    "winner": winner,
+                    "bet": game["bet"]
+                }
+
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="Game data file not found")
+    except Exception as e:
+        write_logs(str(e))
+        raise HTTPException(status_code=400, detail=f"Error: {e}")
 
 
 @app.get("/join/link/{game_id}/{user_id}/{bet}",dependencies = [Depends(verify_headeer)])
