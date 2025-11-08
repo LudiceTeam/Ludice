@@ -418,6 +418,25 @@ async def start_game(request:Start_Game):
                     json.dump(data,file)
                 raise HTTPException(status_code=400,detail=game["id"])
 
+class IsLobbyfull(BaseModel):
+    lobby_id:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/check/lobby/fill")
+async def check_lobby_fill(request:IsLobbyfull):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code = 403,deatil = "Invalid signature")
+    try:
+        with open(game_paths,"r") as file:
+            data = json.load(file)
+        for game in data:
+            if game["id"] == request.lobby_id:
+                return len(game["players"]) == 2
+        raise HTTPException(status_code = 404,deatil = "Lobby not found")    
+                
+    except Exception as e:
+        raise HTTPException(status_code = 400,deatil = f"Error as {e}")
+
 def count_procent_of_wins(user_id:str) -> float:
     try:
         found = False

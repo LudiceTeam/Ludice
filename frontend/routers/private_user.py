@@ -57,7 +57,7 @@ def get_api_key_for_get_request() -> str:
             data = json.load(file)
         return data["x-api-normal"]    
     except Exception as e:
-        print(f"Error while geting api key : {e}")
+        print(f"Error while getting api key : {e}")
         raise TypeError("API Error")    
 # System secret for API signature verification
 SYSTEM_SECRET = get_key_for_api()
