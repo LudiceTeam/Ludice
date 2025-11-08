@@ -335,7 +335,7 @@ async def decrease(request:IncreaseUserBalance):
     except Exception as e:
         print(f"Bad Request : {e}")
         write_logs(str(e))
-        raise HTTPException(status_code = 400,detail = f"Error : {e}x
+        raise HTTPException(status_code = 400,detail = f"Error : {e}")
 
 
 @app.get("/get/{username}/balance",dependencies = [Depends(verify_headeer)])
@@ -347,8 +347,7 @@ async def get_user_balance(username:str):
         try:
             return data[username]
         except Exception as e:
-            raise HTTPException(status_code=404,detail=f"User:{username} not found")         
-            
+            raise HTTPException(status_code=404,detail=f"User:{username} not found")              
     except Exception as e:
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error : {e}")
