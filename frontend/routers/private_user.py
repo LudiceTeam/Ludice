@@ -727,8 +727,7 @@ async def cancel_search(callback: types.CallbackQuery, state: FSMContext):
 async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
     """Handle dice roll action."""
     # Send dice using Telegram's built-in dice
-    await callback.message.edit_text("🎲 Rolling...", reply_markup=None)
-
+    
     dice_msg = await callback.message.answer_dice(emoji="🎲")
 
     # Wait for dice animation
