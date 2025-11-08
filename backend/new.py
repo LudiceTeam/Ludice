@@ -655,6 +655,31 @@ async def write_res(request:WriteRes):
     except Exception as e:
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error : {e}")
+class WriteResult(BaseModel):
+    username:str
+    result:int
+    lobby_id:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/write/game/result")
+async def write_game_result(request:WriteResult):
+    if not verify_signature(request.model_dump(),request.signature):
+        raise HTTPException(status_code = 403,deatil = "Invalid signature")
+    try:
+        ind = False
+        with open(game_paths,"r") as file:
+            data = json.load(file)
+        for game in data:
+            if game["id"] == request.lobby_id:
+                game[f"result_{request.username}"] = request.result
+                with open(game_paths,"w") as file:
+                    data = json.load(file)
+                ind = True
+        if not ind:
+            raise HTTPException(status_code=404,deatil = "Lobby not found")
+    except Exception as e:
+        raise HTTPException(status_code = 400,deatil = f"Error : {e}")    
+
 
 
 @app.get("/get/game/result/{game_id}",dependencies = [Depends(verify_headeer)])
