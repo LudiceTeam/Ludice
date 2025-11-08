@@ -639,7 +639,7 @@ class WriteResult(BaseModel):
 @app.post("/write/game/result")
 async def write_game_result(request:WriteResult):
     if not verify_signature(request.model_dump(),request.signature):
-        raise HTTPException(status_code = 403,deatil = "Invalid signature")
+        raise HTTPException(status_code = 403,detail = "Invalid signature")
     try:
         ind = False
         with open(game_paths,"r") as file:
@@ -648,7 +648,7 @@ async def write_game_result(request:WriteResult):
             if game["id"] == request.lobby_id:
                 game[f"result_{request.username}"] = request.result
                 with open(game_paths,"w") as file:
-                    data = json.load(file)
+                    json.dump(data,file)
                 ind = True
         if not ind:
             raise HTTPException(status_code=404,detail = "Lobby not found")
