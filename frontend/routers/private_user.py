@@ -845,7 +845,7 @@ async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{BACKEND_API_URL}/write/res",
+                f"{BACKEND_API_URL}/write/result",
                 json=data,
                 headers={"Content-Type": "application/json"}
             ) as response:
