@@ -41,9 +41,9 @@ bets_path = "/Users/ivan/Ludice/data/bets.json"
 game_paths = "/Users/ivan/Ludice/data/game.json"
 stats_path = "/Users/ivan/Ludice/data/stats.json"
 users_path = "/Users/ivan/Ludice/data/users.json"
-
-
-
+time_sec_path = "/Users/ivan/Ludice/data/times_sec.json"
+logs_path = "/Users/ivan/Ludice/data/logs.json"
+lobby_path = "/Users/ivan/Ludice/data/lobby.json"
 
 def get_api_key() -> str:
     with open(secrets_path,"r") as file:
@@ -67,7 +67,7 @@ def write_deafault_bank(username:str) -> bool:
             "username":username,
             "balance":0
         }) 
-        with open("bank.json","w") as file:
+        with open(bank_path,"w") as file:
             json.dump(data,file)
     except Exception as e:
         return False        
@@ -81,14 +81,14 @@ def get_ton_url() -> str:
 
 def write_def_stats(user_id:str) -> bool:
     try:
-        with open("stats.json","r") as file:
+        with open(stats_path,"r") as file:
             data = json.load(file)
         data.append({
             "user_id":user_id,
             "wins":0,
             "total_games":0
         })    
-        with open("stats.json","w") as file:
+        with open(stats_path,"w") as file:
             json.dump(data,file)
         return True    
     except Exception as e:
@@ -101,7 +101,7 @@ except Exception as e:
     print(f"Redis is not start")    
 
 def get_key() -> str:
-    with open("secrets.json","r") as file:
+    with open(secrets_path,"r") as file:
         data = json.load(file)
     return data["key"]    
 
@@ -132,7 +132,7 @@ def generate_siganture(data:dict) -> str:
 time_lock = threading.Lock()
 def check_time_seciruty(username:str) -> bool:
     with time_lock:
-        with open("time_sec.json","r") as file:
+        with open(time_sec_path,"r") as file:
             data = json.load(file)
         cur_time = time.time()   
         if username in data:
@@ -146,7 +146,7 @@ def check_time_seciruty(username:str) -> bool:
         for user,user_time in data.items():
             if cur_time - user_time < 3600:
                 cleaned_data[user] = user_time
-        with open("time_sec.json","w") as file:
+        with open(time_sec_path,"w") as file:
             json.dump(data,file)
         return True
     
@@ -192,14 +192,14 @@ def payment(username:str,amount:int,message:str = "") -> bool:
 #------- ЛОГИ -------
 def write_logs(error:str):
     try:
-        with open("data/logs.json","r") as file:
+        with open(logs_path,"r") as file:
             data = json.load(file)
         data.append({
             "time":datetime.now(),
             "error":error,
             "id":uuid.uuid4()
         })    
-        with open("data/logs.json","w") as file:
+        with open(logs_path,"w") as file:
             json.dump(data,file)
     except Exception as e:
         write_logs(str(e))
@@ -217,35 +217,35 @@ async def register(request:Register):
         raise HTTPException(status_code=429,detail="Too many requests")
     if not verify_signature(request.dict(),request.signature):
         raise HTTPException(status_code=403,detail="Invalid signature")
-    with open("data/users.json","r") as file:
+    with open(users_path,"r") as file:
         data = json.load(file)
     if request.username in data:
         raise HTTPException(status_code=400,detail="User already exists")
     else:
         write_deafault_bank(request.username)
         data[request.username] = request.psw
-        with open("data/users.json","w") as file:
+        with open(users_path,"w") as file:
             json.dump(data,file)  
         # DEFAULT LOBBY DATA
-        with open("lobby.json","r") as file:
+        with open(lobby_path,"r") as file:
             lobs = json.load(file)
         lobs.append({
             "username":request.username,
             "lobbys":[]
         })
-        with open("lobby.json","w") as file:
+        with open(lobby_path,"w") as file:
             json.dump(lobs,file)
         write_def_stats(request.username)    
 
 
 def delete_the_same(bet:int,user_id1 : str,user_id2:str,id_that_we_need:str) -> bool:
-    with open("game.json","r") as file:
+    with open(game_paths,"r") as file:
         data = json.load(file)
     for game in data:
         if game["id"] != id_that_we_need and user_id1 in data["players"] and user_id2 in data["players"] and game["bet"] == bet:
             ind = data.index(game)
             data.pop(ind)
-            with open("game.json","w") as file:
+            with open(game_paths,"w") as file:
                 json.dump(data,file)
             return True
     return False        
@@ -253,12 +253,12 @@ def delete_the_same(bet:int,user_id1 : str,user_id2:str,id_that_we_need:str) -> 
 
 def add_win(user_id:str) -> bool:
     try:
-        with open("stats.json","r") as file:
+        with open(stats_path,"r") as file:
             data = json.load(file)
         for user in data:
             if user["user_id"] == user_id:
                 user["wins"] += 1
-                with open("stats.json","w") as file:
+                with open(stats_path,"w") as file:
                     json.dump(data,file)
                 return True         
         return False
@@ -266,12 +266,12 @@ def add_win(user_id:str) -> bool:
         return False
 def add_game(user_id:str) -> bool:
     try:
-        with open("stats.json","r") as file:
+        with open(stats_path,"r") as file:
             data = json.load(file)
         for user in data:
             if user["user_id"] == user_id:
                 user["total_games"] += 1
-                with open("stats.json","w") as file:
+                with open(stats_path,"w") as file:
                     json.dump(data,file)     
                 return True
         return False     
@@ -297,12 +297,12 @@ async def increase_user_balance(request:IncreaseUserBalance):
         )
     try:
         done = False
-        with open("bank.json","r") as file:
+        with open(bank_path,"r") as file:
             data = json.load(file)
         for user in data:
             if user["username"] == request.username:
                 user["balance"] += request.amount
-                with open("bank.json","w") as file:
+                with open(bank_path,"w") as file:
                     json.dump(data,file)
                 done = True
         if not done:
@@ -322,7 +322,7 @@ async def withdraw(request:IncreaseUserBalance):
             detail="Invalid signature - data tampered"
         )
     try:
-        with open("bank.json","r") as file:
+        with open(bank_path,"r") as file:
             data = json.load(file)
         done = False
         for user in data:
@@ -332,7 +332,7 @@ async def withdraw(request:IncreaseUserBalance):
                         user["balance"] -= request.amount
                         #payment(username:str,amount:int,message:str = "")
                         payment(request.username,request.amount,"")
-                        with open("bank.json","w") as file:
+                        with open(bank_path,"w") as file:
                             json.dump(data,file)
                     raise HTTPException(status_code=400,detail=f"User balance doesnt have this much money :(")
                 except Exception as e:
@@ -349,7 +349,7 @@ async def get_user_balance(username:str):
     if not check_time_seciruty(username):
         raise HTTPException(status_code=429,detail="Too many requests")
     try:
-        with open("bank.json","r") as file:
+        with open(bank_path,"r") as file:
             data = json.load(file)
         for user in data:
             if user["username"] == username:
@@ -368,7 +368,7 @@ async def get_user_balance(username:str):
 @app.get("/count_money",dependencies = [Depends(verify_headeer)])
 async def count_all_money():
     try:
-        with open("bank.json","r") as file:
+        with open(bank_path,"r") as file:
             data = json.load(file)
         total = 0
         for user in data:
@@ -400,7 +400,7 @@ async def start_game(request:Start_Game):
             detail="Invalid signature - data tampered"
         )
     found = False
-    with open("game.json","r") as file:
+    with open(game_paths,"r") as file:
         data = json.load(file)
     found_id = ""    
     for game in data:
@@ -410,7 +410,7 @@ async def start_game(request:Start_Game):
             found_id = game["id"]
             add_game(user_id = request.username)
     if found:
-        with open("game.json","w") as file:
+        with open(game_paths,"w") as file:
             json.dump(data,file)
         return found_id
     else:
@@ -418,14 +418,14 @@ async def start_game(request:Start_Game):
             if len(game["players"]) == 0:
                 game["bet"] = request.bet  
                 game["players"].append(request.username)
-                with open("game.json","w") as file:
+                with open(game_paths,"w") as file:
                     json.dump(data,file)
                 raise HTTPException(status_code=400,detail=game["id"])
 
 def count_procent_of_wins(user_id:str) -> float:
     try:
         found = False
-        with open("stats.json","r") as file:
+        with open(stats_path,"r") as file:
             data = json.load(file)
         for user in data:
             if user["user_id"] == user_id:
@@ -453,14 +453,14 @@ async def cancel_find(request:Cancel_My_Find):
             status_code=403, 
             detail="Invalid signature - data tampered"
         )
-    with open("game.json","r") as file:
+    with open(game_paths,"r") as file:
         data = json.load(file)               
     try:
         for game in data:
             if game["id"] == request.id and len(game["players"]) == 1 and request.username in game["players"]:
                 ind = data.index(game)
                 data.pop(ind)
-                with open("game.json","w") as file:
+                with open(game_paths,"w") as file:
                     json.dump(data,file)
                 return True
         return False             
@@ -486,13 +486,13 @@ async def write_winner(request:Win):
             detail="Invalid signature - data tampered"
         )
     try:
-        with open("game.json","r") as file:
+        with open(game_paths,"r") as file:
             data = json.load(file)
         for game in data:
             if game["id"] == request.id and len(game["players"]) == 2 and request.username in game["players"]:
                 if game["winner"] == "":
                     game["winner"] = request.username
-                    with open("game.json","w") as file:
+                    with open(game_paths,"w") as file:
                         json.dump(data,file)
     except Exception as e:
         write_logs(str(e))
@@ -514,7 +514,7 @@ async def leave(request:Leave):
             detail="Invalid signature - data tampered"
         )
     try:
-        with open("game.json","r") as file:
+        with open(game_paths,"r") as file:
             data = json.load(file)
         for game in data:
             if game["id"] == request.id:
@@ -522,7 +522,7 @@ async def leave(request:Leave):
                     game["players"] = []
                     game["bet"] = 0
                     game["winner"] = ""
-                    with open("game.json","w") as file:
+                    with open(game_paths,"w") as file:
                         json.dump(data,file)
                     return True
         raise HTTPException(status_code=400,detail="Error lobby not found :(")        
@@ -553,7 +553,7 @@ async def count_of_wins(request:Procent_Of_Wins):
 @app.get("/get/leader/board/most_games",dependencies = [Depends(verify_headeer)])
 async def get_leader_board_games():
     try:
-        with open("stats.json","r") as file:
+        with open(stats_path,"r") as file:
             data = json.load(file)
         result = {}
         for user in data:
@@ -565,7 +565,7 @@ async def get_leader_board_games():
 @app.get("/get/procent/wins",dependencies = [Depends(verify_headeer)])
 async def get_leader_board():
     try:
-        with open("stats.json","r") as file:
+        with open(stats_path,"r") as file:
             data = json.load(file)
         result = {}
         for user in data:
@@ -579,7 +579,7 @@ async def get_leader_board():
 async def get_me(user_id:str):
     if not check_time_seciruty(user_id):
         raise HTTPException(status_code=429,detail="Too many requests")
-    with open("bank.json","r") as file:
+    with open(bank_path,"r") as file:
         data = json.load(file)
     balance = None    
     for user in data:
@@ -588,7 +588,7 @@ async def get_me(user_id:str):
 
 
     try:
-        with open("stats.json","r") as file:
+        with open(stats_path,"r") as file:
             data = json.load(file)
         for user in data:
             if user["user_id"] == user_id:
@@ -605,7 +605,7 @@ async def get_me(user_id:str):
 
 
 def is_user_playing(user_id:str) -> bool:
-    with open("gane.json","r") as file:
+    with open(game_paths,"r") as file:
         data = json.load(file)
     for game in data:
         if user_id in game["players"]:
@@ -639,13 +639,13 @@ async def write_res(request:WriteRes):
             detail="Invalid signature - data tampered"
         )
     try:
-        with open("game.json","r") as file:
+        with open(game_paths,"r") as file:
             data = json.load(file)
         for game in data:
             if game["id"] == request.game_id:
                 if len(game["players"]) == 2 and request.user_id in game["players"]:
                     game[f"result_{request.user_id}"] = request.result
-                    with open("game.json","w") as file:
+                    with open(game_paths,"w") as file:
                         json.dump(data,file)
                     return True
         return False         
@@ -661,7 +661,7 @@ async def join_by_the_link(user_id:str,bet:int,game_id:str):
     if not check_time_seciruty(user_id):
         raise HTTPException(status_code=429,detail="Too many requests")
     try:
-        with open("game.json","r") as file:
+        with open(game_paths,"r") as file:
             data = json.load(file)
         done = False
         for game in data:
@@ -670,7 +670,7 @@ async def join_by_the_link(user_id:str,bet:int,game_id:str):
                     if len(game["players"] == 1 and user_id not in game["players"]) and game["bet"] == bet:
                         game["players"].append(user_id)
                         done = True
-                        with open("game.json","w") as file:
+                        with open(game_paths,"w") as file:
                             json.dump(data,file)
                         return True
                     else:
@@ -691,7 +691,7 @@ async def get_logs(request:GetLogs):
     if not verify_signature(request.model_dump(),request.siganture):
         raise HTTPException(status_code = 429,detail = "Invalid siganture")
     else:
-        with open("data/logs.json","r") as file:
+        with open(logs_path,"r") as file:
             data = json.load(file)
         try:
             return data
@@ -709,7 +709,7 @@ async def get_log_by_date(request:GetLogsByDate):
     if not verify_signature(request.model_dump(),request.signature):
         raise HTTPException(status_code=429,detail = "Invalid signature")
     else:
-        with open("data/logs.json","r") as file:
+        with open(logs_path,"r") as file:
             data = json.load(file)
         result = []    
         for log in data:
