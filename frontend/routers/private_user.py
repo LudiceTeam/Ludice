@@ -888,8 +888,7 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                 ) as response:
                     if response.status == 200:
                         result_data = await response.json()
-
-                        if result_data["status"] == "completed":
+                        if result_data == "completed":
                             # Game is complete - show results
                             winner = result_data["winner"]
                             results = result_data["results"]
