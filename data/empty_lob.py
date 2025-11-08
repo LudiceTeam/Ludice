@@ -2,7 +2,7 @@ import argparse
 import json
 import uuid
 
-path = "/Users/ivan/Ludice/data/game.json"
+path = "/Users/vikrorkhanin/Ludice/data/game.json"
 parser = argparse.ArgumentParser(description='Generate empty json lobby')
 parser.add_argument('-c', '--count', type=int, help='Amount of empty lobbies')
 def write_empty():
