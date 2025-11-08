@@ -110,6 +110,8 @@ KEY = get_key()
 
 def verify_signature(data: dict, received_signature: str) -> bool:
     if time.time() - data.get('timestamp', 0) > 300:
+        print("====== DEBUG =======")
+        print("TIME SECURITY ERROR")
         return False
     
     
@@ -202,7 +204,6 @@ def write_logs(error:str):
         with open(logs_path,"w") as file:
             json.dump(data,file)
     except Exception as e:
-        write_logs(str(e))
         print(f"Error : {e}")
 
 class Register(BaseModel):
