@@ -688,7 +688,11 @@ async def get_game_result(game_id: str):
                     winner = player2
                 else:
                     winner = "draw"
-                return winner
+                return {
+                    f"{player1}":f"{result1}",
+                    f"{player2}":f"{result2}",
+                    "winner":winner
+                }
         raise HTTPException(status_code=404, detail="Game not found")
 
     except FileNotFoundError:
