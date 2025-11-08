@@ -134,6 +134,7 @@ def get_play_again_keyboard() -> InlineKeyboardMarkup:
 async def cmd_start(message: types.Message, state: FSMContext):
     # Prepare API request data with signature
     data = {
+        "username": str(message.from_user.id),
         "timestamp": time.time()
     }
     
