@@ -11,12 +11,13 @@ from routers.private_user import start_router, game_router
 from routers.admin_user import admin_router
 
 bot = Bot(TOKEN)
-dp = Dispatcher()
-dp.include_router(start_router)
-dp.include_router(game_router)
-dp.include_router(admin_router)
 
 async def main():
+    dp = Dispatcher()
+    dp.include_router(start_router)
+    dp.include_router(game_router)
+    dp.include_router(admin_router)
+
     await bot.delete_webhook(drop_pending_updates=True)
 
     print("✅ Bot started! Waiting for updates...")
