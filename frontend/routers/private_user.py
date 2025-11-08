@@ -1,3 +1,4 @@
+from unittest import result
 from aiogram import F,Router, types
 from aiogram.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import CommandStart
@@ -862,7 +863,7 @@ async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
                 else:
                     error_text = await response.text()
                     await callback.message.answer(f"❌ Error submitting result: {error_text}")
-
+        
     except Exception as e:
         await callback.message.answer(f"❌ Error: {str(e)}")
 
@@ -881,6 +882,7 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
 
             # Check game results from backend
         try:
+        
             async with aiohttp.ClientSession() as session:
                 async with session.get(
                     f"{BACKEND_API_URL}/get/game/result/{game_id}",
@@ -889,17 +891,27 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                     if response.status == 200:
                         
                         result_data = await response.json()
-                        winner = result_data["winner"] 
-                            
-                            
+                        winner = result_data["winner"]
                         
+                        # results for both players
+                        my_res = result[f"result_{user_id}"]
+                        def get_except() -> str:
+                            for key in result_data.keys():
+                                if key != my_res and key != "winner":
+                                    return result_data[key]
+                            return None
+                        opponent_res = get_except()
                         # Process winnings/refunds
                         balance_change_data = {
                             "username": user_id,
                             "timestamp": time.time()
                         }
+                        balance_change_data["signature"] = generate_signature(balance_change_data)
+                        bet = user_data = await state.get_data()
+                        
                         if winner == user_id:
                              # Winner gets double the bet (original bet + winnings)
+                             
                             try:
                                     async with aiohttp.ClientSession() as session:
                                         await session.post(
@@ -913,8 +925,11 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                             outcome_msg = (
                                 f"🎉 **YOU WON!**\n\n"
                                 f"Total credited: {bet * 2} ⭐"
-                                
+                                f"\nYour roll: {my_res} ⭐"
+                                f"\nOpponent's roll: {opponent_res} ⭐\n\n"
                             )
+                            await bot.send_message(message.chat.id, outcome_msg)
+                            print(result_data)
                         elif winner != user_id:
                             try:
                                 async with aiohttp.ClientSession() as session:
@@ -923,6 +938,7 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                                         json=balance_change_data,
                                         headers={"Content-Type": "application/json"}
                                     )
+                                    
                             except Exception as e:
                                 print(f"Error crediting loser: {e}")
                             
@@ -930,7 +946,12 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                             outcome_msg = (
                                 f"😔 **YOU LOST**\n\n"
                                 f"Better luck next time!"
+                                f"\nYour roll: {my_res} ⭐"
+                                f"\nOpponent's roll: {opponent_res} ⭐\n\n"
                             )
+                            await bot.send_message(message.chat.id, outcome_msg)
+
+                            
                         if winner == "draw":
                             # Refund bet to both players
                             try:
@@ -946,8 +967,12 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                             outcome_msg = (
                                 f"🤝 **IT'S A DRAW!**\n\n"
                                 f"Better luck next time!"
+                                f"\nYour roll: {my_res} ⭐"
+                                f"\nOpponent's roll: {opponent_res} ⭐\n\n"
                             )
+                            await bot.send_message(message.chat.id, outcome_msg)
 
+                            
         except Exception as e:
             print(f"Error polling game result: {e}")
             continue
