@@ -22,3 +22,5 @@ go.work.sum
 
 # Go build cache
 .cache/
+/frontend/.env
+frontend/.env

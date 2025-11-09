@@ -1,3 +1,4 @@
+from unittest import result
 from aiogram import F,Router, types
 from aiogram.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import CommandStart
@@ -39,7 +40,7 @@ async def show_gambling_reminder(message):
     await message.answer(GAMBLING_REMINDER, parse_mode="Markdown")
 
 
-secrets_path = "/Users/ivan/Ludice/data/secrets.json"
+secrets_path = "/Users/vikrorkhanin/Ludice/data/secrets.json"
 load_dotenv(find_dotenv())
 secret_token = os.getenv("secret_token")
 def get_key_for_api() -> str:
@@ -50,9 +51,18 @@ def get_key_for_api() -> str:
     except Exception as e:
         print(f"Error while geting api key : {e}")
         raise TypeError("Error")
+
+def get_api_key_for_get_request() -> str:
+    try:
+        with open(secrets_path,"r") as file:
+            data = json.load(file)
+        return data["x-api-normal"]    
+    except Exception as e:
+        print(f"Error while getting api key : {e}")
+        raise TypeError("API Error")    
 # System secret for API signature verification
-SYSTEM_SECRET = "our_secret_key"
-BACKEND_API_URL = "http://127.0.0.1:8080"
+SYSTEM_SECRET = get_key_for_api()
+BACKEND_API_URL = "http://127.0.0.1:8000"
 
 # State groups
 class BetStates(StatesGroup):
@@ -60,6 +70,7 @@ class BetStates(StatesGroup):
     waiting_for_opponent = State()
     game_active = State()
     rolling_dice = State()
+    
 
 class LegalStates(StatesGroup):
     """FSM states for terms acceptance flow."""
@@ -67,7 +78,7 @@ class LegalStates(StatesGroup):
     verification = State()
 
 
-API_URL = "http://127.0.0.1:8000/register"
+API_URL = BACKEND_API_URL + "/register"
 
 # Routers
 start_router = Router()
@@ -130,9 +141,35 @@ def get_play_again_keyboard() -> InlineKeyboardMarkup:
     ])
 
 
+
+
 @start_router.message(CommandStart())
 async def cmd_start(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
+    # Prepare API request data with signature
+    data = {
+        "username": str(user_id),
+        "timestamp": time.time()
+    }
+    
+    # Generate signature
+    data["signature"] = generate_signature(data)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Register user using the Python backend endpoint
+            async with session.post(
+                API_URL,
+                json=data,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status == 200:
+                    await message.answer("✅ Registration successful!")
+                else:
+                    await message.answer("❌ Registration failed.")
+    except Exception as e:
+        await message.answer(f"Error: {e}")
+
 
     # Show terms and set FSM state to wait for acceptance
     await state.set_state(LegalStates.waiting_for_acceptance)
@@ -178,7 +215,96 @@ async def view_full_terms_handler(callback: types.CallbackQuery):
         "Please return to the previous message to accept or decline.",
         parse_mode="Markdown"
     )
+@start_router.message(F.text == "Balance test")
+async def balance_test(message: types.Message):
+    """Test handler to increase user balance by 100 stars."""
+    user_id = str(message.from_user.id)
+    test_amount = 100  # Test credit amount
 
+    # Prepare API request data with signature
+    data = {
+        "username": user_id,
+        "amount": test_amount,
+        "timestamp": time.time()
+    }
+
+    # Generate signature
+    data["signature"] = generate_signature(data)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Increase balance using the Python backend endpoint
+            async with session.post(
+                f"{BACKEND_API_URL}/user/increase",
+                json=data,
+                headers={"Content-Type": "application/json"}
+            ) as increase_response:
+                if increase_response.status == 200:
+                    await message.answer(
+                        f"✅ Balance test successful!\n\n"
+                        f"Added: {test_amount} ⭐ to your account"
+                    )
+                elif increase_response.status == 404:
+                    await message.answer(
+                        "❌ User not found. Please start a game first to create your account."
+                    )
+                elif increase_response.status == 403:
+                    await message.answer("❌ Authentication failed. Invalid signature.")
+                elif increase_response.status == 429:
+                    await message.answer("❌ Too many requests. Please wait a moment.")
+                else:
+                    error_text = await increase_response.text()
+                    await message.answer(f"❌ Error: {error_text}")
+
+    except aiohttp.ClientError as e:
+        await message.answer(f"❌ Network error: {str(e)}")
+    except Exception as e:
+        await message.answer(f"❌ Unexpected error: {str(e)}")
+        
+@start_router.message(F.text == "Profile 👤")
+async def profile_handler(message: types.Message):
+    """Display user profile with balance information."""
+    user_id = str(message.from_user.id)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Get user balance using the backend endpoint
+            async with session.get(
+                f"{BACKEND_API_URL}/get/{user_id}/balance",
+                headers={"X-API-Key": get_api_key_for_get_request()}
+            ) as response:
+                if response.status == 200:
+                    balance = await response.json()
+                    await message.answer(
+                        f"👤 **Your Profile**\n\n"
+                        f"User ID: `{user_id}`\n"
+                        f"Balance: **{balance} ⭐**",
+                        parse_mode="Markdown"
+                    )
+                elif response.status == 404:
+                    await message.answer(
+                        "❌ Profile not found. Please use /start to create your account."
+                    )
+                elif response.status == 401:
+                    await message.answer("❌ Authentication failed. Please try again later.")
+                elif response.status == 429:
+                    await message.answer("❌ Too many requests. Please wait a moment and try again.")
+                else:
+                    error_text = await response.text()
+                    await message.answer(f"❌ Error retrieving profile: {error_text}")
+
+    except aiohttp.ClientError as e:
+        await message.answer(f"❌ Network error: {str(e)}")
+    except Exception as e:
+        await message.answer(f"❌ Unexpected error: {str(e)}")
+
+@start_router.message(Command("menu"))
+async def main_menu(message: types.Message):
+    """Return to main menu."""
+    await message.answer(
+        "Welcome to Ludicé! Choose an option:",
+        reply_markup=start.start_kb
+    )
 
 @start_router.message(F.text == "Top up 🔝")
 async def stars(message: types.Message):
@@ -374,9 +500,14 @@ async def payment_success(msg: types.Message):
     )
 
 # Game section
-@game_router.message(F.text == "Roll 🎲")
+@game_router.message()
 async def play_game(message: types.Message):
-    await message.answer("Choose a game to play:", reply_markup=start.game_kb)
+    if message.text in ("/play", "Roll 🎲"):
+        await message.answer(
+            "Choose a game to play:",
+            reply_markup=start.game_kb
+        )
+
 
 @game_router.message(F.text == "Dice 🎲")
 async def play_dice(message: types.Message, state: FSMContext):
@@ -391,6 +522,7 @@ async def play_dice(message: types.Message, state: FSMContext):
 async def process_bet(message: types.Message, state: FSMContext):
     """Process user's bet and join/create game lobby."""
     bet_amount = message.text
+    user_id = str(message.from_user.id)
 
     # Validate bet is a number
     if not bet_amount.isdigit():
@@ -404,12 +536,65 @@ async def process_bet(message: types.Message, state: FSMContext):
         await message.answer("❌ Minimum bet is 10 stars. Please enter a valid bet amount.")
         return
 
+    # Check user balance first
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"{BACKEND_API_URL}/get/{user_id}/balance",
+                headers={"X-API-Key": get_api_key_for_get_request()}
+            ) as balance_response:
+                if balance_response.status == 200:
+                    balance = await balance_response.json()
+                    if balance < bet:
+                        await message.answer(
+                            f"❌ Insufficient balance!\n\n"
+                            f"Your balance: {balance} ⭐\n"
+                            f"Required: {bet} ⭐\n\n"
+                            f"Please top up your account or choose a lower bet."
+                        )
+                        return
+                else:
+                    await message.answer("❌ Could not check your balance. Please try again.")
+                    return
+    except Exception as e:
+        await message.answer(f"❌ Error checking balance: {str(e)}")
+        return
+
+    # Deduct bet amount from balance
+    deduct_data = {
+        "username": user_id,
+        "amount": bet,
+        "timestamp": time.time()
+    }
+    deduct_data["signature"] = generate_signature(deduct_data)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            decrease_data = {
+                "username": user_id,
+                "amount": bet,
+                "timestamp": time.time()
+            }
+            decrease_data["signature"] = generate_signature(decrease_data)
+            async with session.post(
+                BACKEND_API_URL + "/user/decrease",
+                json=decrease_data,
+                headers={"Content-Type": "application/json"}
+            ) as decrease_response:
+                if decrease_response.status == 400:
+                    await message.answer("❌ You don't have enough stars. Please top up your balance.")
+                    return
+                
+    except Exception as e:
+        await message.answer(f"❌ Error deducting bet: {str(e)}")
+        return
+
     # Store bet in state
     await state.update_data(bet=bet)
 
     # Prepare API request data
     data = {
-        "username": str(message.from_user.id),
+        "username": user_id,
         "bet": bet,
         "timestamp": time.time()
     }
@@ -440,8 +625,10 @@ async def process_bet(message: types.Message, state: FSMContext):
                         f"Roll your dice!",
                         reply_markup=get_dice_keyboard()
                     )
+                    
 
                 elif response.status == 400:
+                    
                     # Player created new lobby - waiting for opponent
                     response_data = await response.json()
                     game_id = response_data.get("detail", "")
@@ -499,19 +686,81 @@ async def poll_for_opponent(message: types.Message, state: FSMContext, game_id: 
             return
 
         try:
-            user_data = await state.get_data()
+            # Check if lobby is full (2 players)
+            data = {
+                "lobby_id": game_id,
+                "timestamp": time.time()
+            }
+            data["signature"] = generate_signature(data)
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{BACKEND_API_URL}/check/lobby/fill",
+                    json=data,
+                    headers={"Content-Type": "application/json"}
+                ) as response:
+                    if response.status == 200:
+                        is_full = await response.json()
+
+                        if is_full:
+                            # Lobby is full - game can start
+                            user_data = await state.get_data()
+                            bet = user_data.get("bet", 0)
+
+                            await state.update_data(lobby_status="game_started")
+                            await state.set_state(BetStates.game_active)
+
+                            await bot.send_message(
+                                message.chat.id,
+                                f"🎮 Opponent found!\n"
+                                f"Bet: {bet} ⭐\n\n"
+                                f"Roll your dice!",
+                                reply_markup=get_dice_keyboard()
+                            )
+                            return
+                    elif response.status == 404:
+                        # Lobby not found - maybe cancelled
+                        await bot.send_message(
+                            message.chat.id,
+                            "❌ Lobby not found. Search cancelled.",
+                            reply_markup=start.start_kb
+                        )
+                        await state.clear()
+                        return
 
         except Exception as e:
             print(f"Polling error: {e}")
             continue
 
-    # Timeout - cancel search
+    # Timeout - cancel search and refund bet
     current_state = await state.get_state()
     if current_state == BetStates.waiting_for_opponent:
+        user_data = await state.get_data()
+        bet = user_data.get("bet", 0)
+        user_id = str(message.from_user.id)
+
+        # Refund the bet
+        refund_data = {
+            "username": user_id,
+            "amount": bet,
+            "timestamp": time.time()
+        }
+        refund_data["signature"] = generate_signature(refund_data)
+        try:
+            async with aiohttp.ClientSession() as session:
+                await session.post(
+                    f"{BACKEND_API_URL}/user/increase",
+                    json=refund_data,
+                    headers={"Content-Type": "application/json"}
+                )
+        except Exception as e:
+            print(f"Error refunding bet on timeout: {e}")
+
         await bot.send_message(
             message.chat.id,
-            "⏰ Search timeout. No opponent found.\n"
-            "Please try again.",
+            f"⏰ Search timeout. No opponent found.\n\n"
+            f"Your bet of {bet} ⭐ has been refunded.\n"
+            f"Please try again.",
             reply_markup=start.start_kb
         )
         await state.clear()
@@ -522,11 +771,13 @@ async def cancel_search(callback: types.CallbackQuery, state: FSMContext):
     """Handle canceling opponent search."""
     user_data = await state.get_data()
     game_id = user_data.get("game_id")
+    bet = user_data.get("bet", 0)
+    user_id = str(callback.from_user.id)
 
     if game_id:
         # Call backend to cancel the lobby
         data = {
-            "username": str(callback.from_user.id),
+            "username": user_id,
             "id": game_id,
             "timestamp": time.time()
         }
@@ -540,8 +791,26 @@ async def cancel_search(callback: types.CallbackQuery, state: FSMContext):
                     headers={"Content-Type": "application/json"}
                 ) as response:
                     if response.status == 200:
+                        # Refund the bet
+                        refund_data = {
+                            "username": user_id,
+                            "amount": bet,
+                            "timestamp": time.time()
+                        }
+                        refund_data["signature"] = generate_signature(refund_data)
+
+                        try:
+                            await session.post(
+                                f"{BACKEND_API_URL}/user/increase",
+                                json=refund_data,
+                                headers={"Content-Type": "application/json"}
+                            )
+                        except Exception as e:
+                            print(f"Error refunding bet: {e}")
+
                         await callback.message.edit_text(
-                            "❌ Search cancelled.",
+                            f"❌ Search cancelled.\n\n"
+                            f"Your bet of {bet} ⭐ has been refunded.",
                             reply_markup=None
                         )
                         await callback.message.answer(
@@ -567,8 +836,7 @@ async def cancel_search(callback: types.CallbackQuery, state: FSMContext):
 async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
     """Handle dice roll action."""
     # Send dice using Telegram's built-in dice
-    await callback.message.edit_text("🎲 Rolling...", reply_markup=None)
-
+    
     dice_msg = await callback.message.answer_dice(emoji="🎲")
 
     # Wait for dice animation
@@ -580,9 +848,9 @@ async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
 
     # Submit result to backend
     data = {
-        "user_id": str(callback.from_user.id),
-        "game_id": game_id,
-        "result": dice_value,
+        "username": str(callback.from_user.id),
+        "result": int(dice_value),
+        "lobby_id": str(game_id),
         "timestamp": time.time()
     }
     data["signature"] = generate_signature(data)
@@ -590,7 +858,7 @@ async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{BACKEND_API_URL}/write/res",
+                f"{BACKEND_API_URL}/write/game/result",
                 json=data,
                 headers={"Content-Type": "application/json"}
             ) as response:
@@ -607,7 +875,7 @@ async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
                 else:
                     error_text = await response.text()
                     await callback.message.answer(f"❌ Error submitting result: {error_text}")
-
+        
     except Exception as e:
         await callback.message.answer(f"❌ Error: {str(e)}")
 
@@ -617,30 +885,112 @@ async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
 async def poll_for_game_result(message: types.Message, state: FSMContext, game_id: str, user_roll: int):
     """Poll backend to check if both players have rolled and determine winner."""
     bot = message.bot
+    user_id = str(message.from_user.id)
     max_wait = 60  # 1 minute
     poll_interval = 2
 
     for _ in range(max_wait // poll_interval):
         await asyncio.sleep(poll_interval)
 
+            # Check game results from backend
         try:
-            # Check game data to see if both players have submitted results
-            # This would require reading the game state from backend
-            # For a complete implementation, you'd need a /get/game/{game_id} endpoint
+        
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{BACKEND_API_URL}/get/game/result/{game_id}",
+                    headers={"X-API-Key": get_api_key_for_get_request()}
+                ) as response:
+                    if response.status == 200:
+                        
+                        result_data = await response.json()
+                        winner = result_data["winner"]
+                        
+                        # results for both players
+                        my_res = result_data[f"result_{user_id}"]
+                        print("DEBUDG")
+                        print(my_res)
+                        def get_except() -> str:
+                            for key in result_data.keys():
+                                if key != my_res and key != "winner":
+                                    return result_data[key]
+                            return None
+                        opponent_res = get_except()
+                        # Process winnings/refunds
+                        balance_change_data = {
+                            "username": user_id,
+                            "timestamp": time.time()
+                        }
+                        balance_change_data["signature"] = generate_signature(balance_change_data)
+                        bet = user_data = await state.get_data()
+                        
+                        if winner == str(user_id):
+                             # Winner gets double the bet (original bet + winnings)
+                             
+                            try:
+                                    async with aiohttp.ClientSession() as session:
+                                        await session.post(
+                                            f"{BACKEND_API_URL}/user/increase",
+                                            json=balance_change_data,
+                                            headers={"Content-Type": "application/json"}
+                                        )
+                            except Exception as e:
+                                print(f"Error crediting winner: {e}")
 
-            # For now, we'll use a placeholder
-            # In production, fetch game data and check if both results are in
+                            outcome_msg = (
+                                f"🎉 **YOU WON!**\n\n"
+                                f"Total credited: {bet * 2} ⭐"
+                                f"\nYour roll: {my_res} ⭐"
+                                f"\nOpponent's roll: {opponent_res} ⭐\n\n"
+                            )
+                            await bot.send_message(message.chat.id, outcome_msg)
+                            print(result_data)
+                        elif winner != str(user_id) and winner != "draw":
+                            try:
+                                async with aiohttp.ClientSession() as session:
+                                    await session.post(
+                                        f"{BACKEND_API_URL}/user/decrease",
+                                        json=balance_change_data,
+                                        headers={"Content-Type": "application/json"}
+                                    )
+                                    
+                            except Exception as e:
+                                print(f"Error crediting loser: {e}")
+                            
+                            
+                            outcome_msg = (
+                                f"😔 **YOU LOST**\n\n"
+                                f"Better luck next time!"
+                                f"\nYour roll: {my_res} ⭐"
+                                f"\nOpponent's roll: {opponent_res} ⭐\n\n"
+                            )
+                            await bot.send_message(message.chat.id, outcome_msg)
 
-            # Placeholder: assume game completes and we need to determine winner
-            # You'd call an endpoint like /get/game/result/{game_id}
+                            
+                        if winner == "draw":
+                            # Refund bet to both players
+                            try:
+                                async with aiohttp.ClientSession() as session:
+                                    await session.post(
+                                        f"{BACKEND_API_URL}/user/increase",
+                                        json=balance_change_data,
+                                        headers={"Content-Type": "application/json"}
+                                    )
+                            except Exception as e:
+                                print(f"Error refunding draw: {e}")
 
-            continue
+                            outcome_msg = (
+                                f"🤝 **IT'S A DRAW!**\n\n"
+                                f"Better luck next time!"
+                                f"\nYour roll: {my_res} ⭐"
+                                f"\nOpponent's roll: {opponent_res} ⭐\n\n"
+                            )
+                            await bot.send_message(message.chat.id, outcome_msg)
 
+                            
         except Exception as e:
-            print(f"Polling error: {e}")
+            print(f"Error polling game result: {e}")
             continue
-
-    # Timeout
+        # Timeout
     await bot.send_message(
         message.chat.id,
         "⏰ Game timeout. Opponent did not roll in time.",
@@ -653,15 +1003,24 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
 async def play_again(callback: types.CallbackQuery, state: FSMContext):
     """Handle play again action."""
     await state.clear()
-    await callback.message.edit_text("Choose a game to play:", reply_markup=start.game_kb)
+    # Delete the inline message first
+    await callback.message.delete()
+    # Send new message with ReplyKeyboardMarkup
+    await callback.message.answer(
+        "Choose a game to play:",
+        reply_markup=start.game_kb
+    )
     await callback.answer()
 
 
-@game_router.callback_query(F.data == "main_menu")
+@start_router.callback_query(Command("menu"))
 async def main_menu(callback: types.CallbackQuery, state: FSMContext):
     """Return to main menu."""
     await state.clear()
-    await callback.message.edit_text(
+    # Delete the inline message first
+    await callback.message.delete()
+    # Send new message with ReplyKeyboardMarkup
+    await callback.message.answer(
         "Welcome to Ludicé! Choose an option:",
         reply_markup=start.start_kb
     )
