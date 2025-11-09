@@ -298,6 +298,13 @@ async def profile_handler(message: types.Message):
     except Exception as e:
         await message.answer(f"❌ Unexpected error: {str(e)}")
 
+@start_router.message(Command("menu"))
+async def main_menu(message: types.Message):
+    """Return to main menu."""
+    await message.answer(
+        "Welcome to Ludicé! Choose an option:",
+        reply_markup=start.start_kb
+    )
 
 @start_router.message(F.text == "Top up 🔝")
 async def stars(message: types.Message):
@@ -493,9 +500,14 @@ async def payment_success(msg: types.Message):
     )
 
 # Game section
-@game_router.message(F.text == "Roll 🎲")
+@game_router.message()
 async def play_game(message: types.Message):
-    await message.answer("Choose a game to play:", reply_markup=start.game_kb)
+    if message.text in ("/play", "Roll 🎲"):
+        await message.answer(
+            "Choose a game to play:",
+            reply_markup=start.game_kb
+        )
+
 
 @game_router.message(F.text == "Dice 🎲")
 async def play_dice(message: types.Message, state: FSMContext):
@@ -894,7 +906,9 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                         winner = result_data["winner"]
                         
                         # results for both players
-                        my_res = result[f"result_{user_id}"]
+                        my_res = result_data[f"result_{user_id}"]
+                        print("DEBUDG")
+                        print(my_res)
                         def get_except() -> str:
                             for key in result_data.keys():
                                 if key != my_res and key != "winner":
@@ -999,7 +1013,7 @@ async def play_again(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@game_router.callback_query(F.data == "main_menu")
+@start_router.callback_query(Command("menu"))
 async def main_menu(callback: types.CallbackQuery, state: FSMContext):
     """Return to main menu."""
     await state.clear()
