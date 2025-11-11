@@ -903,7 +903,13 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                     if response.status == 200:
                         
                         result_data = await response.json()
+<<<<<<< HEAD
+                        winner = result_data["winner"] 
+                        
+                            
+=======
                         winner = result_data["winner"]
+>>>>>>> dc063f5e01e465af553774b0530fa6cbcdd38aa0
                         
                         # results for both players
                         my_res = result_data[f"result_{user_id}"]
