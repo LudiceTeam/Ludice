@@ -45,17 +45,22 @@ users_path = "/Users/vikrorkhanin/Ludice/data/users.json"
 time_sec_path = "/Users/vikrorkhanin/Ludice/data/times_sec.json"
 logs_path = "/Users/vikrorkhanin/Ludice/data/logs.json"
 lobby_path = "/Users/vikrorkhanin/Ludice/data/lobby.json"
-
+sogl_path = "/Users/vikrorkhanin/Ludice/data/sogl.json"
 
 def get_api_key() -> str:
     with open(secrets_path,"r") as file:
         data = json.load(file)
     return data["x-api-normal"]    
 
+
+ 
+
 async def verify_headeer(req:Request):
     api = req.headers.get("X-API-Key")
     if not api or not compare_digest(api,get_api_key()):
         raise HTTPException(status_code=401,detail = "Invalid api key")
+    
+
 @app.get("/")
 async def main():
     return "Ludice API"
@@ -74,8 +79,7 @@ def write_deafault_bank(username:str) -> bool:
 def get_ton_url() -> str:
     with open("secrets.json","r") as file:
         data = json.load(file)
-
-
+ 
 
 
 def write_def_stats(user_id:str) -> bool:
@@ -105,7 +109,6 @@ def get_key() -> str:
     return data["key"]    
 
 KEY = get_key()
-
 
 def verify_signature(data: dict, received_signature: str) -> bool:
     if time.time() - data.get('timestamp', 0) > 300:
@@ -309,6 +312,46 @@ async def increase_user_balance(request:IncreaseUserBalance):
     except Exception as e:
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error something went wrong : {e}")
+    
+def write_sogl(username:str,state:bool):
+    try:
+        with open(sogl_path,"r") as file:
+            data = json.load(file)
+        data[username] = state
+        with open(sogl_path,"w") as file:
+            json.dump(data,file)     
+    except Exception as e:
+        print(f"Error : {e}")
+        raise ValueError("Error soglasie") 
+
+class WriteTerms(BaseModel):
+    username:str
+    terms:bool
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/write/terms")
+async def write_terms(req:WriteTerms):
+    if not verify_signature(req.model_dump(),req.signature):
+        raise HTTPException(status_code = 403,detail = "Invalid signature")
+    try:
+        write_sogl(username=req.username,state=req.terms)
+    except Exception as e:
+        raise HTTPException(status_code = 400,detail = f"Error : {e}")
+
+
+@app.get("/check/terms/{username}",dependencies=[Depends(verify_headeer)])
+async def check_terms(username:str):
+    try:
+        with open(sogl_path,"r") as file:
+            data = json.load(file)
+        if data.get(username):
+            return data[username]
+        else:
+            raise HTTPException(status_code = 404,detail = "User not found")    
+    except Exception as e:
+        raise HTTPException(status_code = 400,detail = f"Error : {e}")
+
+
 @app.post("/user/withdraw")
 async def withdraw(request:IncreaseUserBalance):
    
