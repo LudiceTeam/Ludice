@@ -92,7 +92,7 @@ def generate_signature(data: dict) -> str:
     # Create a copy without signature field
     data_to_sign = data.copy()
     data_to_sign.pop("signature", None)
-
+    
     # Serialize with sorted keys and no spaces
     data_str = json.dumps(data_to_sign, sort_keys=True, separators=(',', ':'))
 
