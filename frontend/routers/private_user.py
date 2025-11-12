@@ -27,7 +27,7 @@ from common.legal_text import TERMS_FULL
 
 # Gamling reminder function
 GAMBLING_REMINDER = """
-⚠️ **Responsible Gaming Reminder**
+**Responsible Gaming Reminder**
 
 • Only bet what you can afford to lose
 
@@ -92,7 +92,7 @@ def generate_signature(data: dict) -> str:
     # Create a copy without signature field
     data_to_sign = data.copy()
     data_to_sign.pop("signature", None)
-
+    
     # Serialize with sorted keys and no spaces
     data_str = json.dumps(data_to_sign, sort_keys=True, separators=(',', ':'))
 
@@ -110,11 +110,11 @@ def get_legal_nav_keyboard() -> InlineKeyboardMarkup:
     """Create keyboard for terms acceptance."""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="✅ I Accept", callback_data="accept_terms"),
-            InlineKeyboardButton(text="📖 Read Full Terms", callback_data="view_full_terms")
+            InlineKeyboardButton(text="I Accept", callback_data="accept_terms"),
+            InlineKeyboardButton(text="Read Full Terms", callback_data="view_full_terms")
         ],
         [
-            InlineKeyboardButton(text="❌ I Decline", callback_data="decline_terms")
+            InlineKeyboardButton(text="I Decline", callback_data="decline_terms")
         ]
     ])
 
@@ -122,22 +122,22 @@ def get_legal_nav_keyboard() -> InlineKeyboardMarkup:
 def get_waiting_keyboard() -> InlineKeyboardMarkup:
     """Create keyboard for waiting for opponent."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="❌ Cancel Search", callback_data="cancel_search")]
+        [InlineKeyboardButton(text="Cancel Search", callback_data="cancel_search")]
     ])
 
 
 def get_dice_keyboard() -> InlineKeyboardMarkup:
     """Create keyboard for rolling dice."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎲 Roll Dice", callback_data="roll_dice")]
+        [InlineKeyboardButton(text="Roll Dice", callback_data="roll_dice")]
     ])
 
 
 def get_play_again_keyboard() -> InlineKeyboardMarkup:
     """Create keyboard for playing again."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎲 Play Again", callback_data="play_again")],
-        [InlineKeyboardButton(text="🏠 Main Menu", callback_data="main_menu")]
+        [InlineKeyboardButton(text="Play Again", callback_data="play_again")],
+        [InlineKeyboardButton(text="Main Menu", callback_data="main_menu")]
     ])
 
 
@@ -164,9 +164,9 @@ async def cmd_start(message: types.Message, state: FSMContext):
                 headers={"Content-Type": "application/json"}
             ) as response:
                 if response.status == 200:
-                    await message.answer("✅ Registration successful!")
+                    print("✅ User registered successfully.")
                 else:
-                    await message.answer("❌ Registration failed.")
+                    print("⚠️ User registration failed or user already exists.")
     except Exception as e:
         await message.answer(f"Error: {e}")
 
@@ -245,16 +245,15 @@ async def balance_test(message: types.Message):
                         f"Added: {test_amount} ⭐ to your account"
                     )
                 elif increase_response.status == 404:
-                    await message.answer(
-                        "❌ User not found. Please start a game first to create your account."
-                    )
+                    print("❌ User not found. Please start a game first to create your account.")
                 elif increase_response.status == 403:
-                    await message.answer("❌ Authentication failed. Invalid signature.")
+                    print("❌ Authentication failed. Invalid signature.")
                 elif increase_response.status == 429:
-                    await message.answer("❌ Too many requests. Please wait a moment.")
+                    print("❌ Too many requests. Please wait a moment.")
                 else:
                     error_text = await increase_response.text()
-                    await message.answer(f"❌ Error: {error_text}")
+                    # await message.answer(f"❌ Error: {error_text}")
+                    print(f"❌ Error: {error_text}")
 
     except aiohttp.ClientError as e:
         await message.answer(f"❌ Network error: {str(e)}")
@@ -903,13 +902,8 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                     if response.status == 200:
                         
                         result_data = await response.json()
-<<<<<<< HEAD
                         winner = result_data["winner"] 
                         
-                            
-=======
-                        winner = result_data["winner"]
->>>>>>> dc063f5e01e465af553774b0530fa6cbcdd38aa0
                         
                         # results for both players
                         my_res = result_data[f"result_{user_id}"]
