@@ -350,6 +350,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None)
+    print("Invoice sent for 15 stars")
 
 # 50 stars
 @start_router.callback_query(F.data == "star50")
@@ -372,6 +373,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 50 stars")
 
 #75 stars 100
 @start_router.callback_query(F.data == "star75")
@@ -394,6 +396,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 75 stars")
 
 #100 stars 133
 @start_router.callback_query(F.data == "star100")
@@ -416,6 +419,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 100 stars")
 
 #150 stars
 @start_router.callback_query(F.data == "star150")
@@ -438,6 +442,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 150 stars")
 #250 stars 333
 @start_router.callback_query(F.data == "star250")
 async def send_invoice(callback: types.CallbackQuery):
@@ -459,6 +464,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 250 stars")
 # 750 stars
 @start_router.callback_query(F.data == "star750")
 async def send_invoice(callback: types.CallbackQuery):
@@ -479,7 +485,8 @@ async def send_invoice(callback: types.CallbackQuery):
 
     await callback.answer()
     await callback.message.delete()
-    await callback.message.edit_reply_markup(reply_markup=None) 
+    await callback.message.edit_reply_markup(reply_markup=None)
+    print("Invoice sent for 750 stars")
 
 # 1000 stars
 @start_router.callback_query(F.data == "star1000")
@@ -502,6 +509,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None)
+    print("Invoice sent for 1000 stars")
 #1500 stars
 
 
