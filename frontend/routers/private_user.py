@@ -256,9 +256,9 @@ async def balance_test(message: types.Message):
                     print(f"❌ Error: {error_text}")
 
     except aiohttp.ClientError as e:
-        await message.answer(f"❌ Network error: {str(e)}")
+        print(f"❌ Network error: {str(e)}")
     except Exception as e:
-        await message.answer(f"❌ Unexpected error: {str(e)}")
+        print(f"❌ Unexpected error: {str(e)}")
         
 @start_router.message(F.text == "Profile 👤")
 async def profile_handler(message: types.Message):
@@ -281,21 +281,19 @@ async def profile_handler(message: types.Message):
                         parse_mode="Markdown"
                     )
                 elif response.status == 404:
-                    await message.answer(
-                        "❌ Profile not found. Please use /start to create your account."
-                    )
+                    print("❌ Profile not found. Please use /start to create your account.")
                 elif response.status == 401:
-                    await message.answer("❌ Authentication failed. Please try again later.")
+                    print("❌ Authentication failed. Please try again later.")
                 elif response.status == 429:
-                    await message.answer("❌ Too many requests. Please wait a moment and try again.")
+                    print("❌ Too many requests. Please wait a moment and try again.")
                 else:
                     error_text = await response.text()
-                    await message.answer(f"❌ Error retrieving profile: {error_text}")
+                    print(f"❌ Error retrieving profile: {error_text}")
 
     except aiohttp.ClientError as e:
-        await message.answer(f"❌ Network error: {str(e)}")
+        print(f"❌ Network error: {str(e)}")
     except Exception as e:
-        await message.answer(f"❌ Unexpected error: {str(e)}")
+        print(f"❌ Unexpected error: {str(e)}")
 
 @start_router.message(Command("menu"))
 async def main_menu(message: types.Message):
