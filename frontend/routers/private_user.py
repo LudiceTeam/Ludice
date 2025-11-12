@@ -186,6 +186,14 @@ async def accept_terms_handler(callback: types.CallbackQuery, state: FSMContext)
     """Handle user accepting terms of service."""
     user_id = callback.from_user.id
 
+    data = {
+        "username": str(user_id),
+        "terms" : True,
+        "timestamp": time.time()}
+    
+    # Generate signature
+    data["signature"] = generate_signature(data)
+    
     await state.clear()
     await callback.message.edit_text("✅ Thank you for accepting the terms!")
     await callback.message.answer(
