@@ -194,6 +194,23 @@ async def accept_terms_handler(callback: types.CallbackQuery, state: FSMContext)
     # Generate signature
     data["signature"] = generate_signature(data)
     
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Register user using the Python backend endpoint
+            async with session.post(
+                API_URL,
+                json=data,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status == 200:
+                    print("✅ User registered successfully.")
+                else:
+                    print("⚠️ User registration failed or user already exists.")
+    except Exception as e:
+        await message.answer(f"Error: {e}")
+
+        
+    
     await state.clear()
     await callback.message.edit_text("✅ Thank you for accepting the terms!")
     await callback.message.answer(
