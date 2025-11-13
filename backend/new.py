@@ -350,7 +350,16 @@ async def check_terms(username:str):
             raise HTTPException(status_code = 404,detail = "User not found")    
     except Exception as e:
         raise HTTPException(status_code = 400,detail = f"Error : {e}")
-
+@app.get("/get/user/exist",dependencies=[Depends(verify_headeer)])
+async def check_user_exists(username:str):
+    with open(sogl_path,"r") as file:
+        data = json.load(file)
+    try:
+        if data.get(username):
+            return True
+        return False
+    except Exception as e:
+        raise HTTPException(status_code = 400,detail=f"Error : {e}")
 
 @app.post("/user/withdraw")
 async def withdraw(request:IncreaseUserBalance):
