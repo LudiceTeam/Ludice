@@ -186,6 +186,29 @@ async def accept_terms_handler(callback: types.CallbackQuery, state: FSMContext)
     """Handle user accepting terms of service."""
     user_id = callback.from_user.id
 
+    data = {
+        "username": str(user_id),
+        "terms" : True,
+        "timestamp": time.time()}
+    
+    # Generate signature
+    data["signature"] = generate_signature(data)
+    
+    try:
+        async with session.post(
+            API_URL,
+            json=data,
+            headers={"Content-Type": "application/json"}
+        ) as response:
+            if response.status == 200:
+                print("✅ User registered successfully.")
+            else:
+                print("⚠️ User registration failed or user already exists.")
+    except Exception as e:
+        print(f"Error: {e}")
+
+        
+    
     await state.clear()
     await callback.message.edit_text("✅ Thank you for accepting the terms!")
     await callback.message.answer(
@@ -256,9 +279,9 @@ async def balance_test(message: types.Message):
                     print(f"❌ Error: {error_text}")
 
     except aiohttp.ClientError as e:
-        await message.answer(f"❌ Network error: {str(e)}")
+        print(f"❌ Network error: {str(e)}")
     except Exception as e:
-        await message.answer(f"❌ Unexpected error: {str(e)}")
+        print(f"❌ Unexpected error: {str(e)}")
         
 @start_router.message(F.text == "Profile 👤")
 async def profile_handler(message: types.Message):
@@ -281,21 +304,19 @@ async def profile_handler(message: types.Message):
                         parse_mode="Markdown"
                     )
                 elif response.status == 404:
-                    await message.answer(
-                        "❌ Profile not found. Please use /start to create your account."
-                    )
+                    print("❌ Profile not found. Please use /start to create your account.")
                 elif response.status == 401:
-                    await message.answer("❌ Authentication failed. Please try again later.")
+                    print("❌ Authentication failed. Please try again later.")
                 elif response.status == 429:
-                    await message.answer("❌ Too many requests. Please wait a moment and try again.")
+                    print("❌ Too many requests. Please wait a moment and try again.")
                 else:
                     error_text = await response.text()
-                    await message.answer(f"❌ Error retrieving profile: {error_text}")
+                    print(f"❌ Error retrieving profile: {error_text}")
 
     except aiohttp.ClientError as e:
-        await message.answer(f"❌ Network error: {str(e)}")
+        print(f"❌ Network error: {str(e)}")
     except Exception as e:
-        await message.answer(f"❌ Unexpected error: {str(e)}")
+        print(f"❌ Unexpected error: {str(e)}")
 
 @start_router.message(Command("menu"))
 async def main_menu(message: types.Message):
@@ -329,6 +350,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None)
+    print("Invoice sent for 15 stars")
 
 # 50 stars
 @start_router.callback_query(F.data == "star50")
@@ -351,6 +373,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 50 stars")
 
 #75 stars 100
 @start_router.callback_query(F.data == "star75")
@@ -373,6 +396,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 75 stars")
 
 #100 stars 133
 @start_router.callback_query(F.data == "star100")
@@ -395,6 +419,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 100 stars")
 
 #150 stars
 @start_router.callback_query(F.data == "star150")
@@ -417,6 +442,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 150 stars")
 #250 stars 333
 @start_router.callback_query(F.data == "star250")
 async def send_invoice(callback: types.CallbackQuery):
@@ -438,6 +464,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 250 stars")
 # 750 stars
 @start_router.callback_query(F.data == "star750")
 async def send_invoice(callback: types.CallbackQuery):
@@ -458,7 +485,8 @@ async def send_invoice(callback: types.CallbackQuery):
 
     await callback.answer()
     await callback.message.delete()
-    await callback.message.edit_reply_markup(reply_markup=None) 
+    await callback.message.edit_reply_markup(reply_markup=None)
+    print("Invoice sent for 750 stars")
 
 # 1000 stars
 @start_router.callback_query(F.data == "star1000")
@@ -481,6 +509,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None)
+    print("Invoice sent for 1000 stars")
 #1500 stars
 
 
