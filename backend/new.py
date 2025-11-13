@@ -357,7 +357,7 @@ async def check_user_exists(username:str):
     try:
         if data.get(username):
             return True
-        return False
+        raise HTTPException(status_code = 404,detail = "User doenst excists")
     except Exception as e:
         raise HTTPException(status_code = 400,detail=f"Error : {e}")
 
