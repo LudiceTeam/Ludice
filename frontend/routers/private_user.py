@@ -178,7 +178,10 @@ async def cmd_start(message: types.Message, state: FSMContext):
                             headers={"Content-Type": "application/json"}
                             
                         ) as response:
-                            
+                            if response.status == 400:
+                                print("✅ User exists.")
+                            else:
+                                print("Unexpected response while checking user existence.")
                         
     except Exception as e:
         await message.answer(f"Error: {e}")
