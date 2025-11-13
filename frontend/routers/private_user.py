@@ -167,17 +167,18 @@ async def cmd_start(message: types.Message, state: FSMContext):
                     print("✅ User registered successfully.")
                 else:
                     print("⚠️ User registration failed or user already exists. Trying to check user existence...")
-                    data = {
-                        
-                    }
-                    async whith aiohttp.ClientSession() as session:
+                    
+                    # Generate signature
+                    data["signature"] = generate_signature(data)
+                    async with aiohttp.ClientSession() as session:
                         # Check if user exists
-                        async whith session.get(
+                        async with session.get(
                             f"{BACKEND_API_URL}/user/increase",
                             json=data,
                             headers={"Content-Type": "application/json"}
                             
-                        )
+                        ) as response:
+                            
                         
     except Exception as e:
         await message.answer(f"Error: {e}")
