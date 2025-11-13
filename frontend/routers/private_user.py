@@ -18,8 +18,8 @@ import hashlib
 import hmac
 import time
 
-
-
+# Session 
+session = AiohttpSession()
 
 
 # Legal text import
