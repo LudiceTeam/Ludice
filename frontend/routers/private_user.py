@@ -12,7 +12,7 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command
 import asyncio
 import os
-import aiohttp
+from aiogram.client.session.aiohttp import AiohttpSession 
 import json
 import hashlib
 import hmac
