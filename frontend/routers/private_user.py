@@ -166,7 +166,13 @@ async def cmd_start(message: types.Message, state: FSMContext):
                 if response.status == 200:
                     print("✅ User registered successfully.")
                 else:
-                    print("⚠️ User registration failed or user already exists.")
+                    print("⚠️ User registration failed or user already exists. Trying to check user existence...")
+                    async whith aiohttp.ClientSession() as session:
+                        # Check if user exists
+                        async whith session.get(
+                            
+                        )
+                        
     except Exception as e:
         await message.answer(f"Error: {e}")
 
@@ -195,15 +201,16 @@ async def accept_terms_handler(callback: types.CallbackQuery, state: FSMContext)
     data["signature"] = generate_signature(data)
     
     try:
-        async with session.post(
-            API_URL,
-            json=data,
-            headers={"Content-Type": "application/json"}
-        ) as response:
-            if response.status == 200:
-                print("✅ User registered successfully.")
-            else:
-                print("⚠️ User registration failed or user already exists.")
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                API_URL,
+                json=data,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status == 200:
+                    print("✅ User registered successfully.")
+                else:
+                    print("⚠️ User registration failed or user already exists.")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -536,15 +543,16 @@ async def play_game(message: types.Message):
             reply_markup=start.game_kb
         )
 
-
+@game_router.message(F.text == "Target 🎯")
+async def play_target(callback: types.CallbackQuery):
+    await callback.answer("In development...")
+    
 @game_router.message(F.text == "Dice 🎲")
 async def play_dice(message: types.Message, state: FSMContext):
-    # Show responsible gambling reminder
-    await show_gambling_reminder(message)
 
     await message.answer("🎲 You chose to play Dice! What amount are you willing to bet?")
     await state.set_state(BetStates.waiting_for_bet)
-
+    
 
 @game_router.message(BetStates.waiting_for_bet)
 async def process_bet(message: types.Message, state: FSMContext):
@@ -554,14 +562,14 @@ async def process_bet(message: types.Message, state: FSMContext):
 
     # Validate bet is a number
     if not bet_amount.isdigit():
-        await message.answer("❌ Please enter a valid number for your bet.")
+        await message.answer("Please enter a valid number for your bet.")
         return
 
     bet = int(bet_amount)
 
     # Validate minimum bet
     if bet < 10:
-        await message.answer("❌ Minimum bet is 10 stars. Please enter a valid bet amount.")
+        await message.answer("Minimum bet is 10 stars. Please enter a valid bet amount.")
         return
 
     # Check user balance first
@@ -1056,6 +1064,3 @@ async def main_menu(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@game_router.message(F.text == "Target 🎯")
-async def play_target(callback: types.CallbackQuery):
-    await callback.answer("In development...")
