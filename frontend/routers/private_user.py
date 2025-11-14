@@ -12,14 +12,14 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command
 import asyncio
 import os
-import aiohttp
+from aiogram.client.session.aiohttp import AiohttpSession 
 import json
 import hashlib
 import hmac
 import time
 
-
-
+# Session 
+session = AiohttpSession()
 
 
 # Legal text import
@@ -27,7 +27,7 @@ from common.legal_text import TERMS_FULL
 
 # Gamling reminder function
 GAMBLING_REMINDER = """
-⚠️ **Responsible Gaming Reminder**
+**Responsible Gaming Reminder**
 
 • Only bet what you can afford to lose
 
@@ -80,6 +80,7 @@ class LegalStates(StatesGroup):
 
 API_URL = BACKEND_API_URL + "/register"
 
+
 # Routers
 start_router = Router()
 payment_router = Router()
@@ -92,7 +93,7 @@ def generate_signature(data: dict) -> str:
     # Create a copy without signature field
     data_to_sign = data.copy()
     data_to_sign.pop("signature", None)
-
+    
     # Serialize with sorted keys and no spaces
     data_str = json.dumps(data_to_sign, sort_keys=True, separators=(',', ':'))
 
@@ -110,11 +111,11 @@ def get_legal_nav_keyboard() -> InlineKeyboardMarkup:
     """Create keyboard for terms acceptance."""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="✅ I Accept", callback_data="accept_terms"),
-            InlineKeyboardButton(text="📖 Read Full Terms", callback_data="view_full_terms")
+            InlineKeyboardButton(text="I Accept", callback_data="accept_terms"),
+            InlineKeyboardButton(text="Read Full Terms", callback_data="view_full_terms")
         ],
         [
-            InlineKeyboardButton(text="❌ I Decline", callback_data="decline_terms")
+            InlineKeyboardButton(text="I Decline", callback_data="decline_terms")
         ]
     ])
 
@@ -122,22 +123,22 @@ def get_legal_nav_keyboard() -> InlineKeyboardMarkup:
 def get_waiting_keyboard() -> InlineKeyboardMarkup:
     """Create keyboard for waiting for opponent."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="❌ Cancel Search", callback_data="cancel_search")]
+        [InlineKeyboardButton(text="Cancel Search", callback_data="cancel_search")]
     ])
 
 
 def get_dice_keyboard() -> InlineKeyboardMarkup:
     """Create keyboard for rolling dice."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎲 Roll Dice", callback_data="roll_dice")]
+        [InlineKeyboardButton(text="Roll Dice", callback_data="roll_dice")]
     ])
 
 
 def get_play_again_keyboard() -> InlineKeyboardMarkup:
     """Create keyboard for playing again."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎲 Play Again", callback_data="play_again")],
-        [InlineKeyboardButton(text="🏠 Main Menu", callback_data="main_menu")]
+        [InlineKeyboardButton(text="Play Again", callback_data="play_again")],
+        [InlineKeyboardButton(text="Main Menu", callback_data="main_menu")]
     ])
 
 
@@ -164,9 +165,8 @@ async def cmd_start(message: types.Message, state: FSMContext):
                 headers={"Content-Type": "application/json"}
             ) as response:
                 if response.status == 200:
-                    await message.answer("✅ Registration successful!")
-                else:
-                    await message.answer("❌ Registration failed.")
+                    print("✅ User registered successfully.")
+        print("⚠️ User registration failed or user already exists. Trying to check user existence...")
     except Exception as e:
         await message.answer(f"Error: {e}")
 
@@ -186,6 +186,30 @@ async def accept_terms_handler(callback: types.CallbackQuery, state: FSMContext)
     """Handle user accepting terms of service."""
     user_id = callback.from_user.id
 
+    data = {
+        "username": str(user_id),
+        "terms" : True,
+        "timestamp": time.time()}
+    
+    # Generate signature
+    data["signature"] = generate_signature(data)
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                API_URL,
+                json=data,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status == 200:
+                    print("✅ User registered successfully.")
+                else:
+                    print("⚠️ User registration failed or user already exists.")
+    except Exception as e:
+        print(f"Error: {e}")
+
+        
+    
     await state.clear()
     await callback.message.edit_text("✅ Thank you for accepting the terms!")
     await callback.message.answer(
@@ -245,21 +269,20 @@ async def balance_test(message: types.Message):
                         f"Added: {test_amount} ⭐ to your account"
                     )
                 elif increase_response.status == 404:
-                    await message.answer(
-                        "❌ User not found. Please start a game first to create your account."
-                    )
+                    print("❌ User not found. Please start a game first to create your account.")
                 elif increase_response.status == 403:
-                    await message.answer("❌ Authentication failed. Invalid signature.")
+                    print("❌ Authentication failed. Invalid signature.")
                 elif increase_response.status == 429:
-                    await message.answer("❌ Too many requests. Please wait a moment.")
+                    print("❌ Too many requests. Please wait a moment.")
                 else:
                     error_text = await increase_response.text()
-                    await message.answer(f"❌ Error: {error_text}")
+                    # await message.answer(f"❌ Error: {error_text}")
+                    print(f"❌ Error: {error_text}")
 
     except aiohttp.ClientError as e:
-        await message.answer(f"❌ Network error: {str(e)}")
+        print(f"❌ Network error: {str(e)}")
     except Exception as e:
-        await message.answer(f"❌ Unexpected error: {str(e)}")
+        print(f"❌ Unexpected error: {str(e)}")
         
 @start_router.message(F.text == "Profile 👤")
 async def profile_handler(message: types.Message):
@@ -282,21 +305,19 @@ async def profile_handler(message: types.Message):
                         parse_mode="Markdown"
                     )
                 elif response.status == 404:
-                    await message.answer(
-                        "❌ Profile not found. Please use /start to create your account."
-                    )
+                    print("❌ Profile not found. Please use /start to create your account.")
                 elif response.status == 401:
-                    await message.answer("❌ Authentication failed. Please try again later.")
+                    print("❌ Authentication failed. Please try again later.")
                 elif response.status == 429:
-                    await message.answer("❌ Too many requests. Please wait a moment and try again.")
+                    print("❌ Too many requests. Please wait a moment and try again.")
                 else:
                     error_text = await response.text()
-                    await message.answer(f"❌ Error retrieving profile: {error_text}")
+                    print(f"❌ Error retrieving profile: {error_text}")
 
     except aiohttp.ClientError as e:
-        await message.answer(f"❌ Network error: {str(e)}")
+        print(f"❌ Network error: {str(e)}")
     except Exception as e:
-        await message.answer(f"❌ Unexpected error: {str(e)}")
+        print(f"❌ Unexpected error: {str(e)}")
 
 @start_router.message(Command("menu"))
 async def main_menu(message: types.Message):
@@ -330,6 +351,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None)
+    print("Invoice sent for 15 stars")
 
 # 50 stars
 @start_router.callback_query(F.data == "star50")
@@ -352,6 +374,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 50 stars")
 
 #75 stars 100
 @start_router.callback_query(F.data == "star75")
@@ -374,6 +397,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 75 stars")
 
 #100 stars 133
 @start_router.callback_query(F.data == "star100")
@@ -396,6 +420,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 100 stars")
 
 #150 stars
 @start_router.callback_query(F.data == "star150")
@@ -418,6 +443,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 150 stars")
 #250 stars 333
 @start_router.callback_query(F.data == "star250")
 async def send_invoice(callback: types.CallbackQuery):
@@ -439,6 +465,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None) 
+    print("Invoice sent for 250 stars")
 # 750 stars
 @start_router.callback_query(F.data == "star750")
 async def send_invoice(callback: types.CallbackQuery):
@@ -459,7 +486,8 @@ async def send_invoice(callback: types.CallbackQuery):
 
     await callback.answer()
     await callback.message.delete()
-    await callback.message.edit_reply_markup(reply_markup=None) 
+    await callback.message.edit_reply_markup(reply_markup=None)
+    print("Invoice sent for 750 stars")
 
 # 1000 stars
 @start_router.callback_query(F.data == "star1000")
@@ -482,6 +510,7 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.answer()
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None)
+    print("Invoice sent for 1000 stars")
 #1500 stars
 
 
@@ -508,15 +537,16 @@ async def play_game(message: types.Message):
             reply_markup=start.game_kb
         )
 
-
+@game_router.message(F.text == "Target 🎯")
+async def play_target(callback: types.CallbackQuery):
+    await callback.answer("In development...")
+    
 @game_router.message(F.text == "Dice 🎲")
 async def play_dice(message: types.Message, state: FSMContext):
-    # Show responsible gambling reminder
-    await show_gambling_reminder(message)
 
     await message.answer("🎲 You chose to play Dice! What amount are you willing to bet?")
     await state.set_state(BetStates.waiting_for_bet)
-
+    
 
 @game_router.message(BetStates.waiting_for_bet)
 async def process_bet(message: types.Message, state: FSMContext):
@@ -526,14 +556,14 @@ async def process_bet(message: types.Message, state: FSMContext):
 
     # Validate bet is a number
     if not bet_amount.isdigit():
-        await message.answer("❌ Please enter a valid number for your bet.")
+        await message.answer("Please enter a valid number for your bet.")
         return
 
     bet = int(bet_amount)
 
     # Validate minimum bet
     if bet < 10:
-        await message.answer("❌ Minimum bet is 10 stars. Please enter a valid bet amount.")
+        await message.answer("Minimum bet is 10 stars. Please enter a valid bet amount.")
         return
 
     # Check user balance first
@@ -903,13 +933,8 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
                     if response.status == 200:
                         
                         result_data = await response.json()
-<<<<<<< HEAD
                         winner = result_data["winner"] 
                         
-                            
-=======
-                        winner = result_data["winner"]
->>>>>>> dc063f5e01e465af553774b0530fa6cbcdd38aa0
                         
                         # results for both players
                         my_res = result_data[f"result_{user_id}"]
@@ -1033,6 +1058,3 @@ async def main_menu(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@game_router.message(F.text == "Target 🎯")
-async def play_target(callback: types.CallbackQuery):
-    await callback.answer("In development...")
