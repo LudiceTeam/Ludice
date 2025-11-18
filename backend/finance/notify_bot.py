@@ -14,13 +14,20 @@ from secrets import compare_digest
 
 
 
-
+def get_siganture_key() -> str:
+    try:
+        with open("secrets.json","r") as file:
+            data  = json.load(file)
+        return data["key"]    
+    except Exception as e:
+        print(f"Error : {e}")
+        raise KeyError("Error")
 
 
 def verify_signature(data: dict, received_signature: str) -> bool:
     if time.time() - data.get('timestamp', 0) > 300:
         return False
-    
+    KEY = get_siganture_key()
     
     data_to_verify = data.copy()
     data_to_verify.pop("signature", None)
@@ -39,6 +46,7 @@ def get_balance():
         return req.json()
     except Exception as e:
         print(f"Exception as {e}")    
+
 def get_api_key():
     with open("data/secrest.json","r") as file:
         data = json.load(file)
