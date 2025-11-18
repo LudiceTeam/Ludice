@@ -12,14 +12,14 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command
 import asyncio
 import os
-import aiohttp
+from aiogram.client.session.aiohttp import AiohttpSession 
 import json
 import hashlib
 import hmac
 import time
 
-
-
+# Session 
+session = AiohttpSession()
 
 
 # Legal text import
@@ -79,6 +79,7 @@ class LegalStates(StatesGroup):
 
 
 API_URL = BACKEND_API_URL + "/register"
+
 
 # Routers
 start_router = Router()
@@ -165,20 +166,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
             ) as response:
                 if response.status == 200:
                     print("✅ User registered successfully.")
-                else:
-                    print("⚠️ User registration failed or user already exists. Trying to check user existence...")
-                    data = {
-                        
-                    }
-                    async whith aiohttp.ClientSession() as session:
-                        # Check if user exists
-                        async whith session.get(
-                            f"{BACKEND_API_URL}/user/increase",
-                            json=data,
-                            headers={"Content-Type": "application/json"}
-                            
-                        )
-                        
+        print("⚠️ User registration failed or user already exists. Trying to check user existence...")
     except Exception as e:
         await message.answer(f"Error: {e}")
 
