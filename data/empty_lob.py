@@ -50,12 +50,13 @@ def write_empty():
             json.dump(data,file)
     except Exception as e:
         raise TypeError(f"Error : {e}")
-args = parser.parse_args()
-if args.count:
-    for i in range(args.count):
-        write_empty()
-else:
-    print("Wrong arguments")    
+def agro_parse():    
+    args = parser.parse_args()
+    if args.count:
+        for i in range(args.count):
+            write_empty()
+    else:
+        print("Wrong arguments")    
 
 def get_api_key() -> str:
     try:
@@ -76,4 +77,14 @@ app = FastAPI()
 @app.get("/")
 async def main():
     return "API for empty lobby"
-
+@app.get("/create/empty/lobby/{count}",dependencies= [Depends(safe_get)])
+async def create_empty_lobby(count:str):
+    try:
+        if  str(int(count)) != count:
+            raise HTTPException(status_code = 400,detail = "Error invalid count")
+        with open(path,"r") as file:
+            data = json.load(file)
+        for i in range(int(count)):
+            write_empty()
+    except Exception as e:
+        raise HTTPException(status_code = 400,detail = f"Error : {e}")
