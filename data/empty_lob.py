@@ -88,3 +88,15 @@ async def create_empty_lobby(count:str):
             write_empty()
     except Exception as e:
         raise HTTPException(status_code = 400,detail = f"Error : {e}")
+@app.get("/count/empty/lobby",dependencies=[Depends(safe_get)])
+async def count_empty_lobby():
+    try:
+        with open(path,"r") as file:
+            data = json.load(file)
+        count = 0    
+        for game in data:
+            if len(game["players"]) == 0 and game["bet"] == 0 and game["winner"] == "":
+                count += 1
+        return count        
+    except Exception as e:
+        raise HTTPException(status_code = 400,detail = f"Error : {e}")
