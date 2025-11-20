@@ -176,9 +176,22 @@ async def cmd_start(message: types.Message, state: FSMContext):
 
     try:
         # Check if user has accepted terms
-        async with backend_sesion.post(
-            
-        )
+        async with backend_session.post(
+            f"{API_URL}/check/terms",
+            json=data,
+            headers={"Content-Type": "application/json"}
+        ) as terms_response:
+            if terms_response.status == 200:
+                terms_accepted = await terms_response.json()
+                if terms_accepted:
+                    # User has accepted terms, show main menu
+                    await message.answer(
+                        "Welcome back to Ludicé! Choose an option:",
+                        reply_markup=start.start_kb
+                    )
+                    return
+            else:
+                print("⚠️ Could not verify terms acceptance.")
 
     # Show terms and set FSM state to wait for acceptance
     await state.set_state(LegalStates.waiting_for_acceptance)
