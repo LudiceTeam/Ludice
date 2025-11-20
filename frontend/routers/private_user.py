@@ -174,6 +174,11 @@ async def cmd_start(message: types.Message, state: FSMContext):
     except Exception as e:
         await message.answer(f"Error: {e}")
 
+    try:
+        # Check if user has accepted terms
+        async with backend_sesion.post(
+            
+        )
 
     # Show terms and set FSM state to wait for acceptance
     await state.set_state(LegalStates.waiting_for_acceptance)
