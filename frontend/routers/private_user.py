@@ -1,3 +1,4 @@
+from email.mime import message
 from unittest import result
 from aiogram import F,Router, types
 from aiogram.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -177,7 +178,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
     try:
         # Check if user has accepted terms
         async with backend_session.post(
-            f"{API_URL}/check/terms",
+            f"{BACKEND_API_URL}/check/terms",
             json=data,
             headers={"Content-Type": "application/json"}
         ) as terms_response:
@@ -371,6 +372,47 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None)
     print("Invoice sent for 15 stars")
+    
+    user_id = str(message.from_user.id)
+    amount = 15  # Credit amount
+
+    # API request data with signature
+    data = {
+        "username": user_id,
+        "amount": amount,
+        "timestamp": time.time()
+    }
+
+    # Generate signature
+    data["signature"] = generate_signature(data)
+
+    try:
+        # Increase balance using the Python backend endpoint
+        async with backend_session.post(
+            f"{BACKEND_API_URL}/user/increase",
+            json=data,
+            headers={"Content-Type": "application/json"}
+        ) as increase_response:
+            if increase_response.status == 200:
+                await message.answer(
+                    f"✅ Balance test successful!\n\n"
+                    f"Added: {test_amount} ⭐ to your account"
+                )
+            elif increase_response.status == 404:
+                print("❌ User not found. Please start a game first to create your account.")
+            elif increase_response.status == 403:
+                print("❌ Authentication failed. Invalid signature.")
+            elif increase_response.status == 429:
+                print("❌ Too many requests. Please wait a moment.")
+            else:
+                error_text = await increase_response.text()
+                # await message.answer(f"❌ Error: {error_text}")
+                print(f"❌ Error: {error_text}")
+
+    except aiohttp.ClientError as e:
+        print(f"❌ Network error: {str(e)}")
+    except Exception as e:
+        print(f"❌ Unexpected error: {str(e)}")
 
 # 50 stars
 @start_router.callback_query(F.data == "star50")
