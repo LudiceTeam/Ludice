@@ -3,6 +3,7 @@ import os
 import aiohttp
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv, find_dotenv
+from datetime import datetime
 
 load_dotenv(find_dotenv())
 TOKEN = os.getenv("TOKEN")
@@ -10,6 +11,18 @@ TOKEN = os.getenv("TOKEN")
 from routers.private_user import start_router, game_router, bot_session
 from routers.admin_user import admin_router
 import routers.private_user as private_user
+
+LOG_FILE = "bot_start_log.txt"
+PID_FILE = "bot.pid"
+
+def log_start():
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{datetime.utcnow().isoformat()} | bot started\n")
+
+
+def write_pid():
+    with open(PID_FILE, "w", encoding="utf-8") as f:
+        f.write(str(os.getpid()))
 
 
 async def main():
