@@ -422,6 +422,7 @@ async def send_invoice(callback: types.CallbackQuery):
     pay_kb = InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text="Pay 67 ⭐", pay=True)]]
     )
+
     
     await callback.message.answer_invoice(
         title="❖ Telegram Stars",
