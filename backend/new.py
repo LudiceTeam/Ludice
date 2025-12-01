@@ -560,6 +560,56 @@ async def write_winner(request:Win):
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Error {e}")   
 
+class FragmentStarsTransfer:
+    def __init__(self, api_key, secret_key):
+        self.api_key = api_key
+        self.secret_key = secret_key
+        self.base_url = "https://fragment.com/api/v1"
+    
+    def transfer_stars(self, to_username, amount):
+        # Параметры запроса
+        params = {
+            'api_key': self.api_key,
+            'timestamp': int(time.time()),
+            'to_username': to_username,
+            'amount': amount,
+            'currency': 'stars'
+        }
+        
+        # Генерация подписи
+        signature = self._generate_signature(params)
+        params['signature'] = signature
+        
+        # Отправка запроса
+        response = requests.post(
+            f"{self.base_url}/transfer",
+            json=params,
+            headers={'Content-Type': 'application/json'}
+        )
+        
+        return response.json()
+    
+    def _generate_signature(self, params):
+        query_string = '&'.join([f"{k}={v}" for k, v in sorted(params.items())])
+        return hmac.new(
+            self.secret_key.encode('utf-8'),
+            query_string.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+
+
+class FragmentPay(BaseModel):
+    username:str
+    amount:int
+@app.post("/pay/fragment")
+async def fragment_pay(req:FragmentPay,x_signature:str = Header(...),x_timestamp:str = Header()):
+    if not verify_signature(req.model_dump(),x_signature,x_timestamp):
+        raise HTTPException(status_code = 401,detail = "Invalid signature")
+    try:
+        pass
+    except Exception as e:
+        raise HTTPException(status_code = 400,detail = str(e))
+
 class Leave(BaseModel):
     user_id:str
     id:str
