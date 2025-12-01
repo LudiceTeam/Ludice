@@ -1,3 +1,4 @@
+from email.mime import message
 from unittest import result
 from aiogram import F,Router, types
 from aiogram.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -12,14 +13,18 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command
 import asyncio
 import os
-from aiogram.client.session.aiohttp import AiohttpSession 
+from aiogram.client.session.aiohttp import AiohttpSession
+import aiohttp
 import json
 import hashlib
 import hmac
 import time
 
-# Session 
-session = AiohttpSession()
+# Session for Bot's Telegram API requests
+bot_session = AiohttpSession()
+
+# Global session for backend API requests (will be initialized in app.py)
+backend_session: aiohttp.ClientSession = None
 
 
 # Legal text import
@@ -157,19 +162,37 @@ async def cmd_start(message: types.Message, state: FSMContext):
     data["signature"] = generate_signature(data)
 
     try:
-        async with aiohttp.ClientSession() as session:
-            # Register user using the Python backend endpoint
-            async with session.post(
-                API_URL,
-                json=data,
-                headers={"Content-Type": "application/json"}
-            ) as response:
-                if response.status == 200:
-                    print("✅ User registered successfully.")
-        print("⚠️ User registration failed or user already exists. Trying to check user existence...")
+        # Register user using the Python backend endpoint
+        async with backend_session.post(
+            API_URL,
+            json=data,
+            headers={"Content-Type": "application/json"}
+        ) as response:
+            if response.status == 200:
+                print("✅ User registered successfully.")
+            else:
+                print("⚠️ User registration failed or user already exists. Trying to check user existence...")
     except Exception as e:
         await message.answer(f"Error: {e}")
 
+    # try:
+    #     # Check if user has accepted terms
+    #     async with backend_session.post(
+    #         f"{BACKEND_API_URL}/check/terms",
+    #         json=data,
+    #         headers={"Content-Type": "application/json"}
+    #     ) as terms_response:
+    #         if terms_response.status == 200:
+    #             terms_accepted = await terms_response.json()
+    #             if terms_accepted:
+    #                 # User has accepted terms, show main menu
+    #                 await message.answer(
+    #                     "Welcome back to Ludicé! Choose an option:",
+    #                     reply_markup=start.start_kb
+    #                 )
+    #                 return
+    #         else:
+    #             print("⚠️ Could not verify terms acceptance.")
 
     # Show terms and set FSM state to wait for acceptance
     await state.set_state(LegalStates.waiting_for_acceptance)
@@ -195,16 +218,15 @@ async def accept_terms_handler(callback: types.CallbackQuery, state: FSMContext)
     data["signature"] = generate_signature(data)
     
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                API_URL,
-                json=data,
-                headers={"Content-Type": "application/json"}
-            ) as response:
-                if response.status == 200:
-                    print("✅ User registered successfully.")
-                else:
-                    print("⚠️ User registration failed or user already exists.")
+        async with backend_session.post(
+            API_URL,
+            json=data,
+            headers={"Content-Type": "application/json"}
+        ) as response:
+            if response.status == 200:
+                print("✅ User registered successfully.")
+            else:
+                print("⚠️ User registration failed or user already exists.")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -256,28 +278,27 @@ async def balance_test(message: types.Message):
     data["signature"] = generate_signature(data)
 
     try:
-        async with aiohttp.ClientSession() as session:
-            # Increase balance using the Python backend endpoint
-            async with session.post(
-                f"{BACKEND_API_URL}/user/increase",
-                json=data,
-                headers={"Content-Type": "application/json"}
-            ) as increase_response:
-                if increase_response.status == 200:
-                    await message.answer(
-                        f"✅ Balance test successful!\n\n"
-                        f"Added: {test_amount} ⭐ to your account"
-                    )
-                elif increase_response.status == 404:
-                    print("❌ User not found. Please start a game first to create your account.")
-                elif increase_response.status == 403:
-                    print("❌ Authentication failed. Invalid signature.")
-                elif increase_response.status == 429:
-                    print("❌ Too many requests. Please wait a moment.")
-                else:
-                    error_text = await increase_response.text()
-                    # await message.answer(f"❌ Error: {error_text}")
-                    print(f"❌ Error: {error_text}")
+        # Increase balance using the Python backend endpoint
+        async with backend_session.post(
+            f"{BACKEND_API_URL}/user/increase",
+            json=data,
+            headers={"Content-Type": "application/json"}
+        ) as increase_response:
+            if increase_response.status == 200:
+                await message.answer(
+                    f"✅ Balance test successful!\n\n"
+                    f"Added: {test_amount} ⭐ to your account"
+                )
+            elif increase_response.status == 404:
+                print("❌ User not found. Please start a game first to create your account.")
+            elif increase_response.status == 403:
+                print("❌ Authentication failed. Invalid signature.")
+            elif increase_response.status == 429:
+                print("❌ Too many requests. Please wait a moment.")
+            else:
+                error_text = await increase_response.text()
+                # await message.answer(f"❌ Error: {error_text}")
+                print(f"❌ Error: {error_text}")
 
     except aiohttp.ClientError as e:
         print(f"❌ Network error: {str(e)}")
@@ -290,29 +311,28 @@ async def profile_handler(message: types.Message):
     user_id = str(message.from_user.id)
 
     try:
-        async with aiohttp.ClientSession() as session:
-            # Get user balance using the backend endpoint
-            async with session.get(
-                f"{BACKEND_API_URL}/get/{user_id}/balance",
-                headers={"X-API-Key": get_api_key_for_get_request()}
-            ) as response:
-                if response.status == 200:
-                    balance = await response.json()
-                    await message.answer(
-                        f"👤 **Your Profile**\n\n"
-                        f"User ID: `{user_id}`\n"
-                        f"Balance: **{balance} ⭐**",
-                        parse_mode="Markdown"
-                    )
-                elif response.status == 404:
-                    print("❌ Profile not found. Please use /start to create your account.")
-                elif response.status == 401:
-                    print("❌ Authentication failed. Please try again later.")
-                elif response.status == 429:
-                    print("❌ Too many requests. Please wait a moment and try again.")
-                else:
-                    error_text = await response.text()
-                    print(f"❌ Error retrieving profile: {error_text}")
+        # Get user balance using the backend endpoint
+        async with backend_session.get(
+            f"{BACKEND_API_URL}/get/{user_id}/balance",
+            headers={"X-API-Key": get_api_key_for_get_request()}
+        ) as response:
+            if response.status == 200:
+                balance = await response.json()
+                await message.answer(
+                    f"👤 **Your Profile**\n\n"
+                    f"User ID: `{user_id}`\n"
+                    f"Balance: **{balance} ⭐**",
+                    parse_mode="Markdown"
+                )
+            elif response.status == 404:
+                print("❌ Profile not found. Please use /start to create your account.")
+            elif response.status == 401:
+                print("❌ Authentication failed. Please try again later.")
+            elif response.status == 429:
+                print("❌ Too many requests. Please wait a moment and try again.")
+            else:
+                error_text = await response.text()
+                print(f"❌ Error retrieving profile: {error_text}")
 
     except aiohttp.ClientError as e:
         print(f"❌ Network error: {str(e)}")
@@ -352,6 +372,47 @@ async def send_invoice(callback: types.CallbackQuery):
     await callback.message.delete()
     await callback.message.edit_reply_markup(reply_markup=None)
     print("Invoice sent for 15 stars")
+    
+    user_id = str(message.from_user.id)
+    amount = 15  # Credit amount
+
+    # API request data with signature
+    data = {
+        "username": user_id,
+        "amount": amount,
+        "timestamp": time.time()
+    }
+
+    # Generate signature
+    data["signature"] = generate_signature(data)
+
+    try:
+        # Increase balance using the Python backend endpoint
+        async with backend_session.post(
+            f"{BACKEND_API_URL}/user/increase",
+            json=data,
+            headers={"Content-Type": "application/json"}
+        ) as increase_response:
+            if increase_response.status == 200:
+                await message.answer(
+                    f"✅ Balance test successful!\n\n"
+                    f"Added: {test_amount} ⭐ to your account"
+                )
+            elif increase_response.status == 404:
+                print("❌ User not found. Please start a game first to create your account.")
+            elif increase_response.status == 403:
+                print("❌ Authentication failed. Invalid signature.")
+            elif increase_response.status == 429:
+                print("❌ Too many requests. Please wait a moment.")
+            else:
+                error_text = await increase_response.text()
+                # await message.answer(f"❌ Error: {error_text}")
+                print(f"❌ Error: {error_text}")
+
+    except aiohttp.ClientError as e:
+        print(f"❌ Network error: {str(e)}")
+    except Exception as e:
+        print(f"❌ Unexpected error: {str(e)}")
 
 # 50 stars
 @start_router.callback_query(F.data == "star50")
@@ -568,24 +629,23 @@ async def process_bet(message: types.Message, state: FSMContext):
 
     # Check user balance first
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{BACKEND_API_URL}/get/{user_id}/balance",
-                headers={"X-API-Key": get_api_key_for_get_request()}
-            ) as balance_response:
-                if balance_response.status == 200:
-                    balance = await balance_response.json()
-                    if balance < bet:
-                        await message.answer(
-                            f"❌ Insufficient balance!\n\n"
-                            f"Your balance: {balance} ⭐\n"
-                            f"Required: {bet} ⭐\n\n"
-                            f"Please top up your account or choose a lower bet."
-                        )
-                        return
-                else:
-                    await message.answer("❌ Could not check your balance. Please try again.")
+        async with backend_session.get(
+            f"{BACKEND_API_URL}/get/{user_id}/balance",
+            headers={"X-API-Key": get_api_key_for_get_request()}
+        ) as balance_response:
+            if balance_response.status == 200:
+                balance = await balance_response.json()
+                if balance < bet:
+                    await message.answer(
+                        f"❌ Insufficient balance!\n\n"
+                        f"Your balance: {balance} ⭐\n"
+                        f"Required: {bet} ⭐\n\n"
+                        f"Please top up your account or choose a lower bet."
+                    )
                     return
+            else:
+                await message.answer("❌ Could not check your balance. Please try again.")
+                return
     except Exception as e:
         await message.answer(f"❌ Error checking balance: {str(e)}")
         return
@@ -599,22 +659,21 @@ async def process_bet(message: types.Message, state: FSMContext):
     deduct_data["signature"] = generate_signature(deduct_data)
 
     try:
-        async with aiohttp.ClientSession() as session:
-            decrease_data = {
-                "username": user_id,
-                "amount": bet,
-                "timestamp": time.time()
-            }
-            decrease_data["signature"] = generate_signature(decrease_data)
-            async with session.post(
-                BACKEND_API_URL + "/user/decrease",
-                json=decrease_data,
-                headers={"Content-Type": "application/json"}
-            ) as decrease_response:
-                if decrease_response.status == 400:
-                    await message.answer("❌ You don't have enough stars. Please top up your balance.")
-                    return
-                
+        decrease_data = {
+            "username": user_id,
+            "amount": bet,
+            "timestamp": time.time()
+        }
+        decrease_data["signature"] = generate_signature(decrease_data)
+        async with backend_session.post(
+            BACKEND_API_URL + "/user/decrease",
+            json=decrease_data,
+            headers={"Content-Type": "application/json"}
+        ) as decrease_response:
+            if decrease_response.status == 400:
+                await message.answer("❌ You don't have enough stars. Please top up your balance.")
+                return
+
     except Exception as e:
         await message.answer(f"❌ Error deducting bet: {str(e)}")
         return
@@ -634,60 +693,59 @@ async def process_bet(message: types.Message, state: FSMContext):
 
     try:
         # Make API call to start game
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f"{BACKEND_API_URL}/start/game",
-                json=data,
-                headers={"Content-Type": "application/json"}
-            ) as response:
+        async with backend_session.post(
+            f"{BACKEND_API_URL}/start/game",
+            json=data,
+            headers={"Content-Type": "application/json"}
+        ) as response:
 
-                if response.status == 200:
-                    # Player joined existing lobby - game started
-                    game_id = await response.text()
-                    game_id = game_id.strip('"')  # Remove quotes from JSON string
+            if response.status == 200:
+                # Player joined existing lobby - game started
+                game_id = await response.text()
+                game_id = game_id.strip('"')  # Remove quotes from JSON string
 
-                    await state.update_data(game_id=game_id, lobby_status="game_started")
-                    await state.set_state(BetStates.game_active)
+                await state.update_data(game_id=game_id, lobby_status="game_started")
+                await state.set_state(BetStates.game_active)
 
-                    await message.answer(
-                        f"🎮 Opponent found!\n"
-                        f"Bet: {bet} ⭐\n\n"
-                        f"Roll your dice!",
-                        reply_markup=get_dice_keyboard()
-                    )
-                    
+                await message.answer(
+                    f"🎮 Opponent found!\n"
+                    f"Bet: {bet} ⭐\n\n"
+                    f"Roll your dice!",
+                    reply_markup=get_dice_keyboard()
+                )
 
-                elif response.status == 400:
-                    
-                    # Player created new lobby - waiting for opponent
-                    response_data = await response.json()
-                    game_id = response_data.get("detail", "")
 
-                    await state.update_data(game_id=game_id, lobby_status="waiting")
-                    await state.set_state(BetStates.waiting_for_opponent)
+            elif response.status == 400:
 
-                    await message.answer(
-                        f"🔍 Searching for opponent...\n"
-                        f"Bet: {bet} ⭐\n\n"
-                        f"Please wait while we find you a match.",
-                        reply_markup=get_waiting_keyboard()
-                    )
+                # Player created new lobby - waiting for opponent
+                response_data = await response.json()
+                game_id = response_data.get("detail", "")
 
-                    # Start polling for opponent
-                    asyncio.create_task(poll_for_opponent(message, state, game_id))
+                await state.update_data(game_id=game_id, lobby_status="waiting")
+                await state.set_state(BetStates.waiting_for_opponent)
 
-                elif response.status == 403:
-                    await message.answer("❌ Authentication failed. Please try again.")
-                    await state.clear()
+                await message.answer(
+                    f"🔍 Searching for opponent...\n"
+                    f"Bet: {bet} ⭐\n\n"
+                    f"Please wait while we find you a match.",
+                    reply_markup=get_waiting_keyboard()
+                )
 
-                elif response.status == 429:
-                    await message.answer("❌ Too many requests. Please wait a moment and try again.")
-                    await state.clear()
+                # Start polling for opponent
+                asyncio.create_task(poll_for_opponent(message, state, game_id))
 
-                else:
-                    error_text = await response.text()
-                    await message.answer(f"❌ Error: {error_text}")
-                    await state.clear()
+            elif response.status == 403:
+                await message.answer("❌ Authentication failed. Please try again.")
+                await state.clear()
+
+            elif response.status == 429:
+                await message.answer("❌ Too many requests. Please wait a moment and try again.")
+                await state.clear()
+
+            else:
+                error_text = await response.text()
+                await message.answer(f"❌ Error: {error_text}")
+                await state.clear()
 
     except aiohttp.ClientError as e:
         await message.answer(
@@ -723,40 +781,39 @@ async def poll_for_opponent(message: types.Message, state: FSMContext, game_id: 
             }
             data["signature"] = generate_signature(data)
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"{BACKEND_API_URL}/check/lobby/fill",
-                    json=data,
-                    headers={"Content-Type": "application/json"}
-                ) as response:
-                    if response.status == 200:
-                        is_full = await response.json()
+            async with backend_session.post(
+                f"{BACKEND_API_URL}/check/lobby/fill",
+                json=data,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status == 200:
+                    is_full = await response.json()
 
-                        if is_full:
-                            # Lobby is full - game can start
-                            user_data = await state.get_data()
-                            bet = user_data.get("bet", 0)
+                    if is_full:
+                        # Lobby is full - game can start
+                        user_data = await state.get_data()
+                        bet = user_data.get("bet", 0)
 
-                            await state.update_data(lobby_status="game_started")
-                            await state.set_state(BetStates.game_active)
+                        await state.update_data(lobby_status="game_started")
+                        await state.set_state(BetStates.game_active)
 
-                            await bot.send_message(
-                                message.chat.id,
-                                f"🎮 Opponent found!\n"
-                                f"Bet: {bet} ⭐\n\n"
-                                f"Roll your dice!",
-                                reply_markup=get_dice_keyboard()
-                            )
-                            return
-                    elif response.status == 404:
-                        # Lobby not found - maybe cancelled
                         await bot.send_message(
                             message.chat.id,
-                            "❌ Lobby not found. Search cancelled.",
-                            reply_markup=start.start_kb
+                            f"🎮 Opponent found!\n"
+                            f"Bet: {bet} ⭐\n\n"
+                            f"Roll your dice!",
+                            reply_markup=get_dice_keyboard()
                         )
-                        await state.clear()
                         return
+                elif response.status == 404:
+                    # Lobby not found - maybe cancelled
+                    await bot.send_message(
+                        message.chat.id,
+                        "❌ Lobby not found. Search cancelled.",
+                        reply_markup=start.start_kb
+                    )
+                    await state.clear()
+                    return
 
         except Exception as e:
             print(f"Polling error: {e}")
@@ -777,12 +834,11 @@ async def poll_for_opponent(message: types.Message, state: FSMContext, game_id: 
         }
         refund_data["signature"] = generate_signature(refund_data)
         try:
-            async with aiohttp.ClientSession() as session:
-                await session.post(
-                    f"{BACKEND_API_URL}/user/increase",
-                    json=refund_data,
-                    headers={"Content-Type": "application/json"}
-                )
+            await backend_session.post(
+                f"{BACKEND_API_URL}/user/increase",
+                json=refund_data,
+                headers={"Content-Type": "application/json"}
+            )
         except Exception as e:
             print(f"Error refunding bet on timeout: {e}")
 
@@ -814,44 +870,43 @@ async def cancel_search(callback: types.CallbackQuery, state: FSMContext):
         data["signature"] = generate_signature(data)
 
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"{BACKEND_API_URL}/cancel/find",
-                    json=data,
-                    headers={"Content-Type": "application/json"}
-                ) as response:
-                    if response.status == 200:
-                        # Refund the bet
-                        refund_data = {
-                            "username": user_id,
-                            "amount": bet,
-                            "timestamp": time.time()
-                        }
-                        refund_data["signature"] = generate_signature(refund_data)
+            async with backend_session.post(
+                f"{BACKEND_API_URL}/cancel/find",
+                json=data,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status == 200:
+                    # Refund the bet
+                    refund_data = {
+                        "username": user_id,
+                        "amount": bet,
+                        "timestamp": time.time()
+                    }
+                    refund_data["signature"] = generate_signature(refund_data)
 
-                        try:
-                            await session.post(
-                                f"{BACKEND_API_URL}/user/increase",
-                                json=refund_data,
-                                headers={"Content-Type": "application/json"}
-                            )
-                        except Exception as e:
-                            print(f"Error refunding bet: {e}")
+                    try:
+                        await backend_session.post(
+                            f"{BACKEND_API_URL}/user/increase",
+                            json=refund_data,
+                            headers={"Content-Type": "application/json"}
+                        )
+                    except Exception as e:
+                        print(f"Error refunding bet: {e}")
 
-                        await callback.message.edit_text(
-                            f"❌ Search cancelled.\n\n"
-                            f"Your bet of {bet} ⭐ has been refunded.",
-                            reply_markup=None
-                        )
-                        await callback.message.answer(
-                            "Welcome back to Ludicé!",
-                            reply_markup=start.start_kb
-                        )
-                    else:
-                        await callback.message.edit_text(
-                            "⚠️ Could not cancel search. The game may have already started.",
-                            reply_markup=None
-                        )
+                    await callback.message.edit_text(
+                        f"❌ Search cancelled.\n\n"
+                        f"Your bet of {bet} ⭐ has been refunded.",
+                        reply_markup=None
+                    )
+                    await callback.message.answer(
+                        "Welcome back to Ludicé!",
+                        reply_markup=start.start_kb
+                    )
+                else:
+                    await callback.message.edit_text(
+                        "⚠️ Could not cancel search. The game may have already started.",
+                        reply_markup=None
+                    )
         except Exception as e:
             await callback.message.edit_text(
                 f"❌ Error canceling search: {str(e)}",
@@ -886,26 +941,25 @@ async def roll_dice(callback: types.CallbackQuery, state: FSMContext):
     data["signature"] = generate_signature(data)
 
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f"{BACKEND_API_URL}/write/game/result",
-                json=data,
-                headers={"Content-Type": "application/json"}
-            ) as response:
+        async with backend_session.post(
+            f"{BACKEND_API_URL}/write/game/result",
+            json=data,
+            headers={"Content-Type": "application/json"}
+        ) as response:
 
-                if response.status == 200:
-                    await callback.message.answer(
-                        f"Your roll: {dice_value}\n\n"
-                        f"⏳ Waiting for opponent's roll..."
-                    )
+            if response.status == 200:
+                await callback.message.answer(
+                    f"Your roll: {dice_value}\n\n"
+                    f"⏳ Waiting for opponent's roll..."
+                )
 
-                    # Start polling for game result
-                    asyncio.create_task(poll_for_game_result(callback.message, state, game_id, dice_value))
+                # Start polling for game result
+                asyncio.create_task(poll_for_game_result(callback.message, state, game_id, dice_value))
 
-                else:
-                    error_text = await response.text()
-                    await callback.message.answer(f"❌ Error submitting result: {error_text}")
-        
+            else:
+                error_text = await response.text()
+                await callback.message.answer(f"❌ Error submitting result: {error_text}")
+
     except Exception as e:
         await callback.message.answer(f"❌ Error: {str(e)}")
 
@@ -922,102 +976,93 @@ async def poll_for_game_result(message: types.Message, state: FSMContext, game_i
     for _ in range(max_wait // poll_interval):
         await asyncio.sleep(poll_interval)
 
-            # Check game results from backend
+        # Check game results from backend
         try:
-        
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{BACKEND_API_URL}/get/game/result/{game_id}",
-                    headers={"X-API-Key": get_api_key_for_get_request()}
-                ) as response:
-                    if response.status == 200:
-                        
-                        result_data = await response.json()
-                        winner = result_data["winner"] 
-                        
-                        
-                        # results for both players
-                        my_res = result_data[f"result_{user_id}"]
-                        print("DEBUDG")
-                        print(my_res)
-                        def get_except() -> str:
-                            for key in result_data.keys():
-                                if key != my_res and key != "winner":
-                                    return result_data[key]
-                            return None
-                        opponent_res = get_except()
-                        # Process winnings/refunds
-                        balance_change_data = {
-                            "username": user_id,
-                            "timestamp": time.time()
-                        }
-                        balance_change_data["signature"] = generate_signature(balance_change_data)
-                        bet = user_data = await state.get_data()
-                        
-                        if winner == str(user_id):
-                             # Winner gets double the bet (original bet + winnings)
-                             
-                            try:
-                                    async with aiohttp.ClientSession() as session:
-                                        await session.post(
-                                            f"{BACKEND_API_URL}/user/increase",
-                                            json=balance_change_data,
-                                            headers={"Content-Type": "application/json"}
-                                        )
-                            except Exception as e:
-                                print(f"Error crediting winner: {e}")
+            async with backend_session.get(
+                f"{BACKEND_API_URL}/get/game/result/{game_id}",
+                headers={"X-API-Key": get_api_key_for_get_request()}
+            ) as response:
+                if response.status == 200:
+                    result_data = await response.json()
+                    winner = result_data["winner"]
 
-                            outcome_msg = (
-                                f"🎉 **YOU WON!**\n\n"
-                                f"Total credited: {bet * 2} ⭐"
-                                f"\nYour roll: {my_res} ⭐"
-                                f"\nOpponent's roll: {opponent_res} ⭐\n\n"
+                    # results for both players
+                    my_res = result_data[f"result_{user_id}"]
+                    print("DEBUDG")
+                    print(my_res)
+                    def get_except() -> str:
+                        for key in result_data.keys():
+                            if key != my_res and key != "winner":
+                                return result_data[key]
+                        return None
+                    opponent_res = get_except()
+                    # Process winnings/refunds
+                    balance_change_data = {
+                        "username": user_id,
+                        "timestamp": time.time()
+                    }
+                    balance_change_data["signature"] = generate_signature(balance_change_data)
+                    user_data = await state.get_data()
+                    bet = user_data.get("bet", 0)
+
+                    if winner == str(user_id):
+                        # Winner gets double the bet (original bet + winnings)
+                        try:
+                            await backend_session.post(
+                                f"{BACKEND_API_URL}/user/increase",
+                                json=balance_change_data,
+                                headers={"Content-Type": "application/json"}
                             )
-                            await bot.send_message(message.chat.id, outcome_msg)
-                            print(result_data)
-                        elif winner != str(user_id) and winner != "draw":
-                            try:
-                                async with aiohttp.ClientSession() as session:
-                                    await session.post(
-                                        f"{BACKEND_API_URL}/user/decrease",
-                                        json=balance_change_data,
-                                        headers={"Content-Type": "application/json"}
-                                    )
-                                    
-                            except Exception as e:
-                                print(f"Error crediting loser: {e}")
-                            
-                            
-                            outcome_msg = (
-                                f"😔 **YOU LOST**\n\n"
-                                f"Better luck next time!"
-                                f"\nYour roll: {my_res} ⭐"
-                                f"\nOpponent's roll: {opponent_res} ⭐\n\n"
+                        except Exception as e:
+                            print(f"Error crediting winner: {e}")
+
+                        outcome_msg = (
+                            f"🎉 **YOU WON!**\n\n"
+                            f"Total credited: {bet * 2} ⭐"
+                            f"\nYour roll: {my_res} ⭐"
+                            f"\nOpponent's roll: {opponent_res} ⭐\n\n"
+                        )
+                        await bot.send_message(message.chat.id, outcome_msg)
+                        print(result_data)
+                    elif winner != str(user_id) and winner != "draw":
+                        try:
+                            await backend_session.post(
+                                f"{BACKEND_API_URL}/user/decrease",
+                                json=balance_change_data,
+                                headers={"Content-Type": "application/json"}
                             )
-                            await bot.send_message(message.chat.id, outcome_msg)
+                        except Exception as e:
+                            print(f"Error crediting loser: {e}")
 
-                            
-                        if winner == "draw":
-                            # Refund bet to both players
-                            try:
-                                async with aiohttp.ClientSession() as session:
-                                    await session.post(
-                                        f"{BACKEND_API_URL}/user/increase",
-                                        json=balance_change_data,
-                                        headers={"Content-Type": "application/json"}
-                                    )
-                            except Exception as e:
-                                print(f"Error refunding draw: {e}")
+                        outcome_msg = (
+                            f"😔 **YOU LOST**\n\n"
+                            f"Better luck next time!"
+                            f"\nYour roll: {my_res} ⭐"
+                            f"\nOpponent's roll: {opponent_res} ⭐\n\n"
+                        )
+                        await bot.send_message(message.chat.id, outcome_msg)
 
-                            outcome_msg = (
-                                f"🤝 **IT'S A DRAW!**\n\n"
-                                f"Better luck next time!"
-                                f"\nYour roll: {my_res} ⭐"
-                                f"\nOpponent's roll: {opponent_res} ⭐\n\n"
+                    if winner == "draw":
+                        # Refund bet to both players
+                        try:
+                            await backend_session.post(
+                                f"{BACKEND_API_URL}/user/increase",
+                                json=balance_change_data,
+                                headers={"Content-Type": "application/json"}
                             )
-                            await bot.send_message(message.chat.id, outcome_msg)
+                        except Exception as e:
+                            print(f"Error refunding draw: {e}")
 
-                            
+                        outcome_msg = (
+                            f"🤝 **IT'S A DRAW!**\n\n"
+                            f"Better luck next time!"
+                            f"\nYour roll: {my_res} ⭐"
+                            f"\nOpponent's roll: {opponent_res} ⭐\n\n"
+                        )
+                        await bot.send_message(message.chat.id, outcome_msg)
+
+                    return  # Exit polling loop after processing result
+
         except Exception as e:
             print(f"Error polling game result: {e}")
             continue
@@ -1056,5 +1101,3 @@ async def main_menu(callback: types.CallbackQuery, state: FSMContext):
         reply_markup=start.start_kb
     )
     await callback.answer()
-
-
