@@ -56,5 +56,22 @@ def check_sogl(username:str) -> bool:
         except Exception as e:
             raise Exception(f"Error : {e}")  
 
+
+def decrease_user_balance(username:str,amount:int) -> bool:
+    if not is_users_exists(username):
+        raise KeyError("User not found")
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(table.c.balance).where(table.c.username == username)
+            res = conn.execute(stmt)
+            user_balance = res.fetchone()[0]
+            if user_balance < amount:
+                return False
+            update_stmt = table.update().where(table.c.username == username).values(balance = user_balance - amount)
+            conn.execute(update_stmt)
+            conn.commit()
+            return True
+        except Exception as e:
+            raise Exception(f"Error : {e}")
         
         
