@@ -73,5 +73,43 @@ def decrease_user_balance(username:str,amount:int) -> bool:
             return True
         except Exception as e:
             raise Exception(f"Error : {e}")
-        
+def increase_user_balance(username:str,amount:int) -> bool:
+    if not is_users_exists(username):
+        raise KeyError("User not found")
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(table.c.balance).where(table.c.username == username)
+            res = conn.execute(stmt)
+            data = res.fetchone()[0]
+            if data:
+                update_stmt = table.update().where(table.c.username == username).values(balance = data + amount)
+                conn.execute(update_stmt)
+                conn.commit()
+                return True
+            return False
+        except Exception as e:
+            raise Exception(f"Error : {e}")   
+def get_user_balance(username:str) -> int:
+    if not is_users_exists(username):
+        raise KeyError("User not found")
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(table.c.balance).where(table.c.username == username)
+            res = conn.execute(stmt)
+            data = res.fetchone()[0]
+            return int(data)
+        except Exception as e:
+            raise Exception(f"Error : {e}")   
+def count_all_user_money() -> int:
+    with sync_engine.connect()  as conn:
+        try:
+            stmt = select(table)
+            res = conn.execute(stmt)
+            data = res.fetchall()
+            result:int = 0
+            for user_ in data:
+                result += int(user_[1]) # Тут кортеж и баланс это втроая Column(см. models.py)
+            return result    
+        except Exception as e:
+            raise Exception(f"Error : {e}")      
         
