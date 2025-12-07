@@ -25,3 +25,4 @@ go.work.sum
 /frontend/.env
 frontend/.env
 backend/sql_database/.env
+backend/sql_database/game_table/.env
