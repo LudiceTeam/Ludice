@@ -1,6 +1,6 @@
 from sqlalchemy import text,select
-from sql_database.sql_i import sync_engine
-from sql_database.models import metadata_obj,table
+from sql_i import sync_engine
+from models import metadata_obj,table
 import uuid
 from typing import List,Optional
 
@@ -111,5 +111,7 @@ def count_all_user_money() -> int:
                 result += int(user_[1]) # Тут кортеж и баланс это втроая Column(см. models.py)
             return result    
         except Exception as e:
-            raise Exception(f"Error : {e}")      
-        
+            raise Exception(f"Error : {e}")  
+def start_game(username:str,bet:int) -> bool:
+    pass            
+
