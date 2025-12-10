@@ -3,6 +3,8 @@ from sql_i import sync_engine
 from models import metadata_obj,table
 import uuid
 from typing import List,Optional
+import os
+from dotenv import load_dotenv
 
 
 def create_table():
@@ -112,6 +114,5 @@ def count_all_user_money() -> int:
             return result    
         except Exception as e:
             raise Exception(f"Error : {e}")  
-def start_game(username:str,bet:int) -> bool:
-    pass            
+
 
