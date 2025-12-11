@@ -5,10 +5,23 @@ import uuid
 from typing import List,Optional
 import os
 from dotenv import load_dotenv
+from typing import List,Optional
 
 
 def create_table():
     metadata_obj.create_all(sync_engine)
+
+def check_user_dowm_payment(username:str) -> bool:
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(table.c.down_payment).where(table.c.username == username)
+            res = conn.execute(stmt)
+            data = res.fetchone()
+            if data is not None:
+                return bool(data)
+        except Exception as e:
+            raise Exception(f"Error : {e}")
+
 
 
 def is_users_exists(username:str) -> bool:
@@ -25,7 +38,7 @@ def register(username:str) -> bool:
         try:
             stmt = table.insert().values(
                 username = username,
-                balance = 0,
+                balance = 100,
                 lobbies = [],
                 wins = 0,
                 loses = 0
@@ -114,5 +127,4 @@ def count_all_user_money() -> int:
             return result    
         except Exception as e:
             raise Exception(f"Error : {e}")  
-
 

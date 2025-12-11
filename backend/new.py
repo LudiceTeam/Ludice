@@ -72,7 +72,7 @@ def write_deafault_bank(username:str) -> bool:
     try:
         with open(bank_path,"r") as file:
             data = json.load(file)
-        data[username] = 0
+        data[username] = 100
         with open(bank_path,"w") as file:
             json.dump(data,file)
     except Exception as e:
