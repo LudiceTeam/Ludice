@@ -251,7 +251,7 @@ async def register(request:Register):
         })
         with open(lobby_path,"w") as file:
             json.dump(lobs,file)
-        #DEFAUL DATA
+        #DEFAULT DATA
         if not is_user_balance_exists(request.username):
             write_def_stats(request.username) 
             write_deafault_bank(request.username)
@@ -563,7 +563,7 @@ async def check_vznos(req:Check_User_First_Vznos):
 
 class Win(BaseModel):
     username:str
-    id:str
+    id_:str
     signature:str
     timestamp: float = Field(default_factory=time.time)
 @app.post("/write/winner")
@@ -579,7 +579,7 @@ async def write_winner(request:Win):
         with open(game_paths,"r") as file:
             data = json.load(file)
         for game in data:
-            if game["id"] == request.id and len(game["players"]) == 2 and request.username in game["players"]:
+            if game["id"] == request.id_ and len(game["players"]) == 2 and request.username in game["players"]:
                 if game["winner"] == "":
                     game["winner"] = request.username
                     with open(game_paths,"w") as file:
