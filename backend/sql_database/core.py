@@ -127,4 +127,21 @@ def count_all_user_money() -> int:
             return result    
         except Exception as e:
             raise Exception(f"Error : {e}")  
+def plus_one_win(username:str) -> bool:
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(table.c.wins).where(table.c.username == username)
+            res = conn.execute()
+            data = res.fetchone()[0]
+            if data is not None:
+                update_stmt = table.update().where(table.c.username == username).values(wins = data + 1)
+                conn.execute(update_stmt)
+                conn.commit()
+                return True 
+            else:
+                print("User not found")
+                return False
+        except Exception as e:
+            print(f"Error : {e}") 
+            raise Exception(f"Error : {e}")       
 

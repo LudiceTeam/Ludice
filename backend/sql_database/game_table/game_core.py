@@ -6,6 +6,7 @@ from typing import List,Optional
 
 
 
+
 def create_table():
     #metadata_obj.drop_all(sync_engine)
     metadata_obj.create_all(sync_engine)
@@ -31,7 +32,7 @@ def check_len_players(id_:str) -> Optional[int]:
             res = conn.execute(stmt)
             data = res.fetchone()
             if data is not None:
-                return len(data)
+                return len(data[0])
             else:
                 print("Nothing found")
                 return None
@@ -80,28 +81,35 @@ def start_game_database(username:str,bet:int) -> str:
                     raise Exception(f"Error : {e}")    
         except Exception as e:
             raise Exception(f"Error : {e}")
-def cancel_game(username:str,id_:str):
+def cancel_game(id_:str):
     with sync_engine.connect() as conn:
         try:
-            def clear_players():
-                stmt = select(game_table.c.players).where(game_table.c.id == id_)
-                res = conn.execute(stmt)
-                data = res.fetchone()
-                if data is not None:
-                    if username in data:
-                        ind = data.index(username)
-                        data.pop(ind)
-                update_stmt = game_table.update().where(game_table.c.id == id_).values(players = data)
-                conn.execute(update_stmt)
-                conn.commit()
-            def clear_bet():
-                stmt = select(game_table.c.bet).where(game_table.c.id == id_)
-                res = conn.execute(stmt)
-                data = res.fetchone()
-
-
+            stmt = game_table.update().where(game_table.c.id == id_).values(
+                players = [],
+                bet = 0,
+                winner = ""
+            )
+            conn.execute(stmt)
+            conn.commit()
         except Exception as e:
             raise Exception(f"Error : {e}")
+def check_lobby_fill(id_:str) -> bool:
+    with sync_engine.connect() as conn:
+        try:
+            count_users = check_len_players(id_)
+            return count_users == 2
+        except Exception as e:
+            raise Exception(f"Error : {e}")
+def write_winner(username:str,id_:str):
+    with sync_engine.connect() as conn:
+        try:
+            stmt = game_table.update().where(game_table.c.id == id_).values(winner = username)
+            conn.execute(stmt)
+            conn.commit()
+        except Exception as e:
+            print(f"Error : {e}")
+            raise Exception(f"Error : {e}")        
+
 
 def get_all_data():
     with sync_engine.connect() as conn:
@@ -111,4 +119,4 @@ def get_all_data():
             return res.fetchall()
         except Exception as e:
             raise Exception(f"Error : {e}")    
-print(start_game_database("user1",10))
+#print(check_len_players("1390bf89-dfd6-4050-b850-a0e7d22fd2dc"))
