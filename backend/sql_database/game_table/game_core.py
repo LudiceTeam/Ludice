@@ -24,7 +24,19 @@ def fill_empty():
             conn.commit()
         except Exception as e:
             raise Exception(f"Error : {e}")
-
+def check_len_players(id_:str) -> Optional[int]:
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(game_table.c.players).where(game_table.c.id == id_)
+            res = conn.execute(stmt)
+            data = res.fetchone()
+            if data is not None:
+                return len(data)
+            else:
+                print("Nothing found")
+                return None
+        except Exception as e:    
+            raise Exception(f"Error : {e}")
 
 def start_game_database(username:str,bet:int) -> str:
     with sync_engine.connect() as conn:
@@ -68,10 +80,26 @@ def start_game_database(username:str,bet:int) -> str:
                     raise Exception(f"Error : {e}")    
         except Exception as e:
             raise Exception(f"Error : {e}")
-def cancel_game(username:str,id:str):
+def cancel_game(username:str,id_:str):
     with sync_engine.connect() as conn:
         try:
-            pass
+            def clear_players():
+                stmt = select(game_table.c.players).where(game_table.c.id == id_)
+                res = conn.execute(stmt)
+                data = res.fetchone()
+                if data is not None:
+                    if username in data:
+                        ind = data.index(username)
+                        data.pop(ind)
+                update_stmt = game_table.update().where(game_table.c.id == id_).values(players = data)
+                conn.execute(update_stmt)
+                conn.commit()
+            def clear_bet():
+                stmt = select(game_table.c.bet).where(game_table.c.id == id_)
+                res = conn.execute(stmt)
+                data = res.fetchone()
+
+
         except Exception as e:
             raise Exception(f"Error : {e}")
 
