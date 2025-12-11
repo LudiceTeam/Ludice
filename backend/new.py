@@ -46,6 +46,8 @@ time_sec_path = "/Users/vikrorkhanin/Ludice/data/times_sec.json"
 logs_path = "/Users/vikrorkhanin/Ludice/data/logs.json"
 lobby_path = "/Users/vikrorkhanin/Ludice/data/lobby.json"
 sogl_path = "/Users/vikrorkhanin/Ludice/data/sogl.json"
+vznos_path = "/Users/vikrorkhanin/Ludice/data/first_vznos.json"
+
 
 def get_api_key() -> str:
     with open(secrets_path,"r") as file:
@@ -70,7 +72,7 @@ def write_deafault_bank(username:str) -> bool:
     try:
         with open(bank_path,"r") as file:
             data = json.load(file)
-        data[username] = 0
+        data[username] = 100
         with open(bank_path,"w") as file:
             json.dump(data,file)
     except Exception as e:
@@ -217,7 +219,17 @@ def is_user_balance_exists(username:str) -> bool:
 
     except Exception as e:
         print(f"Exception as {e}")
-
+def write_first_vznos(username:str) -> bool:
+    try:
+        with open(vznos_path,"r") as file:
+            data = json.load(file)
+        if not data.get(username):
+            data[username] = 100
+            return True
+        else:
+            return False
+    except Exception as e:
+        raise Exception(f"Error : {e}")
 
 class Register(BaseModel):
     username:str
@@ -243,7 +255,8 @@ async def register(request:Register):
         if not is_user_balance_exists(request.username):
             write_def_stats(request.username) 
             write_deafault_bank(request.username)
-
+            if not write_first_vznos(request.username):
+                print("User already has first vznos")
 
 
 def delete_the_same(bet:int,user_id1 : str,user_id2:str,id_that_we_need:str) -> bool:
@@ -531,7 +544,22 @@ async def cancel_find(request:Cancel_My_Find):
         write_logs(str(e))
         raise HTTPException(status_code=400,detail=f"Exception as {e}")         
 
-
+class Check_User_First_Vznos(BaseModel):
+    username:str
+    signature:str
+    timestamp:float = Field(default_factory=time.time)
+@app.post("/check/first/vznos")  
+async def check_vznos(req:Check_User_First_Vznos):
+    if not verify_signature(req.model_dump(),req.signature):
+        raise HTTPException(status_code = 401,detail = "Invalid signature")
+    try:
+        with open(vznos_path,"r") as file:
+            data = json.load(file)
+        if not data.get(req.username):
+            return False # могу тут вернуть HTTPException но на фронте проверять лучше не по response.status_code а по response.json()
+        return True
+    except Exception as e:
+        raise HTTPException(status_code = 400,detail = f"Error : {e}")
 
 class Win(BaseModel):
     username:str
