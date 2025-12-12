@@ -11,6 +11,7 @@ table = Table(
     Column("games",JSONB),
     Column("wins",Integer),
     Column("loses",Integer),
+    Column("games_count",Integer),
     Column("sogl",Boolean),
     Column("down_payment",Boolean)
 )

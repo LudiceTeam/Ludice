@@ -1,4 +1,4 @@
-from sqlalchemy import text,select
+from sqlalchemy import text,select,and_,func
 from sql_i import sync_engine
 from models import metadata_obj,table
 import uuid
@@ -26,10 +26,12 @@ def check_user_dowm_payment(username:str) -> bool:
 
 def is_users_exists(username:str) -> bool:
     with sync_engine.connect() as conn:
-        stmt = select(text("COUNT(1)")).where(table.c.username == username)
-        conn.execute(stmt)
-        res = conn.scalar()
-        return res > 0 if res else False
+        stmt = select(table.c.username).where(table.c.username == username)
+        res = conn.execute(stmt)
+        data = res.fetchone()
+        if data is not None:
+            return len(data[0]) > 0
+        return False 
 
 def register(username:str) -> bool:
     if is_users_exists(username):
@@ -39,7 +41,7 @@ def register(username:str) -> bool:
             stmt = table.insert().values(
                 username = username,
                 balance = 100,
-                lobbies = [],
+                games = [],
                 wins = 0,
                 loses = 0
             )
@@ -145,3 +147,86 @@ def plus_one_win(username:str) -> bool:
             print(f"Error : {e}") 
             raise Exception(f"Error : {e}")       
 
+def plus_one_game(username:str) -> bool:
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(table.c.games_count).where(table.c.username == username)
+            res = conn.execute()
+            data = res.fetchone()[0]
+            if data is not None:
+                update_stmt = table.update().where(table.c.username == username).values(games_count = data + 1)
+                conn.execute(update_stmt)
+                conn.commit()
+                return True 
+            else:
+                print("User not found")
+                return False
+        except Exception as e:
+            print(f"Error : {e}") 
+            raise Exception(f"Error : {e}")       
+
+def plus_one_lose(username:str) -> bool:
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(table.c.loses).where(table.c.username == username)
+            res = conn.execute()
+            data = res.fetchone()[0]
+            if data is not None:
+                update_stmt = table.update().where(table.c.username == username).values(loses = data + 1)
+                conn.execute(update_stmt)
+                conn.commit()
+                return True 
+            else:
+                print("User not found")
+                return False
+        except Exception as e:
+            print(f"Error : {e}") 
+            raise Exception(f"Error : {e}")       
+def count_procent_of_wins(username) -> float:
+    def get_user_wins() -> int:
+        with sync_engine.connect() as conn:
+            try:
+                stmt = select(table.c.wins).where(table.c.username == username)
+                res = conn.execute(stmt)
+                data = res.fetchone()[0]
+                if data is not None:
+                    return int(data)
+                return None
+            except Exception as e:
+                return Exception(f"Error : {e}")        
+    def get_user_games_count() -> int:
+        with sync_engine.connect() as conn:
+            try:
+                stmt = select(table.c.games_count).where(table.c.username == username)
+                res = conn.execute(stmt)
+                data = res.fetchone()[0]
+                if data is not None:
+                    return int(data)
+                return None
+            except Exception as e:
+                return Exception(f"Error : {e}")    
+    wins = get_user_wins()
+    games_count = get_user_games_count()
+    if type(wins) != int or type(games_count) != int:
+        raise UserWarning("User not found")        
+    else:
+        return (games_count // wins) * 100
+def get_leader_borad():
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(table.c.username)
+            res = conn.execute(stmt)
+            data = res.fetchall()
+            print(data)
+        except Exception as e:
+            return Exception(f"Error : {e}")    
+def get_all_data():
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(table)
+            res = conn.execute(stmt)
+            data = res.fetchall()
+            return data
+        except Exception as e:
+            return Exception(f"Error : {e}")  
+print(register("user1"))              
