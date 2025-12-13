@@ -122,12 +122,12 @@ def get_user_balance(username:str) -> int:
 def count_all_user_money() -> int:
     with sync_engine.connect()  as conn:
         try:
-            stmt = select(table)
+            stmt = select(table.c.balance)
             res = conn.execute(stmt)
             data = res.fetchall()
             result:int = 0
-            for user_ in data:
-                result += int(user_[1]) # Тут кортеж и баланс это втроая Column(см. models.py)
+            for balance in data:
+                result += balance[0]
             return result    
         except Exception as e:
             raise Exception(f"Error : {e}")  
@@ -212,7 +212,7 @@ def count_procent_of_wins(username:str) -> float:
     if (type(wins) != int or type(games_count) != int) or (games_count == 0 or wins ==  0):
         return 0        
     else:
-        return (games_count // wins) * 100
+        return (games_count / wins) * 100
 def get_leader_borad_games() -> dict:
     with sync_engine.connect() as conn:
         try:
@@ -240,7 +240,7 @@ def get_all_data():
             stmt = select(table)
             res = conn.execute(stmt)
             data = res.fetchall()
-            print(data)
+            return data
         except Exception as e:
             return Exception(f"Error : {e}")  
 def get_me(username:str) -> dict:
@@ -282,3 +282,4 @@ def get_me(username:str) -> dict:
             return result
         except Exception as e:
             return Exception(f"Error : {e}")
+ 
