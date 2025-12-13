@@ -43,7 +43,10 @@ def register(username:str) -> bool:
                 balance = 100,
                 games = [],
                 wins = 0,
-                loses = 0
+                loses = 0,
+                games_count = 0,
+                sogl = False,
+                down_payment = True
             )
             conn.execute(stmt)
             conn.commit()
@@ -182,15 +185,15 @@ def plus_one_lose(username:str) -> bool:
         except Exception as e:
             print(f"Error : {e}") 
             raise Exception(f"Error : {e}")       
-def count_procent_of_wins(username) -> float:
+def count_procent_of_wins(username:str) -> float:
     def get_user_wins() -> int:
         with sync_engine.connect() as conn:
             try:
                 stmt = select(table.c.wins).where(table.c.username == username)
                 res = conn.execute(stmt)
-                data = res.fetchone()[0]
+                data = res.fetchall()
                 if data is not None:
-                    return int(data)
+                    return int(data[0][0])
                 return None
             except Exception as e:
                 return Exception(f"Error : {e}")        
@@ -199,25 +202,37 @@ def count_procent_of_wins(username) -> float:
             try:
                 stmt = select(table.c.games_count).where(table.c.username == username)
                 res = conn.execute(stmt)
-                data = res.fetchone()[0]
+                data = res.fetchall()
                 if data is not None:
-                    return int(data)
+                    return int(data[0][0])
                 return None
             except Exception as e:
                 return Exception(f"Error : {e}")    
     wins = get_user_wins()
     games_count = get_user_games_count()
-    if type(wins) != int or type(games_count) != int:
-        raise UserWarning("User not found")        
+    if (type(wins) != int or type(games_count) != int) or (games_count == 0 or wins ==  0):
+        return 0        
     else:
         return (games_count // wins) * 100
-def get_leader_borad():
+def get_leader_borad_games() -> dict:
     with sync_engine.connect() as conn:
         try:
             stmt = select(table.c.username)
             res = conn.execute(stmt)
             data = res.fetchall()
-            print(data)
+            users = []
+            for user in data:
+                users.append(user[0])
+            stmt_games = select(table.c.games_count)
+            res_games = conn.execute(stmt_games)
+            data2 = res_games.fetchall()
+            counts = []
+            for count in data2:
+                counts.append(count[0])
+            data_leader_board = {}
+            for i in range(len(users)):
+                data_leader_board[users] = counts[i]
+            return data_leader_board    
         except Exception as e:
             return Exception(f"Error : {e}")    
 def get_all_data():
@@ -226,7 +241,47 @@ def get_all_data():
             stmt = select(table)
             res = conn.execute(stmt)
             data = res.fetchall()
-            return data
+            print(data)
         except Exception as e:
             return Exception(f"Error : {e}")  
-print(register("user1"))              
+def get_me(username:str) -> dict:
+    if not is_users_exists(username):
+        return KeyError("User not found")
+    with sync_engine.connect() as conn:
+        def get_wins():
+            stmt = select(table.c.wins).where(table.c.username == username)
+            res = conn.execute(stmt)
+            data = res.fetchall()
+            if data is not None:
+                return data[0][0]
+        def get_loses():
+            stmt = select(table.c.loses).where(table.c.username == username)
+            res = conn.execute(stmt)
+            data = res.fetchall()
+            if data is not None:
+                return data[0][0]
+        def get_games_count():
+            stmt = select(table.c.games_count).where(table.c.username == username)
+            res = conn.execute(stmt)
+            data = res.fetchall()
+            if data is not None:
+                return data[0][0]   
+        try:
+            balance  = get_user_balance(username)
+            wins = get_wins()
+            loses = get_loses()
+            total_games = get_games_count()
+            win_procent = count_procent_of_wins(username)
+            #print(win_procent)
+            result = {
+                "Tatal games":total_games,
+                "Wins":wins,
+                "Loses":loses,
+                "Balance":balance,
+                "Wins procent":win_procent
+            }
+            return result
+        except Exception as e:
+            return Exception(f"Error : {e}")
+   
+print(get_me("user2"))        
