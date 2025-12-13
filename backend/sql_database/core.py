@@ -41,7 +41,6 @@ def register(username:str) -> bool:
             stmt = table.insert().values(
                 username = username,
                 balance = 100,
-                games = [],
                 wins = 0,
                 loses = 0,
                 games_count = 0,
@@ -283,5 +282,3 @@ def get_me(username:str) -> dict:
             return result
         except Exception as e:
             return Exception(f"Error : {e}")
-   
-print(get_me("user2"))        

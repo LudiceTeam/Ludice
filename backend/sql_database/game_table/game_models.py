@@ -10,5 +10,6 @@ game_table = Table(
     Column("bet",Integer),
     Column("players",ARRAY(String)),
     Column("id",String,primary_key=True),
-    Column("winner",String)
+    Column("winner",String),
+    Column("results",JSONB)
 )
