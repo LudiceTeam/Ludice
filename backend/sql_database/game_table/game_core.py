@@ -8,7 +8,7 @@ from typing import List,Optional
 
 
 def create_table():
-    #metadata_obj.drop_all(sync_engine)
+    metadata_obj.drop_all(sync_engine)
     metadata_obj.create_all(sync_engine)
 
 
@@ -19,7 +19,8 @@ def fill_empty():
                 bet = 0,
                 players = [],
                 id = str(uuid.uuid4()),
-                winner = ""
+                winner = "",
+                results = {}
             )
             conn.execute(stmt)
             conn.commit()
@@ -87,7 +88,8 @@ def cancel_game(id_:str):
             stmt = game_table.update().where(game_table.c.id == id_).values(
                 players = [],
                 bet = 0,
-                winner = ""
+                winner = "",
+                results = {}
             )
             conn.execute(stmt)
             conn.commit()
@@ -120,3 +122,24 @@ def get_all_data():
         except Exception as e:
             raise Exception(f"Error : {e}")    
 #print(check_len_players("1390bf89-dfd6-4050-b850-a0e7d22fd2dc"))
+def write_result(game_id:str,username:str,result:int):
+    with sync_engine.connect() as conn:
+        try:
+            res = {}
+            res[username] = result
+            update_stmt = game_table.update().where(game_table.c.id == game_id).values(results = res)
+            conn.execute(update_stmt)
+            conn.commit()
+        except Exception as e:
+            return Exception(f"Error : {e}")
+def get_game_result(game_id:str) -> dict:
+    with sync_engine.connect() as conn:
+        try:
+            stmt = select(game_table.c.results).where(game_table.c.id == game_id)
+            res = conn.execute(stmt)
+            data = res.fetchone()
+            if data is not None:
+                return data[0]
+        except Exception as e:
+            return Exception(f"Error  {e}")
+print(get_game_result("dd7456a9-0006-4e8f-8b74-6666c3dc1e4b"))
