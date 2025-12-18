@@ -26,3 +26,4 @@ go.work.sum
 frontend/.env
 backend/sql_database/.env
 backend/sql_database/game_table/.env
+backend/sql_database/buy_history_table/.env
