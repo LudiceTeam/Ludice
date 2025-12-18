@@ -63,7 +63,7 @@ def start_game_database(username:str,bet:int) -> str:
                         return game[2]
             if not found:
                 try:
-                    print("test")
+                   
                     stmt_2 = select(game_table.c).where(
                         and_(
                             #text("players IS NULL OR array_length(players, 1) = 0"),
@@ -81,7 +81,7 @@ def start_game_database(username:str,bet:int) -> str:
                 except Exception as e:
                     raise Exception(f"Error : {e}")    
         except Exception as e:
-            raise Exception(f"Error : {e}")
+            raise Exception(f"Error : {e}")      
 def cancel_game(id_:str):
     with sync_engine.connect() as conn:
         try:
