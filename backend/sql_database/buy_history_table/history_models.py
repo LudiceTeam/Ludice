@@ -10,5 +10,6 @@ history_table = Table(
     Column("username",String,primary_key=True),
     Column("name",String),
     Column("id",String),
-    Column("price",Integer)
+    Column("price",Integer),
+    Column("date",String)
 )
