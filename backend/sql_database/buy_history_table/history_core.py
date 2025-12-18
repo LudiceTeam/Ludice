@@ -40,4 +40,14 @@ def get_user_history(username:str) -> List:
             return res.fetchall()
         except Exception as e:
             return Exception(f"Error : {e}")
+def clear_history(username:str):
+    with sync_engine.connect() as conn:
+        try:
+            stmt = delete(history_table).where(history_table.c.username == username)
+            conn.execute(stmt)
+            conn.commit()
+        except Exception as e:
+            return Exception(f"Error : {e}")
+      
+
                 
