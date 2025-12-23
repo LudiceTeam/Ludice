@@ -142,4 +142,3 @@ def get_game_result(game_id:str) -> dict:
                 return data[0]
         except Exception as e:
             return Exception(f"Error  {e}")
-print(get_game_result("dd7456a9-0006-4e8f-8b74-6666c3dc1e4b"))
