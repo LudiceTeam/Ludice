@@ -2,7 +2,7 @@
 aiogram==3.13.1
 
 # Environment variables
-python-dotenv==1.0.1
+python-dotenv==1.2.1
 
 # HTTP requests (for backend API calls)
 requests==2.32.5

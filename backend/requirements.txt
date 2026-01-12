@@ -18,7 +18,7 @@ python-jose[cryptography]==3.5.0
 cryptography==41.0.7
 
 # Configuration
-python-dotenv==1.0.1
+python-dotenv==1.2.1
 
 # Rate Limiting
 slowapi==0.1.9
