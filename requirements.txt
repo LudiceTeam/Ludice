@@ -61,7 +61,7 @@ slowapi==0.1.9
 redis==5.1.1
 
 # Utilities
-python-multipart==0.0.12
+python-multipart==0.0.20
 filelock==3.16.1
 
 # Aiogram Dependencies
