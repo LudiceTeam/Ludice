@@ -9,7 +9,7 @@ requests==2.32.5
 httpx==0.28.1
 
 # Async support (aiogram dependencies)
-aiohttp==3.13.3
+aiohttp==3.10.11
 aiofiles==25.1.0
 magic-filter==1.0.12
 
