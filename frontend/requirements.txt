@@ -17,8 +17,11 @@ magic-filter==1.0.12
 pydantic==2.9.2
 
 # URL handling
-yarl==1.13.1
-idna==3.11
+
+yarl==1.22.0
+idna==3.10
+
+
 
 # Additional aiogram dependencies
 aiosignal==1.3.1
