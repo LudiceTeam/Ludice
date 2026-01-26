@@ -4,7 +4,7 @@ aiogram==3.22.0
 # Web Framework
 fastapi==0.121.0
 uvicorn[standard]==0.40.0
-pydantic==2.12.3
+pydantic==2.12.5
 starlette==0.50.0
 
 # HTTP & Async (aiohttp version compatible with aiogram)
