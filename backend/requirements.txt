@@ -28,7 +28,7 @@ redis==5.1.1
 
 # Utilities
 python-multipart==0.0.22
-filelock==3.16.1
+filelock==3.25.0
 
 # Aiogram Dependencies
 aiosignal==1.4.0
