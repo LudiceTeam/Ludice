@@ -18,7 +18,7 @@ pydantic==2.12.5
 
 # URL handling
 
-yarl==1.22.0
+yarl==1.23.0
 idna==3.11
 
 
