@@ -1,5 +1,5 @@
 # Core Telegram Bot
-aiogram==3.13.1
+aiogram==3.26.0
 
 # Web Framework
 fastapi==0.135.1

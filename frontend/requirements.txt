@@ -1,5 +1,5 @@
 # Core bot framework
-aiogram==3.13.1
+aiogram==3.26.0
 
 # Environment variables
 python-dotenv==1.2.1
