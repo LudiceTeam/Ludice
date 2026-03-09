@@ -3,7 +3,7 @@ aiogram==3.13.1
 
 # Web Framework
 fastapi==0.135.1
-uvicorn[standard]==0.40.0
+uvicorn[standard]==0.41.0
 pydantic==2.12.5
 
 # HTTP & Async
