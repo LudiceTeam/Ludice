@@ -30,4 +30,4 @@ certifi==2026.1.4
 charset-normalizer==3.4.4
 frozenlist==1.8.0
 multidict==6.7.1
-typing-extensions==4.12.2
+typing-extensions==4.15.0
